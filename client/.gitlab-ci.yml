@@ -1,0 +1,17 @@
+deploy-job:
+  stage: deploy
+  environment: development
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y sshpass
+    - curl -sL https://deb.nodesource.com/setup_20.x | bash - # Adjust Node.js version as needed
+    - apt-get install -y nodejs
+  script:
+    - sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no root@157.173.221.127 "cd $APPLICATION_PATH && git pull && sudo npm install --force && npm run build && pm2 restart $PM2_APP_NAME"
+  variables:
+    APPLICATION_PATH: "/var/www/html/heed-cline-side"
+    PM2_APP_NAME: "heed-cline-side"  # No need to include `pm2 restart` here; handle it in `script`
+    SSH_PASSWORD: $CI_DEPLOY_PASSWORD
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
