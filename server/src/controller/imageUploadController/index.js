@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const sharp = require('sharp'); 
-const host = "https://shopheed.com/"
+require("dotenv").config()
+const host = process.env.HOST_URL;
 
 
 const singleImage = async function (req, res) {
@@ -28,7 +29,7 @@ const singleImage = async function (req, res) {
       .toFile(imagePath); 
 
    
-    const imageUrl = `${host}/static/images/${filename}`;
+    const imageUrl = `${host}/images/${filename}`;
 
    
     res.status(200).json({ imageUrl });

@@ -10,6 +10,8 @@ const webhookRoutes = require("./src/Route/webhookRoutes");
 const categoryRoutes = require("./src/Route/categoryRoute");
 const blogRoute = require("./src/Route/blogRoute");
 const returnAndExchangeRoute = require("./src/Route/returnAndExchangeRoute");
+const promocodeRoutes = require('./src/Route/promocodeRoute'); 
+const bannerRoutes = require('./src/Route/bannerRoute'); 
 const { scheduleCron } = require("./src/scheduler/token")
 
 const cors = require("cors");
@@ -27,9 +29,9 @@ mongoose.connect(process.env.MONGODB_DATABASE,
 )
   .then(() => console.log("Mongodb is connect"))
   .catch((error) => console.log(error))
-app.use("/", (req, res) => {
-  res.json({ success: true, message: "" })
-})
+// app.use("/", (req, res) => {
+//   res.json({ success: true, message: "" })
+// })
 app.use("/api/api", Route)
 app.use("/api/auth-api", authRoute)
 app.use("/api/admin-api", adminRoute)
@@ -37,8 +39,10 @@ app.use("/api/product-api", productRoute)
 app.use("/api/api/orders", orderRoutes)
 app.use("/api/api/webhooks", webhookRoutes)
 app.use("/api/api/category", categoryRoutes)
+app.use("/api/banner", bannerRoutes);
 app.use("/api/api/blog", blogRoute)
 app.use("/api/returnAndExchangeRoutes", returnAndExchangeRoute)
+app.use("/api/promocode", promocodeRoutes);
 
 
 

@@ -1,0 +1,1 @@
+export type { PromocodeType, } from "./promocode"

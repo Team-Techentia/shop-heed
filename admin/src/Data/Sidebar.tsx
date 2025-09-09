@@ -1,4 +1,4 @@
-import { AlignLeft, Archive, BarChart,Codesandbox, Box,FolderMinus,FolderPlus, Camera, Chrome, Clipboard, DollarSign, Home, LogIn, Settings, Tag, UserPlus, Users , Truck } from "react-feather";
+import { AlignLeft, Archive, BarChart,Codesandbox, Box,FolderMinus,FolderPlus, Camera, Chrome, Clipboard, DollarSign, Home, LogIn, Settings, Tag, UserPlus, Users , Truck, ThumbsDown, Image } from "react-feather";
 
 export const MENUITEMS: any = [
   {
@@ -115,16 +115,20 @@ export const MENUITEMS: any = [
   //     { path: "/sales/transactions", title: "Transactions", type: "link" },
   //   ],
   // },
-  // {
-  //   title: "Coupons",
-  //   icon: Tag,
-  //   type: "sub",
-  //   active: false,
-  //   children: [
-  //     { path: "/coupons/list-coupons", title: "List Coupons", type: "link" },
-  //     { path: "/coupons/create-coupons", title: "Create Coupons", type: "link" },
-  //   ],
-  // },
+  {
+    title: "Coupons",
+    icon: Tag,
+    type: "link",
+    active: false,
+    path:"/coupons/list-coupons",
+  },
+  {
+    title: "Banner",
+    icon: Image,
+    type: "link",
+    active: false,
+    path:"/coupons/list-coupons",
+  },
   // {
   //   title: "Pages",
   //   icon: Clipboard,
