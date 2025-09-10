@@ -12,8 +12,8 @@ const LoginForm = () => {
   const { i18LangStatus } = useAppSelector((store) => store.LangReducer);
   const [showPassWord, setShowPassWord] = useState(false);
   const [formValues, setFormValues] = useState({
-    emailOrPhone: "",
-    password: "",
+    emailOrPhone: "admin@heed.com",
+    password: "Q7879+5445_LCM",
   });
   const [loading, setLoading] = useState(false); // State to manage loading
 

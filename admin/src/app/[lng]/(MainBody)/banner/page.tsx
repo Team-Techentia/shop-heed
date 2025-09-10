@@ -34,6 +34,20 @@ interface SubCategory {
     value: string;
 }
 
+// Define table row data structure
+interface TableRowData {
+    Image: JSX.Element;
+    "Banner ID": string;
+    Title: JSX.Element;
+    Type: JSX.Element;
+    Category: string;
+    SubCategory: string;
+    Status: JSX.Element;
+    Priority: JSX.Element;
+    "Created Date": string;
+    Actions: string;
+}
+
 const bannerTypeOptions = [
     { value: "all", label: "All Types" },
     { value: "home", label: "Home Page" },
@@ -49,7 +63,7 @@ const statusOptions = [
 
 const BannerList = () => {
     const [bannerData, setBannerData] = useState<Banner[]>([]);
-    const [filteredData, setFilteredData] = useState([]);
+    const [filteredData, setFilteredData] = useState<TableRowData[]>([]);
     const [open, setOpen] = useState(false);
     const [openAdd, setOpenAdd] = useState(false);
     const [openView, setOpenView] = useState(false);
@@ -94,8 +108,68 @@ const BannerList = () => {
     }, [bannerData, filters]);
 
     const applyFilters = () => {
-        let filtered = bannerData.filter(item => {
-            const banner = bannerData.find(b => b._id === item["Banner ID"]);
+        // Create table data from bannerData first
+        const tableData: TableRowData[] = bannerData.map((item) => ({
+            Image: (
+                <div className="product-image-container">
+                    <img
+                        src={item.image || "/placeholder-banner.jpg"}
+                        alt={item.title}
+                        className="banner-list-image"
+                        style={{
+                            width: 80,
+                            height: 50,
+                            objectFit: "cover",
+                            borderRadius: "4px",
+                            border: "1px solid #dee2e6"
+                        }}
+                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                            (e.target as HTMLImageElement).src = "/placeholder-banner.jpg";
+                        }}
+                    />
+                </div>
+            ),
+            "Banner ID": item._id || "no",
+            Title: (
+                <div className="banner-title-cell">
+                    <span className="banner-title">{item.title || "No Title"}</span>
+                    <small className="text-muted d-block">
+                        {item.link && (
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="banner-link">
+                                🔗 View Link
+                            </a>
+                        )}
+                    </small>
+                </div>
+            ),
+            Type: (
+                <span className={`badge badge-${getBannerTypeBadge(item.bannerType)}`}>
+                    {item.bannerType?.toUpperCase() || "HOME"}
+                </span>
+            ),
+            Category: item.category || "N/A",
+            SubCategory: item.subCategory || "N/A",
+            Status: (
+                <span className={`badge ${item.isActive ? 'badge-success' : 'badge-danger'}`}>
+                    {item.isActive ? 'Active' : 'Inactive'}
+                </span>
+            ),
+            Priority: (
+                <span className="priority-badge">
+                    #{item.priority || 1}
+                </span>
+            ),
+            "Created Date": new Date(item.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }),
+            Actions: item._id || "no",
+        }));
+
+        // Then apply filters
+        const filtered = tableData.filter(tableItem => {
+            const banner = bannerData.find(b => b._id === tableItem["Banner ID"]);
             if (!banner) return true;
 
             // Filter by banner type
@@ -171,71 +245,8 @@ const BannerList = () => {
 
     const fetchBanners = async () => {
         setTableLoading(true);
-        const storeData = [];
         try {
             const res = await Api.getAllBanners();
-
-            res.data.data.forEach((item) => {
-                const newObject = {
-                    Image: (
-                        <div className="product-image-container">
-                            <img
-                                src={item.image || "/placeholder-banner.jpg"}
-                                alt={item.title}
-                                className="banner-list-image"
-                                style={{
-                                    width: 80,
-                                    height: 50,
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    border: "1px solid #dee2e6"
-                                }}
-                                onError={(e) => {
-                                    e.target.src = "/placeholder-banner.jpg";
-                                }}
-                            />
-                        </div>
-                    ),
-                    "Banner ID": item._id || "no",
-                    Title: (
-                        <div className="banner-title-cell">
-                            <span className="banner-title">{item.title || "No Title"}</span>
-                            <small className="text-muted d-block">
-                                {item.link && (
-                                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="banner-link">
-                                        🔗 View Link
-                                    </a>
-                                )}
-                            </small>
-                        </div>
-                    ),
-                    Type: (
-                        <span className={`badge badge-${getBannerTypeBadge(item.bannerType)}`}>
-                            {item.bannerType?.toUpperCase() || "HOME"}
-                        </span>
-                    ),
-                    Category: item.category || "N/A",
-                    SubCategory: item.subCategory || "N/A",
-                    Status: (
-                        <span className={`badge ${item.isActive ? 'badge-success' : 'badge-danger'}`}>
-                            {item.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                    ),
-                    Priority: (
-                        <span className="priority-badge">
-                            #{item.priority || 1}
-                        </span>
-                    ),
-                    "Created Date": new Date(item.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    }),
-                    Actions: item._id || "no",
-                };
-                storeData.push(newObject);
-            });
-
             setBannerData(res.data.data);
         } catch (error) {
             console.log("Error fetching banners:", error);
@@ -245,7 +256,7 @@ const BannerList = () => {
         }
     };
 
-    const getBannerTypeBadge = (type) => {
+    const getBannerTypeBadge = (type: string) => {
         switch (type) {
             case 'home': return 'primary';
             case 'category': return 'info';
@@ -263,7 +274,7 @@ const BannerList = () => {
         }
     };
 
-    const fetchSubCategoriesByCategory = async (categoryName) => {
+    const fetchSubCategoriesByCategory = async (categoryName: string) => {
         try {
             const getData = await Api.getSubCategoryByCategoryName(categoryName);
             setSubCategoryData(getData.data.data);
@@ -272,7 +283,7 @@ const BannerList = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id: string) => {
         try {
             await Api.deleteBanner(id, { headers: { Authorization: `Bearer ${token}` } });
             fetchBanners();
@@ -290,7 +301,7 @@ const BannerList = () => {
         }
     };
 
-    const openEditModal = async (id) => {
+    const openEditModal = async (id: string) => {
         try {
             const res = await Api.getBannerById(id);
             const banner = res.data.data;
@@ -319,7 +330,7 @@ const BannerList = () => {
         }
     };
 
-    const openViewModal = async (id) => {
+    const openViewModal = async (id: string) => {
         try {
             const res = await Api.getBannerById(id);
             const banner = res.data.data;
@@ -331,12 +342,12 @@ const BannerList = () => {
         }
     };
 
-    const handleImgChange = async (e) => {
+    const handleImgChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
-            const file = e.target.files[0];
+            const file = e.target.files?.[0];
             if (!file) {
                 toast.error("Please select an image to upload.");
                 return;
@@ -344,7 +355,7 @@ const BannerList = () => {
 
             const convertedImage = await convertToJPEG(file);
             const formData = new FormData();
-            formData.append("image", convertedImage, "banner.jpg");
+            formData.append("image", convertedImage as Blob, "banner.jpg");
 
             const res = await Api.uploadSingleImage(formData);
             setImage(res.data.imageUrl);
@@ -357,7 +368,7 @@ const BannerList = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!bannerForm.title) {
@@ -391,7 +402,7 @@ const BannerList = () => {
         }
     };
 
-    const handleStatusToggle = async (id, currentStatus) => {
+    const handleStatusToggle = async (id: string, currentStatus: boolean) => {
         try {
             await Api.updateBannerStatus(id, { isActive: !currentStatus }, { headers: { Authorization: `Bearer ${token}` } });
             fetchBanners();
@@ -402,7 +413,7 @@ const BannerList = () => {
         }
     };
 
-    const handleFilterChange = (key, value) => {
+    const handleFilterChange = (key: string, value: string) => {
         setFilters(prev => ({
             ...prev,
             [key]: value
@@ -774,284 +785,6 @@ const BannerList = () => {
                     <h5 className="modal-title f-w-600">
                         <Plus className="me-2" size={20} />
                         Add New Banner
-                    </h5>
-                </ModalHeader>
-                <ModalBody>
-                    <Form onSubmit={handleSubmit} className="form-label-center">
-                        {/* Banner Title */}
-                        <FormGroup className="mb-3">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Banner Title <span className="text-danger">*</span>:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <Input
-                                        value={bannerForm.title}
-                                        onChange={(e) => setBannerForm(prev => ({ ...prev, title: e.target.value }))}
-                                        name="title"
-                                        type="text"
-                                        placeholder="Enter banner title"
-                                        required
-                                    />
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        {/* Banner Type */}
-                        <FormGroup className="mb-3">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Banner Type <span className="text-danger">*</span>:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <Input
-                                        type="select"
-                                        value={bannerForm.bannerType}
-                                        onChange={(e) => {
-                                            setBannerForm(prev => ({
-                                                ...prev,
-                                                bannerType: e.target.value,
-                                                category: "",
-                                                subCategory: ""
-                                            }));
-                                            setSubCategoryData([]); // Clear subcategory data when banner type changes
-                                        }}
-                                    >
-                                        <option value="home">Home Page</option>
-                                        <option value="category">Category Page</option>
-                                        <option value="subcategory">SubCategory Page</option>
-                                    </Input>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        {/* Category Selection (for category and subcategory banners) */}
-                        {(bannerForm.bannerType === "category" || bannerForm.bannerType === "subcategory") && (
-                            <FormGroup className="mb-3">
-                                <Row>
-                                    <Col xl="3" sm="4">
-                                        <Label className="fw-bold mb-0">Category <span className="text-danger">*</span>:</Label>
-                                    </Col>
-                                    <Col xl="8" sm="7">
-                                        <Input
-                                            onClick={fetchCategories}
-                                            type="select"
-                                            value={bannerForm.category}
-                                            onChange={(e) => {
-                                                setBannerForm(prev => ({
-                                                    ...prev,
-                                                    category: e.target.value,
-                                                    subCategory: ""
-                                                }));
-                                                if (e.target.value) {
-                                                    fetchSubCategoriesByCategory(e.target.value);
-                                                }
-                                            }}
-                                            required
-                                        >
-                                            <option value="">Select a category</option>
-                                            {categoryData.map((data, index) => (
-                                                <option key={index} value={data.value}>
-                                                    {data.category}
-                                                </option>
-                                            ))}
-                                        </Input>
-                                    </Col>
-                                </Row>
-                            </FormGroup>
-                        )}
-
-                        {/* SubCategory Selection (for subcategory banners) */}
-                        {bannerForm.bannerType === "subcategory" && (
-                            <FormGroup className="mb-3">
-                                <Row>
-                                    <Col xl="3" sm="4">
-                                        <Label className="fw-bold mb-0">SubCategory <span className="text-danger">*</span>:</Label>
-                                    </Col>
-                                    <Col xl="8" sm="7">
-                                        <Input
-                                            type="select"
-                                            value={bannerForm.subCategory}
-                                            onChange={(e) => setBannerForm(prev => ({ ...prev, subCategory: e.target.value }))}
-                                            required
-                                        >
-                                            <option value="">Select a subcategory</option>
-                                            {subCategoryData.map((data, index) => (
-                                                <option key={index} value={data.value}>
-                                                    {data.subCategory}
-                                                </option>
-                                            ))}
-                                        </Input>
-                                        {bannerForm.category && subCategoryData.length === 0 && (
-                                            <small className="text-muted">No subcategories found for selected category</small>
-                                        )}
-                                    </Col>
-                                </Row>
-                            </FormGroup>
-                        )}
-
-                        {/* Priority */}
-                        <FormGroup className="mb-3">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Priority:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        value={bannerForm.priority}
-                                        onChange={(e) => setBannerForm(prev => ({ ...prev, priority: parseInt(e.target.value) || 1 }))}
-                                        placeholder="Enter priority (1-100)"
-                                    />
-                                    <small className="text-muted">Lower numbers display first</small>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        {/* Link URL */}
-                        <FormGroup className="mb-3">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Link URL:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <Input
-                                        type="url"
-                                        value={bannerForm.link}
-                                        onChange={(e) => setBannerForm(prev => ({ ...prev, link: e.target.value }))}
-                                        placeholder="https://example.com (optional)"
-                                    />
-                                    <small className="text-muted">Optional: URL to redirect when banner is clicked</small>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        {/* Status */}
-                        <FormGroup className="mb-3">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Status:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <div className="d-flex align-items-center">
-                                        <FormGroup check className="me-3">
-                                            <Input
-                                                type="radio"
-                                                name="status"
-                                                checked={bannerForm.isActive === true}
-                                                onChange={() => setBannerForm(prev => ({ ...prev, isActive: true }))}
-                                            />
-                                            <Label check className="text-success">Active</Label>
-                                        </FormGroup>
-                                        <FormGroup check>
-                                            <Input
-                                                type="radio"
-                                                name="status"
-                                                checked={bannerForm.isActive === false}
-                                                onChange={() => setBannerForm(prev => ({ ...prev, isActive: false }))}
-                                            />
-                                            <Label check className="text-danger">Inactive</Label>
-                                        </FormGroup>
-                                    </div>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        {/* Image Upload */}
-                        <FormGroup className="mb-4">
-                            <Row>
-                                <Col xl="3" sm="4">
-                                    <Label className="fw-bold mb-0">Banner Image <span className="text-danger">*</span>:</Label>
-                                </Col>
-                                <Col xl="8" sm="7">
-                                    <div className="upload-section">
-                                        <div className="box-input-file mb-3">
-                                            <Input
-                                                accept="image/*"
-                                                className="upload"
-                                                type="file"
-                                                onChange={handleImgChange}
-                                                disabled={isLoading}
-                                                id="banner-image-upload"
-                                            />
-                                            <Label for="banner-image-upload" className="upload-label">
-                                                {isLoading ? (
-                                                    <>
-                                                        <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                                                        Uploading...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Plus size={16} className="me-2" />
-                                                        Upload Banner Image
-                                                    </>
-                                                )}
-                                            </Label>
-                                        </div>
-
-                                        {image && (
-                                            <div className="image-preview mt-3">
-                                                <div className="position-relative d-inline-block">
-                                                    <img
-                                                        alt="Banner Preview"
-                                                        src={image}
-                                                        className="img-fluid rounded shadow-sm"
-                                                        style={{ width: 250, height: 150, objectFit: "cover" }}
-                                                    />
-                                                    <Button
-                                                        color="danger"
-                                                        size="sm"
-                                                        className="position-absolute"
-                                                        style={{ top: "5px", right: "5px", padding: "4px 8px" }}
-                                                        onClick={() => {
-                                                            setImage("");
-                                                            setBannerForm(prev => ({ ...prev, image: "" }));
-                                                        }}
-                                                    >
-                                                        <XCircle size={14} />
-                                                    </Button>
-                                                </div>
-                                                <small className="text-muted d-block mt-2">Image uploaded successfully</small>
-                                            </div>
-                                        )}
-
-                                        <small className="text-muted">
-                                            Recommended: 1200x400px or higher. Supports JPG, PNG, WebP formats.
-                                        </small>
-                                    </div>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-                    </Form>
-                </ModalBody>
-                <ModalFooter className="d-flex justify-content-end">
-                    <Button color="secondary" onClick={onCloseAddModal} disabled={isLoading}>
-                        Cancel
-                    </Button>
-                    <Button color="primary" onClick={handleSubmit} disabled={isLoading}>
-                        {isLoading ? (
-                            <>
-                                <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <Plus size={16} className="me-1" />
-                                Create Banner
-                            </>
-                        )}
-                    </Button>
-                </ModalFooter>
-            </Modal>
-
-            {/* Edit Banner Modal */}
-            <Modal isOpen={open} toggle={onCloseModal} size="lg" className="model-model" centered>
-                <ModalHeader toggle={onCloseModal}>
-                    <h5 className="modal-title f-w-600">
-                        <Edit className="me-2" size={20} />
-                        Edit Banner
                     </h5>
                 </ModalHeader>
                 <ModalBody>
