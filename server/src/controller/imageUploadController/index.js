@@ -1,75 +1,73 @@
-const fs = require("fs");
-const path = require("path");
-const sharp = require('sharp'); 
-require("dotenv").config()
-const host = process.env.HOST_URL;
+const cloudinary = require("cloudinary").v2;
+const streamifier = require("streamifier");
 
+// 🔹 Cloudinary Config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const singleImage = async function (req, res) {
+// ✅ Upload Single Image
+const singleImage = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    const imageData = req.file.buffer; 
-    const filename = `profile_pic_${Date.now()}.jpg`; 
-    const uploadDirectory = path.join(__dirname, '../../../uploadImages/images');
-    
-    
-    if (!fs.existsSync(uploadDirectory)) {
-      fs.mkdirSync(uploadDirectory);
-    }
+    const result = await new Promise((resolve, reject) => {
+      const cldStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "profile_pics",
+          transformation: [{ height: 1000, crop: "scale" }],
+        },
+        (error, result) => (error ? reject(error) : resolve(result))
+      );
+      streamifier.createReadStream(req.file.buffer).pipe(cldStream);
+    });
 
-    const imagePath = path.join(uploadDirectory, filename); 
-
-  
-    await sharp(imageData)
-      .resize({height:1000})
-      .jpeg({ quality: 80 })
-      .toFile(imagePath); 
-
-   
-    const imageUrl = `${host}/images/${filename}`;
-
-   
-    res.status(200).json({ imageUrl });
-  } catch (error) {
-
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const deleteImage = async function (req, res) {
-  try {
-    const filename = req.params.filename; 
-    if (!filename) {
-      return res.status(400).json({ error: "Filename is required" });
-    }
-
-    const uploadDirectory = path.join(__dirname, "../../../uploadImages/images");
-    const imagePath = path.join(uploadDirectory, filename);
-
-    if (!fs.existsSync(imagePath)) {
-      return res.status(404).json({ error: "File not found" });
-    }
-
-    fs.unlinkSync(imagePath);
-
-    res.status(200).json({ message: "Image deleted successfully" });
-  } catch (error) {
-  
+    res.status(200).json({ imageUrl: result.secure_url, publicId: result.public_id });
+  } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-   const uploadBulkImage =    async (req, res) => {
-    
- 
+// ✅ Upload Multiple Images
+const uploadBulkImage = async (req, res) => {
+  try {
+    if (!req.files?.length) return res.status(400).json({ error: "No files uploaded" });
+
+    const uploadPromises = req.files.map(
+      (file) =>
+        new Promise((resolve, reject) => {
+          const cldStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "bulk_uploads",
+              transformation: [{ height: 1000, crop: "scale" }],
+            },
+            (error, result) => (error ? reject(error) : resolve(result.secure_url))
+          );
+          streamifier.createReadStream(file.buffer).pipe(cldStream);
+        })
+    );
+
+    const imageUrls = await Promise.all(uploadPromises);
+    res.status(200).json({ imageUrls });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
+// ✅ Delete Image
+const deleteImage = async (req, res) => {
+  try {
+    let { publicId } = req.params;
 
+    if (!publicId) return res.status(400).json({ error: "Public ID is required" });
 
+    const result = await cloudinary.uploader.destroy(publicId);
+    res.status(200).json({ message: "Image deleted", result });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-
-
-  module.exports = { singleImage ,deleteImage ,uploadBulkImage };
+module.exports = { singleImage, uploadBulkImage, deleteImage };

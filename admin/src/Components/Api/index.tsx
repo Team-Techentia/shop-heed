@@ -1,14 +1,13 @@
-import axios from "axios"
-// const BACKEND_URL = "http://192.168.1.5:3110/api/";
-// const BACKEND_URL = "http://localhost:3110/api/";
-// const BACKEND_URL = "https://heed-server-side.onrender.com/";    
-// const BACKEND_URL = "https://shopheed.com/api/";
+import axios from "axios";
+
 const postsApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
 });
 
 const Api = {
   uploadSingleImage: (data: any) => postsApi.post("/api/upload-single-image", data),
+
+  // Product APIs
   createProduct: (data: any, token: any) => postsApi.post("/product-api/create-product", data, token),
   getAllProductAdmin: () => postsApi.get(`/product-api/get-all-product-admin`),
   get_Product_By_Id: (id: any) => postsApi.get(`/product-api/get-product/${id}`),
@@ -17,6 +16,8 @@ const Api = {
   updateMainProduct: (id: any, data: any, token: any) => postsApi.put(`/product-api/update-product/${id}`, data, token),
   deleteSubProduct: (id: any, data: any, token: any) => postsApi.put(`/product-api/update-sub-product/${id}`, data, token),
   updateSubProduct: (id: any, data: any, token: any) => postsApi.put(`/product-api/update-sub-product/${id}`, data, token),
+
+  // Category APIs
   createcategory: (data: any, token: any) => postsApi.post("/api/category/create-category", data, token),
   createsubCategory: (data: any, token: any) => postsApi.post("/api/category/create-subcategory", data, token),
   getCategory: () => postsApi.get("/api/category/get-category"),
@@ -25,6 +26,11 @@ const Api = {
   getSubCategoryByCategoryName: (category: any) => postsApi.get(`/api/category/get-subcategory-by-name/${category}`),
   deteletCategory: (id: any, token: any) => postsApi.delete(`/api/category/delete-category/${id}`, token),
   deteletSubCategory: (id: any, token: any) => postsApi.delete(`/api/category/delete-subcategory/${id}`, token),
+  getCategoryById: (id: any, token: any) => postsApi.get(`/api/category/get-category/${id}`, token),
+  editSubcategory: (id: any, data: any, token: any) => postsApi.put(`/api/category/edit-sub-category/${id}`, data, token),
+  editCategory: (id: any, data: any, token: any) => postsApi.put(`/api/category/edit-category/${id}`, data, token),
+
+  // Orders & Payments
   getOrdersByAdmin: (token: any, status: any, orderStatus: any) => postsApi.get(`/admin-api/get-order?status=${status}&orderStatus=${orderStatus}`, token),
   getOrderByIdAdmin: (id: any, token: any) => postsApi.get(`/admin-api/get-order/${id}`, token),
   getAllPayment: (token: any, status: any, startDate: any, endDate: any) => {
@@ -33,33 +39,25 @@ const Api = {
       startDate: startDate || "",
       endDate: endDate || ""
     }).toString();
-
     return postsApi.get(`/admin-api/get-all-payment?${params}`, token);
   },
-
   updateOrder: (id: any, data: any, token: any) => postsApi.put(`/admin-api/update-order/${id}`, data, token),
   updateOrderStatus: (data: any, token: any) => postsApi.post("/api/orders/update-order-status", data, token),
-  getCategoryById: (id: any, token: any) => postsApi.get(`/api/category/get-category/${id}`, token),
-  deleteReview: (productId: any, commentId: any, token: any) => postsApi.get(`/product-api/delete/products/comments/${productId}/${commentId}`, token),
-  getCommentByProductId: (id: any, token: any) => postsApi.get(`/product-api/get/product/comments/${id}`, token),
-  editSubcategory: (id: any, data: any, token: any) => postsApi.put(`/api/category/edit-sub-category/${id}`, data, token),
-  editCategory: (id: any, data: any, token: any) => postsApi.put(`/api/category/edit-category/${id}`, data, token),
-  deleteUser: (id: any, token: any) => postsApi.put(`/auth-api/delete/user/${id}`, {}, token),
   deleteOrder: (id: any, token: any) => postsApi.put(`/api/orders/delete/order/${id}`, {}, token),
   get_All_Orders: (token: any, status: any, orderStatus: any) => postsApi.get(`/admin-api/get-all/orders?status=${status} `, token),
-
   generateInvoicing: (token: any, orderId: any) => postsApi.get(`/api/orders/generate-invoicing/${orderId} `, token),
 
+  // Reviews
+  deleteReview: (productId: any, commentId: any, token: any) => postsApi.get(`/product-api/delete/products/comments/${productId}/${commentId}`, token),
+  getCommentByProductId: (id: any, token: any) => postsApi.get(`/product-api/get/product/comments/${id}`, token),
 
-
-  //admin
-
+  // Admin APIs
   adminPannel: (token: any) => postsApi.get("/admin-api/admin-panel", token),
   getAllUser: (token: any) => postsApi.get("/admin-api/all-user", token),
   loginUser: (data: any) => postsApi.post("/auth-api/login", data),
+  deleteUser: (id: any, token: any) => postsApi.put(`/auth-api/delete/user/${id}`, {}, token),
 
-
-  //blog
+  // Blog APIs
   createBlogs: (data: any, token: any) => postsApi.post("/api/blog/create-blog", data, token),
   get_All_Blog: () => postsApi.get("/api/blog/get-all-blog"),
   Delete_Blog: (id: any, token: any) => postsApi.get(`/api/blog/delete-blog/${id}`, token),
@@ -80,28 +78,25 @@ const Api = {
   getActivePromocodes: () => postsApi.get("/promocode/active-promocodes"),
 
   // Banner APIs
-  createBanner: (data: any, token: any) => postsApi.post("/banner/create-banner", data, token),
-  getAllBanners: (params?: any) => {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : '';
-    return postsApi.get(`/banner/get-all-banners${queryString}`);
-  },
-  getBannerById: (id: any) => postsApi.get(`/banner/get-banner/${id}`),
-  updateBanner: (id: any, data: any, token: any) => postsApi.put(`/banner/update-banner/${id}`, data, token),
-  deleteBanner: (id: any, token: any) => postsApi.delete(`/banner/delete-banner/${id}`, token),
-  updateBannerStatus: (id: any, data: any, token: any) => postsApi.put(`/banner/update-banner-status/${id}`, data, token),
-  getBannersByType: (bannerType: any, params?: any) => {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : '';
-    return postsApi.get(`/banner/public/banners/${bannerType}${queryString}`);
-  },
-  getActiveBanners: () => postsApi.get("/banner/public/active-banners"),
-};
+  createBanner: (data: any, token: any) => postsApi.post("banner/create-banner", { ...data, bannerType: "home" }, token),
+  getAllBanners: (token: any) => postsApi.get("banner/get-all-banners", token),
+  getBannerById: (id: any, token: any) => postsApi.get(`banner/get-banner/${id}`, token),
+  updateBanner: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, { ...data, bannerType: "home" }, token),
+  deleteBanner: (id: any, token: any) => postsApi.delete(`banner/delete-banner/${id}`, { headers: { Authorization: token } }),
+  updateBannerStatus: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, data, token), // Reuse update for status
 
-export default Api
+  // ✅ Announcement APIs
+  getAnnouncement: () => 
+  postsApi.get("/announcement/get-latest"),
+
+// Admin routes
+updateAnnouncement: (data: any, token: any) =>
+  postsApi.post("/announcement/create-or-update", data, token),
+
+toggleAnnouncement: (token: any) =>
+  postsApi.patch("/announcement/toggle", {}, token),
+
+}
 
 
-//   signup: (data) => postsApi.post("/signup", data) ,
-//   checkUser: (data) => postsApi.post("/check-email-mobile", data) ,
-//   login: (data) => postsApi.post('/login',data),
-//   googleLogin:(postData)=>postsApi.post('/auth/google' ,postData),
-//   sendOtp:(postData)=>postsApi.post("/send-otp" , postData)   ,
-//   verifyOtp:(postData)=>postsApi.post('/verify-otp' , postData) ,
+export default Api;

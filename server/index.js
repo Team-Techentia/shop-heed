@@ -13,12 +13,15 @@ const returnAndExchangeRoute = require("./src/Route/returnAndExchangeRoute");
 const promocodeRoutes = require('./src/Route/promocodeRoute'); 
 const bannerRoutes = require('./src/Route/bannerRoute'); 
 const { scheduleCron } = require("./src/scheduler/token")
+const announcementRoute = require('./src/Route/announcement');
+const imageRoutes = require("./src/Route/routes");
 
 const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 app.use(express.json());
 app.use(express.static("uploadImages"))
+
 app.use(express.static("invoices"))
 
 
@@ -43,8 +46,8 @@ app.use("/api/banner", bannerRoutes);
 app.use("/api/api/blog", blogRoute)
 app.use("/api/returnAndExchangeRoutes", returnAndExchangeRoute)
 app.use("/api/promocode", promocodeRoutes);
-
-
+app.use("/api/announcement", announcementRoute);
+app.use("/api", imageRoutes);
 
 //scheduler
 scheduleCron()

@@ -5,8 +5,6 @@ const {
     getBannerById,
     updateBanner,
     deleteBanner,
-    updateBannerStatus,
-    getBannersByType,
     getActiveBanners
 } = require('../controller/bannerController/banner.controller');
 
@@ -20,10 +18,8 @@ bannerRouter.get("/get-all-banners", authenticateToken, adminAuthorisation, getA
 bannerRouter.get("/get-banner/:id", authenticateToken, adminAuthorisation, getBannerById);
 bannerRouter.put("/update-banner/:id", authenticateToken, adminAuthorisation, updateBanner);
 bannerRouter.delete("/delete-banner/:id", authenticateToken, adminAuthorisation, deleteBanner);
-bannerRouter.put("/update-banner-status/:id", authenticateToken, adminAuthorisation, updateBannerStatus);
 
-// Public routes (for frontend display)
+// Public route for home page carousel
 bannerRouter.get("/public/active-banners", getActiveBanners);
-bannerRouter.get("/public/banners/:bannerType", getBannersByType);
 
 module.exports = bannerRouter;

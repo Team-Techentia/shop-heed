@@ -127,7 +127,14 @@ export const MENUITEMS: any = [
     icon: Image,
     type: "link",
     active: false,
-    path:"/coupons/list-coupons",
+    path:"/banner",
+  },
+   {
+    title: "Announcement",
+    icon: Image,
+    type: "link",
+    active: false,
+    path:"/header-line",
   },
   // {
   //   title: "Pages",
