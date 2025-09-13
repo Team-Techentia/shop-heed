@@ -24,10 +24,10 @@ const createBanner = async (req, res) => {
         const newBanner = new bannerModel(data);
         const savedBanner = await newBanner.save();
 
-        return res.status(201).json({ 
-            success: true, 
-            message: "Home banner created successfully", 
-            data: savedBanner 
+        return res.status(201).json({
+            success: true,
+            message: "Home banner created successfully",
+            data: savedBanner
         });
 
     } catch (error) {
@@ -70,14 +70,19 @@ const updateBanner = async (req, res) => {
     try {
         const data = req.body;
         const bannerId = req.params.id;
+        console.log(bannerId)
 
-        data.bannerType = "home";
-
-        const updatedBanner = await bannerModel.findOneAndUpdate(
-            { _id: bannerId, bannerType: "home" },
+        if (data.targetSubCategory === "" || data.targetSubCategory === null||data.targetCategory === "" || data.targetCategory === null) {
+            delete data.targetSubCategory;
+            delete data.targetCategory;
+        }
+        const updatedBanner = await bannerModel.findByIdAndUpdate(
+            bannerId,
             { $set: data },
             { new: true }
         );
+
+        console.log(updatedBanner)
 
         if (!updatedBanner) {
             return res.status(404).json({ success: false, message: "Home banner not found or update failed" });
@@ -86,7 +91,7 @@ const updateBanner = async (req, res) => {
         return res.status(200).json({ success: true, message: "Home banner updated successfully", data: updatedBanner });
     } catch (error) {
         console.error("Error updating banner:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+        return res.status(400).json({ success: false, message: "Internal server error", error });
     }
 };
 
@@ -119,11 +124,11 @@ const getActiveBanners = async (req, res) => {
     }
 };
 
-module.exports = { 
-    createBanner, 
-    getAllBanners, 
-    getBannerById, 
-    updateBanner, 
-    deleteBanner, 
-    getActiveBanners 
+module.exports = {
+    createBanner,
+    getAllBanners,
+    getBannerById,
+    updateBanner,
+    deleteBanner,
+    getActiveBanners
 };

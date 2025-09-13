@@ -28,6 +28,10 @@ const HomeBannerList = () => {
   const [subCategories, setSubCategories] = useState<any[]>([]);
   const [categoryNames, setCategoryNames] = useState<{[key: string]: string}>({});
   const [subCategoryNames, setSubCategoryNames] = useState<{[key: string]: string}>({});
+  // FIXED: Category-based subcategory mapping using proper category identifiers
+  const [categorySubcategories, setCategorySubcategories] = useState<{[categoryId: string]: any[]}>({});
+  // NEW: Add reverse mapping for category values to IDs
+  const [categoryValueToId, setCategoryValueToId] = useState<{[value: string]: string}>({});
   const [openAdd, setOpenAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -36,10 +40,10 @@ const HomeBannerList = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  // Complete form state with click actions
+  // Complete form state with click actions - FIXED: Don't set default priority
   const [bannerForm, setBannerForm] = useState({
     title: "",
-    priority: 1,
+    priority: "", // Changed from 1 to empty string
     image: "",
     clickAction: "none", // none, category, subcategory
     targetCategory: "",
@@ -63,15 +67,32 @@ const HomeBannerList = () => {
       const res = await Api.getCategory();
       const categoriesData = res.data.data || [];
       
+      console.log("📁 Categories fetched:", categoriesData);
       setCategories(categoriesData);
      
-      
-      // Create a mapping of category IDs to names for quick lookup
+      // FIXED: Create proper mapping of category IDs and values to names
       const nameMap: {[key: string]: string} = {};
+      const valueToIdMap: {[value: string]: string} = {};
+      
       categoriesData.forEach((cat: any) => {
-        nameMap[cat._id] = cat.name;
+        // Map both _id and category field to the display value
+        const categoryId = cat._id;
+        const categoryValue = cat.category || cat.value;
+        const displayName = cat.value || cat.name || cat.categoryName || cat.title || categoryValue;
+        
+        nameMap[categoryId] = displayName;
+        if (categoryValue) {
+          nameMap[categoryValue] = displayName;
+          valueToIdMap[categoryValue] = categoryId;
+        }
+        
+        console.log(`🏷️ Category mapping - ID: ${categoryId}, Value: ${categoryValue}, Display: ${displayName}`);
       });
+      
       setCategoryNames(nameMap);
+      setCategoryValueToId(valueToIdMap);
+      console.log("🗃️ Category names mapping:", nameMap);
+      console.log("🔄 Category value to ID mapping:", valueToIdMap);
     } catch (error) {
       console.log("Error fetching categories:", error);
     }
@@ -81,14 +102,52 @@ const HomeBannerList = () => {
     try {
       const res = await Api.getsubCategory();
       const subCategoriesData = res.data.data || [];
+      
+      console.log("📁 Subcategories fetched:", subCategoriesData);
+      console.log("📊 Subcategories count:", subCategoriesData.length);
+      
+      if (subCategoriesData.length > 0) {
+        console.log("🔍 First subcategory structure:", subCategoriesData[0]);
+        console.log("🔍 Available properties:", Object.keys(subCategoriesData[0]));
+      }
+      
       setSubCategories(subCategoriesData);
       
-      // Create a mapping of subcategory IDs to names for quick lookup
+      // FIXED: Create proper mapping using the correct properties and handle category mapping
       const nameMap: {[key: string]: string} = {};
+      const categoryMapping: {[categoryId: string]: any[]} = {};
+      
       subCategoriesData.forEach((subCat: any) => {
-        nameMap[subCat._id] = subCat.name;
+        // Use the correct properties: value or subCategory
+        const subCategoryName = subCat.value || subCat.subCategory || subCat.name || `Subcategory ${subCat._id}`;
+        nameMap[subCat._id] = subCategoryName;
+        
+        // FIXED: Group subcategories by BOTH category ID and category value for proper mapping
+        const categoryValue = subCat.category; // This is the category value like "shirt", "bottom"
+        
+        if (categoryValue) {
+          // Map by category value (like "shirt", "bottom")
+          if (!categoryMapping[categoryValue]) {
+            categoryMapping[categoryValue] = [];
+          }
+          categoryMapping[categoryValue].push(subCat);
+          
+          // Also map by category ID if we have the mapping
+          if (categoryValueToId[categoryValue]) {
+            const categoryId = categoryValueToId[categoryValue];
+            if (!categoryMapping[categoryId]) {
+              categoryMapping[categoryId] = [];
+            }
+            categoryMapping[categoryId].push(subCat);
+          }
+        }
       });
+      
       setSubCategoryNames(nameMap);
+      setCategorySubcategories(categoryMapping);
+      
+      console.log("🗃️ Subcategory names mapping:", nameMap);
+      console.log("🗂️ Category-subcategory mapping:", categoryMapping);
     } catch (error) {
       console.log("Error fetching subcategories:", error);
     }
@@ -124,7 +183,7 @@ const HomeBannerList = () => {
               <span className="badge badge-info">Category</span>
               <br />
               <small className="text-muted">
-                {categoryNames[item.targetCategory] || "Unknown Category"}
+                {getCategoryDisplayName(item.targetCategory)}
               </small>
             </div>
           ) : item.clickAction === "subcategory" ? (
@@ -165,6 +224,28 @@ const HomeBannerList = () => {
     setFilteredData(tableData);
   };
 
+  // FIXED: Helper function to get category display name from any identifier
+  const getCategoryDisplayName = (categoryIdentifier: string) => {
+    if (!categoryIdentifier) return "Unknown Category";
+    
+    // Try to get display name using the identifier directly
+    const directName = categoryNames[categoryIdentifier];
+    if (directName) return directName;
+    
+    // If not found, try to find the category by value or ID
+    const category = categories.find(cat => 
+      cat._id === categoryIdentifier || 
+      cat.category === categoryIdentifier || 
+      cat.value === categoryIdentifier
+    );
+    
+    if (category) {
+      return category.value || category.name || category.categoryName || category.title || categoryIdentifier;
+    }
+    
+    return categoryIdentifier;
+  };
+
   const onCloseAddModal = () => {
     setOpenAdd(false);
     setEditId(null);
@@ -182,10 +263,11 @@ const HomeBannerList = () => {
 
   const onCloseConfirmationModal = () => setConfirmDelete(false);
 
+  // FIXED: Reset form without setting priority to 1
   const resetForm = () => {
     setBannerForm({
       title: "",
-      priority: 1,
+      priority: "", // Changed from 1 to empty string
       image: "",
       clickAction: "none",
       targetCategory: "",
@@ -232,7 +314,7 @@ const HomeBannerList = () => {
 
       setBannerForm({
         title: banner.title || "",
-        priority: banner.priority || 1,
+        priority: banner.priority ? banner.priority.toString() : "", // Convert to string for input
         image: banner.image || "",
         clickAction: banner.clickAction || "none",
         targetCategory: banner.targetCategory || "",
@@ -292,6 +374,10 @@ const HomeBannerList = () => {
       return toast.error("Please enter banner title");
     }
 
+    if (!bannerForm.priority) {
+      return toast.error("Please enter banner priority");
+    }
+
     if (!image) {
       return toast.error("Please upload banner media");
     }
@@ -308,6 +394,7 @@ const HomeBannerList = () => {
     try {
       const payload = {
         ...bannerForm,
+        priority: parseInt(bannerForm.priority) || 1, // Convert string back to number
         image: image,
         bannerType: "home", // Always home
         // Clean up payload based on click action
@@ -322,6 +409,7 @@ const HomeBannerList = () => {
 
       if (editId) {
         await Api.updateBanner(editId, payload, token);
+        console.log(token)
         toast.success("Home banner updated successfully");
       } else {
         console.log()
@@ -337,33 +425,94 @@ const HomeBannerList = () => {
     }
   };
 
+  // FIXED: Get filtered subcategories for selected category with proper mapping
+  const getSubcategoriesForCategory = (categoryIdentifier: string) => {
+    if (!categoryIdentifier) return [];
+    
+    console.log("🔍 Getting subcategories for category:", categoryIdentifier,categorySubcategories,categories.find(c=>c._id === categoryIdentifier).value);
+    
+    // Try direct lookup first
+    let subcategories = categorySubcategories[categories.find(c=>c._id === categoryIdentifier).value] || [];
+    
+    // If not found by ID, try to find by value
+    if (subcategories.length === 0) {
+      const category = categories.find(cat => cat._id === categoryIdentifier);
+      if (category && category.category) {
+        subcategories = categorySubcategories[category.category] || [];
+        console.log("🔍 Found subcategories by category value:", category.category, subcategories.length);
+      }
+    }
+    
+    // If still not found, try reverse lookup
+    if (subcategories.length === 0) {
+      const categoryValue = Object.keys(categoryValueToId).find(value => 
+        categoryValueToId[value] === categoryIdentifier
+      );
+      if (categoryValue) {
+        subcategories = categorySubcategories[categoryValue] || [];
+        console.log("🔍 Found subcategories by reverse lookup:", categoryValue, subcategories.length);
+      }
+    }
+    
+    console.log("🎯 Final subcategories found:", subcategories.length);
+    return subcategories;
+  };
+
   // Get preview for different file types
   const getFilePreview = (url: string) => {
-  if (!url) return null;
+    if (!url) return null;
 
-  if (url.includes('.mp4') || url.includes('.webm')) {
+    if (url.includes('.mp4') || url.includes('.webm')) {
+      return (
+        <video
+          src={url}
+          className="img-fluid rounded shadow-sm"
+          style={{ width: 400, height: 150, objectFit: "cover" }}
+          controls
+        />
+      );
+    }
+
     return (
-      <video
+      <img
+        alt="Banner Preview"
         src={url}
         className="img-fluid rounded shadow-sm"
         style={{ width: 400, height: 150, objectFit: "cover" }}
-        controls
       />
     );
-  }
-
-  return (
-    <img
-      alt="Banner Preview"
-      src={url}
-      className="img-fluid rounded shadow-sm"
-      style={{ width: 400, height: 150, objectFit: "cover" }}
-    />
-  );
-};
+  };
 
   return (
     <>
+      <style>
+        {`
+          .form-select-dark-text,
+          .form-select-dark-text option {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+          }
+          
+          .form-select-dark-text:focus {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+          }
+          
+          select.form-select-dark-text {
+            color: #000000 !important;
+          }
+          
+          .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 12px;
+            margin-top: 4px;
+          }
+        `}
+      </style>
       <Fragment>
         <CommonBreadcrumb title="Home Banner Management" parent="Marketing" />
         <Container fluid>
@@ -487,8 +636,8 @@ const HomeBannerList = () => {
                     <Input
                       type="number"
                       value={bannerForm.priority}
-                      onChange={(e) => setBannerForm((prev) => ({ ...prev, priority: parseInt(e.target.value) || 1 }))}
-                      placeholder="1"
+                      onChange={(e) => setBannerForm((prev) => ({ ...prev, priority: e.target.value }))}
+                      placeholder="Enter priority number"
                       min="1"
                       max="10"
                       required
@@ -510,6 +659,7 @@ const HomeBannerList = () => {
                     targetCategory: "",
                     targetSubCategory: ""
                   }))}
+                  className="form-select-dark-text"
                 >
                   <option value="none">No Action (Static Banner)</option>
                   <option value="category">Navigate to Category Page</option>
@@ -518,7 +668,7 @@ const HomeBannerList = () => {
                 <small className="text-muted">Choose where users go when clicking this banner</small>
               </FormGroup>
 
-              {/* Category Selection */}
+              {/* Category Selection for "category" click action */}
               {bannerForm.clickAction === "category" && (
                 <FormGroup className="mb-3">
                   <Label className="fw-bold">Select Target Category:</Label>
@@ -527,16 +677,27 @@ const HomeBannerList = () => {
                     value={bannerForm.targetCategory}
                     onChange={(e) => setBannerForm((prev) => ({ ...prev, targetCategory: e.target.value }))}
                     required
+                    className="form-select-dark-text"
                   >
                     <option value="">Select category...</option>
-                    {categories.map(cat => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
-                    ))}
+                    {categories.map(cat => {
+                      const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
+                      return (
+                        <option key={cat._id} value={cat._id}>
+                          {displayName}
+                        </option>
+                      );
+                    })}
                   </Input>
+                  {bannerForm.targetCategory && (
+                    <div className="debug-info">
+                      <strong>Selected Category:</strong> {getCategoryDisplayName(bannerForm.targetCategory)} (ID: {bannerForm.targetCategory})
+                    </div>
+                  )}
                 </FormGroup>
               )}
 
-              {/* Subcategory Selection */}
+              {/* Category and Subcategory Selection for "subcategory" click action */}
               {bannerForm.clickAction === "subcategory" && (
                 <>
                   <FormGroup className="mb-3">
@@ -544,20 +705,29 @@ const HomeBannerList = () => {
                     <Input
                       type="select"
                       value={bannerForm.targetCategory}
-                      onChange={(e) => setBannerForm((prev) => ({ 
-                        ...prev, 
-                        targetCategory: e.target.value, 
-                        targetSubCategory: "" 
-                      }))}
+                      onChange={(e) => {
+                        const selectedCategoryId = e.target.value;
+                        console.log("🎯 Selected category ID:", selectedCategoryId);
+                        console.log("🎯 Available subcategories for this category:", getSubcategoriesForCategory(selectedCategoryId));
+                        setBannerForm((prev) => ({ 
+                          ...prev, 
+                          targetCategory: selectedCategoryId, 
+                          targetSubCategory: "" 
+                        }));
+                      }}
                       required
+                      className="form-select-dark-text"
                     >
                       <option value="">Select category...</option>
                       {categories && categories.length > 0 ? (
-                        categories.map(cat => (
-                          <option key={cat._id} value={cat._id}>
-                            {cat.name}
-                          </option>
-                        ))
+                        categories.map(cat => {
+                          const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
+                          return (
+                            <option key={cat._id} value={cat._id}>
+                              {displayName}
+                            </option>
+                          );
+                        })
                       ) : (
                         <option disabled>No categories available</option>
                       )}
@@ -566,6 +736,12 @@ const HomeBannerList = () => {
                       <small className="text-warning">
                         No categories found. Please ensure categories are created first.
                       </small>
+                    )}
+                    {bannerForm.targetCategory && (
+                      <div className="debug-info">
+                        <strong>Selected Category:</strong> {getCategoryDisplayName(bannerForm.targetCategory)} (ID: {bannerForm.targetCategory})<br/>
+                        <strong>Available Subcategories:</strong> {getSubcategoriesForCategory(bannerForm.targetCategory).length}
+                      </div>
                     )}
                   </FormGroup>
                   
@@ -577,26 +753,42 @@ const HomeBannerList = () => {
                       onChange={(e) => setBannerForm((prev) => ({ ...prev, targetSubCategory: e.target.value }))}
                       required
                       disabled={!bannerForm.targetCategory}
+                      className="form-select-dark-text"
                     >
                       <option value="">Select subcategory...</option>
-                      {bannerForm.targetCategory && subCategories && subCategories.length > 0 ? (
-                        subCategories
-                          .filter(sub => sub.categoryId === bannerForm.targetCategory)
-                          .map(sub => (
-                            <option key={sub._id} value={sub._id}>
-                              {sub.name}
-                            </option>
-                          ))
-                      ) : bannerForm.targetCategory ? (
-                        <option disabled>No subcategories available for selected category</option>
+                      {bannerForm.targetCategory ? (
+                        getSubcategoriesForCategory(bannerForm.targetCategory).length > 0 ? (
+                          getSubcategoriesForCategory(bannerForm.targetCategory).map(sub => {
+                            // Use subCategory field for display (like "Chinos", "Half Sleeve Shirt")
+                            const subName = sub.subCategory || sub.value || sub.name || `Subcategory ${sub._id}`;
+                            console.log("🏷️ Rendering subcategory:", subName, "ID:", sub._id);
+                            return (
+                              <option key={sub._id} value={sub._id}>
+                                {subName}
+                              </option>
+                            );
+                          })
+                        ) : (
+                          <option disabled>No subcategories available for selected category</option>
+                        )
                       ) : (
                         <option disabled>Please select a category first</option>
                       )}
                     </Input>
-                    {bannerForm.targetCategory && subCategories.filter(sub => sub.categoryId === bannerForm.targetCategory).length === 0 && (
+                    {bannerForm.targetCategory && getSubcategoriesForCategory(bannerForm.targetCategory).length === 0 && (
                       <small className="text-warning">
-                        No subcategories found for selected category.
+                        No subcategories found for selected category: {getCategoryDisplayName(bannerForm.targetCategory)}
                       </small>
+                    )}
+                    {bannerForm.targetCategory && getSubcategoriesForCategory(bannerForm.targetCategory).length > 0 && (
+                      <small className="text-success">
+                        {getSubcategoriesForCategory(bannerForm.targetCategory).length} subcategories available for "{getCategoryDisplayName(bannerForm.targetCategory)}"
+                      </small>
+                    )}
+                    {bannerForm.targetSubCategory && (
+                      <div className="debug-info">
+                        <strong>Selected Subcategory:</strong> {subCategoryNames[bannerForm.targetSubCategory]} (ID: {bannerForm.targetSubCategory})
+                      </div>
                     )}
                   </FormGroup>
                 </>
