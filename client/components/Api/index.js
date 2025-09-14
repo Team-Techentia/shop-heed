@@ -21,6 +21,7 @@ const Api = {
     postsApi.delete(`/api/cart-delete/${itemId}`, token),
   deleteCart: (toekn) => postsApi.delete(`/api/delete-cart/`, toekn),
   getAllProduct: () => postsApi.get("/product-api/get-all-product"),
+  getNewProduct: () => postsApi.get("/product-api/get-new-product"),
   filterProduct: (data) =>
     postsApi.get("/product-api/filter-products", { params: data }),
 

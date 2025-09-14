@@ -8,6 +8,7 @@ const { createComments ,getComments,getCommentByProductId,checkReviewInListing ,
 productRoute.post("/create-product" , authenticateToken,adminAuthorisation, product.createProduct)
 
 productRoute.get("/get-all-product", product.get_All_Product);
+productRoute.get("/get-new-product", product.get_NEW_Product);
 productRoute.get("/get-all-product-admin", product.get_All_Product_Admin);
 productRoute.get("/get-all-product-admin-by-id/:id", product.get_All_Product_Admin_by_id);
 

@@ -39,13 +39,13 @@ const createProduct = async function (req, res) {
         .status(400)
         .send({ status: false, message: "no data provided" });
     }
-    const iSProductExist =await productModel.findOne({title:variants[0].title});
-  if(iSProductExist){
-    return res
-    .status(500)
-    .json({ success: false, message: "Product title already exist" });
-}
-  
+    const iSProductExist = await productModel.findOne({ title: variants[0].title });
+    if (iSProductExist) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Product title already exist" });
+    }
+
     const product = new mainProductModel({
       brand,
       category,
@@ -81,7 +81,7 @@ const createProduct = async function (req, res) {
     });
 
     const createdVariantIds = await Promise.all(variantPromises);
-      product.products = createdVariantIds;
+    product.products = createdVariantIds;
     await product.save();
 
     return res.status(201).json({
@@ -99,6 +99,29 @@ const get_All_Product = async function (req, res) {
   try {
     const allProduct = await mainProductModel
       .find({ isDeleted: false })
+      .populate("products")
+      .sort({ createdAt: -1 });
+    if (!allProduct) {
+      return res
+        .status(404)
+        .json({ success: false, message: "product not found" });
+    }
+    const arr = [];
+    await allProduct.map((data, index) => {
+      arr.push(data.products[0]);
+    });
+
+    return res
+      .status(200)
+      .json({ success: true, data: arr, message: "fetched all product data" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "internal server error" });
+  }
+};
+const get_NEW_Product = async function (req, res) {
+  try {
+    const allProduct = await mainProductModel
+      .find({ isDeleted: false, shopType: { $in: ["new"] }, })
       .populate("products")
       .sort({ createdAt: -1 });
     if (!allProduct) {
@@ -299,7 +322,7 @@ const updated_Product = async function (req, res) {
       // if (shopType) {
       //   mainProduct.shopType = Array.from(new Set([...mainProduct.shopType, ...shopType]));
       // }
-      
+
 
       await mainProduct.save();
 
@@ -331,14 +354,14 @@ const updated_Product = async function (req, res) {
     });
 
     await Promise.all(createPromise);
-     let mainProductData = await mainProductModel.findById(
+    let mainProductData = await mainProductModel.findById(
       updateProduct.productId
     );
     if (shopType) {
       mainProductData.shopType = Array.from(new Set([...mainProduct.shopType, ...shopType]));
       await mainProductData.save()
     }
-    
+
 
     if (
       price ||
@@ -396,7 +419,7 @@ const filterProduct = async (req, res) => {
     }
     if (isTrending) {
       where.shopType = { $in: ["trending"] };
-    }else if(shopType){
+    } else if (shopType) {
       where.shopType = { $in: shopType && shopType.split(",").map((item) => item) };
     }
     if (subCategory === "all") {
@@ -450,7 +473,7 @@ const filterProductV2 = async (req, res) => {
         .sort({ createdAt: -1 });
     }
 
-    
+
 
     res.json(products);
   } catch (error) {
@@ -613,6 +636,7 @@ module.exports = {
   get_All_Product_Admin_by_id,
   createProduct,
   get_All_Product,
+  get_NEW_Product,
   get_Product_By_Id,
   updated_Product,
   filterProduct,
