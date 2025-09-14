@@ -1,14 +1,17 @@
 /** @type {import('next').NextConfig} */
-
 const nextConfig = {
   env: {
-    API_URL: "",
+    API_URL: "", // update if you want
   },
 
   reactStrictMode: true,
 
   images: {
-    domains: ['shopheed.com' ], 
+    domains: [
+      "res.cloudinary.com",
+      "localhost",
+      "shopheed.com", // ✅ added here
+    ],
   },
 };
 

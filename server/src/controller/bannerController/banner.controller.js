@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const bannerModel = require("../../Model/bannerModel");
 
 // Create a new home banner
@@ -17,9 +18,10 @@ const createBanner = async (req, res) => {
 
         data.bannerType = "home";
 
-        // Convert targetCategory and targetSubCategory to ObjectId or null
-        data.targetCategory = data.targetCategory ? mongoose.Types.ObjectId(data.targetCategory) : null;
-        data.targetSubCategory = data.targetSubCategory ? mongoose.Types.ObjectId(data.targetSubCategory) : null;
+        // FIXED: Don't convert to ObjectId, keep as string values
+        // Frontend sends category/subcategory values (like "shirt", "chinos") not IDs
+        data.targetCategory = data.targetCategory || null;
+        data.targetSubCategory = data.targetSubCategory || null;
 
         const newBanner = new bannerModel(data);
         const savedBanner = await newBanner.save();
@@ -32,6 +34,40 @@ const createBanner = async (req, res) => {
 
     } catch (error) {
         console.error("Error creating banner:", error);
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+// Also fix updateBanner function if it exists:
+const updateBanner = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+
+        // Ensure image URL is absolute
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3110";
+        if (data.image && !data.image.startsWith("http")) {
+            data.image = `${baseUrl}${data.image.startsWith("/") ? "" : "/"}${data.image}`;
+        }
+
+        // FIXED: Don't convert to ObjectId, keep as string values
+        data.targetCategory = data.targetCategory || null;
+        data.targetSubCategory = data.targetSubCategory || null;
+
+        const updatedBanner = await bannerModel.findByIdAndUpdate(id, data, { new: true });
+
+        if (!updatedBanner) {
+            return res.status(404).json({ success: false, message: "Banner not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Banner updated successfully",
+            data: updatedBanner
+        });
+
+    } catch (error) {
+        console.error("Error updating banner:", error);
         return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
@@ -65,35 +101,7 @@ const getBannerById = async (req, res) => {
     }
 };
 
-// Update home banner
-const updateBanner = async (req, res) => {
-    try {
-        const data = req.body;
-        const bannerId = req.params.id;
-        console.log(bannerId)
 
-        if (data.targetSubCategory === "" || data.targetSubCategory === null||data.targetCategory === "" || data.targetCategory === null) {
-            delete data.targetSubCategory;
-            delete data.targetCategory;
-        }
-        const updatedBanner = await bannerModel.findByIdAndUpdate(
-            bannerId,
-            { $set: data },
-            { new: true }
-        );
-
-        console.log(updatedBanner)
-
-        if (!updatedBanner) {
-            return res.status(404).json({ success: false, message: "Home banner not found or update failed" });
-        }
-
-        return res.status(200).json({ success: true, message: "Home banner updated successfully", data: updatedBanner });
-    } catch (error) {
-        console.error("Error updating banner:", error);
-        return res.status(400).json({ success: false, message: "Internal server error", error });
-    }
-};
 
 // Delete home banner
 const deleteBanner = async (req, res) => {

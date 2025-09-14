@@ -1,26 +1,27 @@
 const express = require('express');
-const { createPromocode, getAllPromocodes, getPromocodeById, updatePromocode, deletePromocode, validatePromocode, applyPromocode } = require('../controller/promcodeController/promocode.controller');
+const { createPromocode, getAllPromocodes, getPromocodeById, updatePromocode, deletePromocode, validatePromocode, applyPromocode } = require('../controller/promcodeController/promocode.controller.js');
 
 const promocodeRouter = express.Router();
-const auth = require("../auth/index");
+const auth = require("../auth/index.js");
+const { Promocode } = require('../Model/promocode.js');
 const { authenticateToken, adminAuthorisation } = auth;
 
 // Admin routes (require admin authorization)
 promocodeRouter.post("/create-promocode", authenticateToken, adminAuthorisation, createPromocode);
-promocodeRouter.get("/get-all-promocodes", authenticateToken, adminAuthorisation, getAllPromocodes);
-promocodeRouter.get("/get-promocode/:id", authenticateToken, adminAuthorisation, getPromocodeById);
+promocodeRouter.get("/get-all-promocodes", getAllPromocodes);
+promocodeRouter.get("/get-promocode/:id", authenticateToken, getPromocodeById);
 promocodeRouter.put("/update-promocode/:id", authenticateToken, adminAuthorisation, updatePromocode);
 promocodeRouter.delete("/delete-promocode/:id", authenticateToken, adminAuthorisation, deletePromocode);
 
 // Public routes (for customers)
-promocodeRouter.post("/validate-promocode", validatePromocode);
+promocodeRouter.post("/validate-promocode", authenticateToken,validatePromocode );
 promocodeRouter.post("/apply-promocode", authenticateToken, applyPromocode);
 
 // Additional utility routes
 promocodeRouter.get("/active-promocodes", async (req, res) => {
     try {
         const now = new Date();
-        const activePromocodes = await require("../../Model/promocodeModel").find({
+        const activePromocodes = await Promocode.find({
             status: true,
             startDate: { $lte: now },
             endDate: { $gte: now },

@@ -72,4 +72,6 @@ promocodeSchema.methods.applyUsage = function (userId) {
     return this.save();
 };
 
-module.exports = mongoose.model('Promocode', promocodeSchema);
+const Promocode = mongoose.model("Promocode", promocodeSchema);
+
+module.exports = { Promocode };

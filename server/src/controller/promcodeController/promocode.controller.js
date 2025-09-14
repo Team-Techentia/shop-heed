@@ -1,4 +1,4 @@
-const promocodeModel = require("../../Model/promocode");
+const { Promocode } = require("../../Model/promocode.js");
 
 const createPromocode = async function (req, res) {
     try {
@@ -41,7 +41,7 @@ const createPromocode = async function (req, res) {
         }
 
         // Check if promocode with same code already exists
-        const existingPromocode = await promocodeModel.findOne({ 
+        const existingPromocode = await Promocode.findOne({ 
             code: data.code.toUpperCase(), 
             isDeleted: false 
         });
@@ -71,7 +71,7 @@ const createPromocode = async function (req, res) {
             }
         });
 
-        const postData = new promocodeModel(data);
+        const postData = new Promocode(data);
         const promocodeData = await postData.save();
         
         if (!promocodeData) {
@@ -108,13 +108,13 @@ const getAllPromocodes = async function (req, res) {
             ];
         }
 
-        const promocodes = await promocodeModel
+        const promocodes = await Promocode
             .find(filter)
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
 
-        const totalPromocodes = await promocodeModel.countDocuments(filter);
+        const totalPromocodes = await Promocode.countDocuments(filter);
         
         return res.status(200).json({ 
             success: true, 
@@ -143,7 +143,7 @@ const getPromocodeById = async function (req, res) {
             return res.status(404).json({ success: false, message: "User id not found" });
         }
 
-        const promocodeDetails = await promocodeModel.findById(promocodeId);
+        const promocodeDetails = await Promocode.findById(promocodeId);
 
         if (!promocodeDetails || promocodeDetails.isDeleted) {
             return res.status(404).json({ success: false, message: "Promocode not found" });
@@ -178,7 +178,7 @@ const updatePromocode = async function (req, res) {
         // If code is being updated, ensure it's uppercase and unique
         if (data.code) {
             data.code = data.code.toUpperCase();
-            const existingPromocode = await promocodeModel.findOne({ 
+            const existingPromocode = await Promocode.findOne({ 
                 code: data.code, 
                 _id: { $ne: id }, 
                 isDeleted: false 
@@ -219,7 +219,7 @@ const updatePromocode = async function (req, res) {
             }
         });
 
-        const updatePromocode = await promocodeModel.findByIdAndUpdate(
+        const updatePromocode = await Promocode.findByIdAndUpdate(
             id, 
             { $set: data }, 
             { new: true }
@@ -254,7 +254,7 @@ const deletePromocode = async function (req, res) {
             return res.status(404).json({ success: false, message: "Promocode ID is missing" });
         }
 
-        const deletePromocode = await promocodeModel.findByIdAndUpdate(
+        const deletePromocode = await Promocode.findByIdAndUpdate(
             id,
             { $set: { isDeleted: true } },
             { new: true }
@@ -273,13 +273,15 @@ const deletePromocode = async function (req, res) {
 
 const validatePromocode = async function (req, res) {
     try {
-        const { code, userId, cartTotal, products, categories } = req.body;
+        const { code, cartTotal, products, categories } = req.body;
+        const userId = req._id; 
+        console.log(code,userId);
 
         if (!code) {
             return res.status(400).json({ success: false, message: "Promocode is required" });
         }
 
-        const promocode = await promocodeModel.findOne({ 
+        const promocode = await Promocode.findOne({ 
             code: code.toUpperCase(), 
             isDeleted: false 
         });
@@ -394,7 +396,8 @@ const validatePromocode = async function (req, res) {
 
 const applyPromocode = async function (req, res) {
     try {
-        const { code, userId } = req.body;
+        const { code } = req.body;
+        const userId = req._id;
 
         if (!code || !userId) {
             return res.status(400).json({ 
@@ -403,7 +406,7 @@ const applyPromocode = async function (req, res) {
             });
         }
 
-        const promocode = await promocodeModel.findOne({ 
+        const promocode = await Promocode.findOne({ 
             code: code.toUpperCase(), 
             isDeleted: false 
         });

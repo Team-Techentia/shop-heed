@@ -6,48 +6,45 @@ const bannerSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    
+        
     image: {
         type: String,
         required: true
     },
-    
+        
     bannerType: {
         type: String,
-        default: "home", // Always home
-        enum: ["home"] // Restrict to home-only
+        default: "home",
+        enum: ["home"]
     },
-    
+        
     isActive: {
         type: Boolean,
         default: true
     },
-    
+        
     priority: {
         type: Number,
         default: 1,
         min: 1,
         max: 10
     },
-    
-    // Click destination options (link to page)
+        
     clickAction: {
         type: String,
         enum: ['none', 'category', 'subcategory'],
         default: 'none'
     },
-    
-    // For category page navigation
+        
+    // CHANGED: String instead of ObjectId to store category values like "shirt"
     targetCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
+        type: String,  // Changed from ObjectId
         default: null
     },
-    
-    // For subcategory page navigation  
+        
+    // CHANGED: String instead of ObjectId to store subcategory values like "half-sleeve-shirt"
     targetSubCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubCategory',
+        type: String,  // Changed from ObjectId  
         default: null
     }
     
@@ -55,7 +52,6 @@ const bannerSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Index for better query performance
 bannerSchema.index({ bannerType: 1, isActive: 1, priority: 1 });
 
 module.exports = mongoose.model('Banner', bannerSchema);

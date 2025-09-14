@@ -65,7 +65,46 @@ const Api = {
   get_All_Blog: () => postsApi.get("/api/blog/get-all-blog"),
   contactUs: (data) => postsApi.post("/api/contact-us", data),
   BulkEnquiry: (data) => postsApi.post("/api/bulk-enquiry", data),
-  estimateTimeDelivery: (delivery_postcode) => postsApi.get(`/api/product-api/service/availability?pickup_postcode=110008&delivery_postcode=${delivery_postcode}`)
+  estimateTimeDelivery: (delivery_postcode) => postsApi.get(`/api/product-api/service/availability?pickup_postcode=110008&delivery_postcode=${delivery_postcode}`),
+
+getAnnouncement: () => postsApi.get("/announcement/get-latest"),  // ✅ Add comma here
+
+updateAnnouncement: (data, token) =>
+  postsApi.post("/announcement/create-or-update", data, {
+    headers: { Authorization: `Bearer ${token}` },
+  }),
+
+toggleAnnouncement: (token) =>
+  postsApi.patch("/announcement/toggle", {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  }),
+
+
+  getActiveBanners: () => postsApi.get("banner/public/active-banners"), 
+  getAllBanners: (token) =>
+    postsApi.get("/banner/get-all-banners", token),
+  createBanner: (data, token) =>
+    postsApi.post("/banner/create-banner", data, token
+     ),
+  updateBanner: (id, data, token) =>
+    postsApi.put(`/banner/update-banner/${id}`, data, token),
+  deleteBanner: (id, token) =>
+    postsApi.delete(`/banner/delete-banner/${id}`,token
+
+    ),
+
+  createPromocode: (data, token) => postsApi.post("/promocode/create-promocode", data, token),
+  getAllPromocodes: (token, params) => {
+    const queryString = params ? new URLSearchParams(params).toString() : '';
+    return postsApi.get(`/promocode/get-all-promocodes`, token);
+  },
+  getPromocodeById: (id, token) => postsApi.get(`/promocode/get-promocode/${id}`, token),
+  updatePromocode: (id, data, token) => postsApi.put(`/promocode/update-promocode/${id}`, data, token),
+  deletePromocode: (id, token) => postsApi.delete(`/promocode/delete-promocode/${id}`, token),
+  validatePromocode: (data, token) => postsApi.post("/promocode/validate-promocode", data, token),
+  applyPromocode: (data, token) => postsApi.post("/promocode/apply-promocode", data, token),
+  getActivePromocodes: () => postsApi.get("/promocode/active-promocodes"),
 };
+
 
 export default Api;

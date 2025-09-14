@@ -669,133 +669,101 @@ const HomeBannerList = () => {
               </FormGroup>
 
               {/* Category Selection for "category" click action */}
-              {bannerForm.clickAction === "category" && (
-                <FormGroup className="mb-3">
-                  <Label className="fw-bold">Select Target Category:</Label>
-                  <Input
-                    type="select"
-                    value={bannerForm.targetCategory}
-                    onChange={(e) => setBannerForm((prev) => ({ ...prev, targetCategory: e.target.value }))}
-                    required
-                    className="form-select-dark-text"
-                  >
-                    <option value="">Select category...</option>
-                    {categories.map(cat => {
-                      const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
-                      return (
-                        <option key={cat._id} value={cat._id}>
-                          {displayName}
-                        </option>
-                      );
-                    })}
-                  </Input>
-                  {bannerForm.targetCategory && (
-                    <div className="debug-info">
-                      <strong>Selected Category:</strong> {getCategoryDisplayName(bannerForm.targetCategory)} (ID: {bannerForm.targetCategory})
-                    </div>
-                  )}
-                </FormGroup>
-              )}
+      
+// Category Selection for "category" click action - SEND VALUE NOT ID
+{bannerForm.clickAction === "category" && (
+  <FormGroup className="mb-3">
+    <Label className="fw-bold">Select Target Category:</Label>
+    <Input
+      type="select"
+      value={bannerForm.targetCategory}
+      onChange={(e) => setBannerForm((prev) => ({ ...prev, targetCategory: e.target.value }))}
+      required
+      className="form-select-dark-text"
+    >
+      <option value="">Select category...</option>
+      {categories.map(cat => {
+        const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
+        const categoryValue = cat.value || cat.category; // SEND VALUE NOT ID
+        return (
+          <option key={cat._id} value={categoryValue}>
+            {displayName}
+          </option>
+        );
+      })}
+    </Input>
+  </FormGroup>
+)}
 
-              {/* Category and Subcategory Selection for "subcategory" click action */}
-              {bannerForm.clickAction === "subcategory" && (
-                <>
-                  <FormGroup className="mb-3">
-                    <Label className="fw-bold">Select Target Category:</Label>
-                    <Input
-                      type="select"
-                      value={bannerForm.targetCategory}
-                      onChange={(e) => {
-                        const selectedCategoryId = e.target.value;
-                        console.log("🎯 Selected category ID:", selectedCategoryId);
-                        console.log("🎯 Available subcategories for this category:", getSubcategoriesForCategory(selectedCategoryId));
-                        setBannerForm((prev) => ({ 
-                          ...prev, 
-                          targetCategory: selectedCategoryId, 
-                          targetSubCategory: "" 
-                        }));
-                      }}
-                      required
-                      className="form-select-dark-text"
-                    >
-                      <option value="">Select category...</option>
-                      {categories && categories.length > 0 ? (
-                        categories.map(cat => {
-                          const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
-                          return (
-                            <option key={cat._id} value={cat._id}>
-                              {displayName}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option disabled>No categories available</option>
-                      )}
-                    </Input>
-                    {categories.length === 0 && (
-                      <small className="text-warning">
-                        No categories found. Please ensure categories are created first.
-                      </small>
-                    )}
-                    {bannerForm.targetCategory && (
-                      <div className="debug-info">
-                        <strong>Selected Category:</strong> {getCategoryDisplayName(bannerForm.targetCategory)} (ID: {bannerForm.targetCategory})<br/>
-                        <strong>Available Subcategories:</strong> {getSubcategoriesForCategory(bannerForm.targetCategory).length}
-                      </div>
-                    )}
-                  </FormGroup>
-                  
-                  <FormGroup className="mb-3">
-                    <Label className="fw-bold">Select Target Subcategory:</Label>
-                    <Input
-                      type="select"
-                      value={bannerForm.targetSubCategory}
-                      onChange={(e) => setBannerForm((prev) => ({ ...prev, targetSubCategory: e.target.value }))}
-                      required
-                      disabled={!bannerForm.targetCategory}
-                      className="form-select-dark-text"
-                    >
-                      <option value="">Select subcategory...</option>
-                      {bannerForm.targetCategory ? (
-                        getSubcategoriesForCategory(bannerForm.targetCategory).length > 0 ? (
-                          getSubcategoriesForCategory(bannerForm.targetCategory).map(sub => {
-                            // Use subCategory field for display (like "Chinos", "Half Sleeve Shirt")
-                            const subName = sub.subCategory || sub.value || sub.name || `Subcategory ${sub._id}`;
-                            console.log("🏷️ Rendering subcategory:", subName, "ID:", sub._id);
-                            return (
-                              <option key={sub._id} value={sub._id}>
-                                {subName}
-                              </option>
-                            );
-                          })
-                        ) : (
-                          <option disabled>No subcategories available for selected category</option>
-                        )
-                      ) : (
-                        <option disabled>Please select a category first</option>
-                      )}
-                    </Input>
-                    {bannerForm.targetCategory && getSubcategoriesForCategory(bannerForm.targetCategory).length === 0 && (
-                      <small className="text-warning">
-                        No subcategories found for selected category: {getCategoryDisplayName(bannerForm.targetCategory)}
-                      </small>
-                    )}
-                    {bannerForm.targetCategory && getSubcategoriesForCategory(bannerForm.targetCategory).length > 0 && (
-                      <small className="text-success">
-                        {getSubcategoriesForCategory(bannerForm.targetCategory).length} subcategories available for "{getCategoryDisplayName(bannerForm.targetCategory)}"
-                      </small>
-                    )}
-                    {bannerForm.targetSubCategory && (
-                      <div className="debug-info">
-                        <strong>Selected Subcategory:</strong> {subCategoryNames[bannerForm.targetSubCategory]} (ID: {bannerForm.targetSubCategory})
-                      </div>
-                    )}
-                  </FormGroup>
-                </>
-              )}
-
-              {/* Media Upload Section */}
-              <FormGroup className="mb-4">
+// Category and Subcategory Selection for "subcategory" click action - SEND VALUES NOT IDS
+{bannerForm.clickAction === "subcategory" && (
+  <>
+    <FormGroup className="mb-3">
+      <Label className="fw-bold">Select Target Category:</Label>
+      <Input
+        type="select"
+        value={bannerForm.targetCategory}
+        onChange={(e) => {
+          const selectedCategoryValue = e.target.value; // NOW STORING VALUE
+          setBannerForm((prev) => ({ 
+            ...prev, 
+            targetCategory: selectedCategoryValue, 
+            targetSubCategory: "" 
+          }));
+        }}
+        required
+        className="form-select-dark-text"
+      >
+        <option value="">Select category...</option>
+        {categories && categories.length > 0 ? (
+          categories.map(cat => {
+            const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
+            const categoryValue = cat.value || cat.category; // SEND VALUE NOT ID
+            return (
+              <option key={cat._id} value={categoryValue}>
+                {displayName}
+              </option>
+            );
+          })
+        ) : (
+          <option disabled>No categories available</option>
+        )}
+      </Input>
+    </FormGroup>
+    
+    <FormGroup className="mb-3">
+      <Label className="fw-bold">Select Target Subcategory:</Label>
+      <Input
+        type="select"
+        value={bannerForm.targetSubCategory}
+        onChange={(e) => setBannerForm((prev) => ({ ...prev, targetSubCategory: e.target.value }))}
+        required
+        disabled={!bannerForm.targetCategory}
+        className="form-select-dark-text"
+      >
+        <option value="">Select subcategory...</option>
+        {bannerForm.targetCategory ? (
+          categorySubcategories[bannerForm.targetCategory] && categorySubcategories[bannerForm.targetCategory].length > 0 ? (
+            categorySubcategories[bannerForm.targetCategory].map(sub => {
+              const subName = sub.subCategory || sub.value || sub.name || `Subcategory ${sub._id}`;
+              const subValue = sub.value || sub.subCategory; // SEND VALUE NOT ID
+              return (
+                <option key={sub._id} value={subValue}>
+                  {subName}
+                </option>
+              );
+            })
+          ) : (
+            <option disabled>No subcategories available for selected category</option>
+          )
+        ) : (
+          <option disabled>Please select a category first</option>
+        )}
+      </Input>
+    </FormGroup>
+  </>
+)}
+<FormGroup className="mb-4">
                 <Label className="fw-bold">
                   Banner Media <span className="text-danger">*</span>:
                 </Label>

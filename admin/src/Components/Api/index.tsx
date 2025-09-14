@@ -82,7 +82,7 @@ const Api = {
   getAllBanners: (token: any) => postsApi.get("banner/get-all-banners", token),
   getBannerById: (id: any, token: any) => postsApi.get(`banner/get-banner/${id}`, token),
   updateBanner: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, { ...data, bannerType: "home" }, token),
-  deleteBanner: (id: any, token: any) => postsApi.delete(`banner/delete-banner/${id}`, { headers: { Authorization: token } }),
+  deleteBanner: (id: any, token: any) => postsApi.delete(`banner/delete-banner/${id}`,token),
   updateBannerStatus: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, data, token), // Reuse update for status
 
   // ✅ Announcement APIs
@@ -96,7 +96,9 @@ updateAnnouncement: (data: any, token: any) =>
 toggleAnnouncement: (token: any) =>
   postsApi.patch("/announcement/toggle", {}, token),
 
+
 }
+
 
 
 export default Api;
