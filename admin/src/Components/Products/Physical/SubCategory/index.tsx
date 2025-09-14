@@ -28,19 +28,16 @@ import Datatable from "@/CommonComponents/DataTable";
 
 type SubCategory = {
   category: string;
-  "Sub Category": string;  // If you're using the exact key name "Sub Category"
+  "Sub Category": string;
+  image: string;
   Actions: string;
 };
-
 
 interface category {
   category: string;
   value: string;
   _id: string;
 }
-
-
-
 
 const SubCategory = () => {
   const [open, setOpen] = useState(false);
@@ -49,20 +46,35 @@ const SubCategory = () => {
   const [text, setText] = useState("");
   const [value, setValue] = useState("");
   const [text1, setText1] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(false); 
-  const [subCategory, setSubCategory] = useState<SubCategory[]>([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [editImagePreview, setEditImagePreview] = useState<string>("");
+  const [editSelectedImage, setEditSelectedImage] = useState<File | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [subCategory, setSubCategory] = useState<any[]>([]);
   const [category, setCategory] = useState<category[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | any>(null);
   const token = getCookie()
+
   const onOpenModal = () => {
     setOpen(true);
   };
+
   const onCloseModal = () => {
     setOpen(false);
+    // Reset form when closing
+    setText('');
+    setText1('');
+    setValue('');
+    setSelectedImage(null);
+    setImagePreview('');
   };
 
   const onCloseModal2 = () => {
     setOpen2(false);
+    setEditSelectedImage(null);
+    setEditImagePreview('');
   };
 
   const onOpenModal2 = () => {
@@ -71,10 +83,46 @@ const SubCategory = () => {
 
   const openConfirmationModal = (id: string) => {
     setSelectedId(id);
-    setConfirmDelete(true); 
+    setConfirmDelete(true);
   };
 
   const onCloseConfirmationModal = () => setConfirmDelete(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (imageFile: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    try {
+      const response = await Api.uploadSingleImage(formData);
+      return response.data.imageUrl || response.data.url || response.data.path;
+    } catch (error) {
+      throw new Error('Failed to upload image');
+    }
+  };
 
   const openPopUp = async (id: string) => {
     setOpen2(true);
@@ -82,14 +130,13 @@ const SubCategory = () => {
     try {
       const res = await Api.getSubCategoryById(id, token);
       setSelectedSubCategory(res.data.data);
+      if (res.data.data.image) {
+        setEditImagePreview(res.data.data.image);
+      }
     } catch (error) {
       console.log(error);
     }
   };
-
-
-
-
 
   const subCreateCategory = async () => {
     if (!text) {
@@ -104,35 +151,51 @@ const SubCategory = () => {
       toast.error("Sub category is required");
       return;
     }
+    if (!selectedImage) {
+      toast.error("Image is required");
+      return;
+    }
 
-
+    setIsUploading(true);
     try {
-      const payLoad = { category: text, subCategory: text1, value: value.toLowerCase(), };
+      // Upload image first
+      const imageUrl = await uploadImage(selectedImage);
+
+      const payLoad = {
+        category: text,
+        subCategory: text1,
+        value: value.toLowerCase(),
+        Image: imageUrl
+      };
+
       const createData = await Api.createsubCategory(payLoad, token);
+      toast.success("Sub Category created successfully!");
       onCloseModal();
       fetchData();
-      setText('');
-      setText1("");
       fetchData1();
     } catch (error) {
-      return console.log(error);
+      toast.error("Failed to create sub category");
+      console.log(error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const fetchData1 = async () => {
-    const StoreSubCategory: SubCategory[] = [];
+    const StoreSubCategory: any[] = [];
     try {
       const getData = await Api.getsubCategory();
-  
+
       const createPromise = getData.data.data.map(async (item: any) => {
         const newObject = {
           category: item.category,
-          ["Sub Category"]: item.subCategory,  // This matches your original structure
-          Actions: item._id,                   // Assuming Actions is derived from _id
+          ["Sub Category"]: item.subCategory,
+          Image: item.image || '',
+          Actions: item._id,
         };
         StoreSubCategory.push(newObject);
       });
-      
+
       await Promise.all(createPromise);
       setSubCategory(StoreSubCategory);
     } catch (error) {
@@ -144,19 +207,15 @@ const SubCategory = () => {
     try {
       const Data = await Api.getCategory();
       setCategory(Data.data.data);
-
     } catch (error) {
       return console.log(error);
     }
   };
 
-
-
   useEffect(() => {
     fetchData1();
     fetchData()
   }, []);
-
 
   const deleteSubCategory = async (id: string) => {
     try {
@@ -168,34 +227,39 @@ const SubCategory = () => {
     }
   };
 
-
   const handleConfirmDelete = () => {
     if (selectedId) {
       deleteSubCategory(selectedId);
-      onCloseConfirmationModal(); 
+      onCloseConfirmationModal();
     }
   };
 
   const handleEditSubCategory = async () => {
     if (!selectedSubCategory || !selectedId) return;
 
+    setIsUploading(true);
     try {
-      const { category, subCategory, value }:any = selectedSubCategory;
-      const payload = { category, subCategory, value };
+      let imageUrl = selectedSubCategory.image;
+
+      // If a new image is selected, upload it
+      if (editSelectedImage) {
+        imageUrl = await uploadImage(editSelectedImage);
+      }
+
+      const { category, subCategory, value }: any = selectedSubCategory;
+      const payload = { category, subCategory, value, image: imageUrl };
+
       await Api.editSubcategory(selectedId, payload, token);
       toast.success("Sub Category updated successfully!");
       onCloseModal2();
       fetchData1();
-      return;
     } catch (error) {
       console.error("Error updating sub-category:", error);
-    return  toast.error("Failed to update sub-category.");
+      toast.error("Failed to update sub-category.");
+    } finally {
+      setIsUploading(false);
     }
   };
-
-
-
-
 
   return (
     <Fragment>
@@ -210,22 +274,18 @@ const SubCategory = () => {
                   <Button style={{ marginBottom: "30px" }} color="primary" onClick={onOpenModal}>
                     Add Sub Category
                   </Button>
-                  <Modal isOpen={open} toggle={onCloseModal}>
+
+                  {/* Add Sub Category Modal */}
+                  <Modal isOpen={open} toggle={onCloseModal} size="md">
                     <ModalHeader toggle={onCloseModal}>
-                      <h5
-                        className="modal-title f-w-600"
-                        id="exampleModalLabel2"
-                      >
+                      <h5 className="modal-title f-w-600" id="exampleModalLabel2">
                         Add Product Sub Category
                       </h5>
                     </ModalHeader>
                     <ModalBody>
                       <Form>
                         <FormGroup>
-                          <Label
-                            htmlFor="recipient-name"
-                            className="col-form-label"
-                          >
+                          <Label htmlFor="recipient-name" className="col-form-label">
                             Category Name:
                           </Label>
                           <Input
@@ -234,43 +294,28 @@ const SubCategory = () => {
                             id="validationCustom03"
                             value={text}
                             onChange={(e) => {
-                              console.log(e.target.value);
                               setText(e.target.value);
                             }}
                           >
                             <option>Select Category </option>
                             {category &&
                               category.map((data) => (
-                                <option
-                                  key={data.category}
-                                  value={data.value}
-                                >
+                                <option key={data.category} value={data.value}>
                                   {data.category}
                                 </option>
                               ))}
                           </Input>
                         </FormGroup>
-                        {/* <FormGroup>
-                          <Label htmlFor="recipient-name" className="col-form-label">
-                            Sub Category Value:
-                          </Label>
-                          <Input onChange={(e) => {
-                            setValue(e.target.value)
-                          }} type="text" />
-                        </FormGroup> */}
 
                         <FormGroup>
-                          <Label
-                            htmlFor="recipient-name"
-                            className="col-form-label"
-                          >
+                          <Label htmlFor="recipient-name" className="col-form-label">
                             Sub Category Name:
                           </Label>
                           <Input
                             onChange={(e) => {
                               const value = e.target.value
                               setText1(value);
-                              const lower =  value.toLowerCase().replaceAll(" ","-")
+                              const lower = value.toLowerCase().replaceAll(" ", "-")
                               setValue(lower)
                             }}
                             value={text1}
@@ -278,17 +323,35 @@ const SubCategory = () => {
                           />
                         </FormGroup>
 
-                        {/* <FormGroup>
+                        <FormGroup>
                           <Label htmlFor="message-text" className="col-form-label">
-                            Sub Category Image :
+                            Sub Category Image: <span style={{ color: 'red' }}>*</span>
                           </Label>
-                          <Input id="validationCustom02" type="file" />
-                        </FormGroup> */}
+                          <Input
+                            id="validationCustom02"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                          />
+                          {imagePreview && (
+                            <div className="mt-2">
+                              <img
+                                src={imagePreview}
+                                alt="Preview"
+                                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px' }}
+                              />
+                            </div>
+                          )}
+                        </FormGroup>
                       </Form>
                     </ModalBody>
                     <ModalFooter>
-                      <Button color="secondary" onClick={subCreateCategory}>
-                        Save
+                      <Button
+                        color="secondary"
+                        onClick={subCreateCategory}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? 'Uploading...' : 'Save'}
                       </Button>
                       <Button color="primary" onClick={onCloseModal}>
                         Close
@@ -297,12 +360,12 @@ const SubCategory = () => {
                   </Modal>
                 </ButtonGroup>
 
-
+                {/* Edit Sub Category Modal */}
                 {selectedSubCategory && (
-                  <Modal isOpen={open2} toggle={onOpenModal2} >
+                  <Modal isOpen={open2} toggle={onOpenModal2} size="md">
                     <ModalHeader toggle={onCloseModal2}>
                       <h5 className="modal-title f-w-600" id="exampleModalLabel2">
-                        Sub Category Details
+                        Edit Sub Category Details
                       </h5>
                     </ModalHeader>
                     <ModalBody>
@@ -330,32 +393,43 @@ const SubCategory = () => {
                             id="edit-sub-category-name"
                             type="text"
                             value={selectedSubCategory.subCategory}
-                            onChange={(e) =>
-                              
-                           {
-                            const value = e.target.value
-                            const lower =  value.toLowerCase().replaceAll(" ","-")
-                            setSelectedSubCategory({ ...selectedSubCategory, subCategory:value , value:lower })
-                           }
-                            
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const lower = value.toLowerCase().replaceAll(" ", "-")
+                              setSelectedSubCategory({ ...selectedSubCategory, subCategory: value, value: lower })
+                            }}
                           />
                         </FormGroup>
 
-
-                        {/* <FormGroup>
-                          <Label htmlFor="edit-value">Value:</Label>
+                        <FormGroup>
+                          <Label htmlFor="edit-image">Sub Category Image:</Label>
                           <Input
-                            id="edit-value"
-                            type="text"
-                            value={selectedSubCategory.value}
-                            onChange={(e) => setSelectedSubCategory({ ...selectedSubCategory, value: e.target.value })}
+                            id="edit-image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEditImageChange}
                           />
-                        </FormGroup> */}
+                          {(editImagePreview || selectedSubCategory.image) && (
+                            <div className="mt-2">
+                              <img
+                                src={editImagePreview || selectedSubCategory.image}
+                                alt="Current Image"
+                                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px' }}
+                              />
+                              {editImagePreview && <p className="text-muted mt-1">New image selected</p>}
+                            </div>
+                          )}
+                        </FormGroup>
                       </Form>
                     </ModalBody>
                     <ModalFooter>
-                      <Button color="secondary" onClick={handleEditSubCategory}>Update</Button>
+                      <Button
+                        color="secondary"
+                        onClick={handleEditSubCategory}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? 'Updating...' : 'Update'}
+                      </Button>
                       <Button color="primary" onClick={onCloseModal2}>
                         Close
                       </Button>
@@ -363,13 +437,13 @@ const SubCategory = () => {
                   </Modal>
                 )}
 
-
-<Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
+                {/* Delete Confirmation Modal */}
+                <Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
                   <ModalHeader toggle={onCloseConfirmationModal}>
                     <h5 className="modal-title f-w-600">Confirm Deletion</h5>
                   </ModalHeader>
                   <ModalBody>
-                    Are you sure to want  delete this Sub Category?
+                    Are you sure you want to delete this Sub Category?
                   </ModalBody>
                   <ModalFooter>
                     <Button color="primary" onClick={handleConfirmDelete}>Yes</Button>
@@ -379,7 +453,7 @@ const SubCategory = () => {
 
                 <div className="clearfix"></div>
                 <div id="basicScenario" className="product-physical capitalized">
-                  <Datatable
+                  {/* <Datatable
                     typeUse={"subCategory"}
                     myData={subCategory}
                     multiSelectOption={false}
@@ -388,16 +462,25 @@ const SubCategory = () => {
                     handleDelete={openConfirmationModal}
                     openPopUp={openPopUp}
                     class="-striped -highlight"
+                  /> */}
+                  < Datatable
+                    typeUse={"subCategory"}
+                    myData={subCategory}
+                    openPopUp={openPopUp}
+                    multiSelectOption={false}
+                    pageSize={10}
+                    pagination={true}
+                    class="-striped -highlight"
+                    handleDelete={openConfirmationModal}
                   />
-
-
                 </div>
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
-    </Fragment>
+    </Fragment >
   );
 };
+
 export default SubCategory;

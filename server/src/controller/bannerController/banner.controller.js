@@ -5,7 +5,7 @@ const bannerModel = require("../../Model/bannerModel");
 const createBanner = async (req, res) => {
     try {
         const data = req.body;
-
+        
         if (!data.title || !data.image) {
             return res.status(400).json({ success: false, message: "Title and image are required" });
         }

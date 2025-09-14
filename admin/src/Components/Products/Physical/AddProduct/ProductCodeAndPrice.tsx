@@ -63,7 +63,7 @@ export const colorData = [
   { name: "Ultramarine", code: "#3F00FF" },
   { name: "Vermilion", code: "#E34234" }
 ];
-const shopTypeData = [{value:"formal wear" ,item:'Formal Wear' } ,{value:"everyday wear" ,item:'EveryDay Wear' } ,{value:"designer wear" ,item:'Designer Wear' }  ,{value:"street wear" ,item:'Street Wear' } ,{value:"trending" ,item:'Trending' }]
+const shopTypeData = [{value:"formal wear" ,item:'Formal Wear' } ,{value:"everyday wear" ,item:'EveryDay Wear' } ,{value:"designer wear" ,item:'Designer Wear' }  ,{value:"street wear" ,item:'Street Wear' } ,{value:"trending" ,item:'Trending' },{value:"new" ,item:'New' },]
 interface category {
   category: string;
   value: string;

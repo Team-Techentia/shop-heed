@@ -42,6 +42,14 @@ export const MENUITEMS: any = [
     active: false,
   },
   {
+    path: "/feature",
+    title: "Feature",
+    icon: Archive,
+    type: "link",
+    badgeType: "primary",
+    active: false,
+  },
+  {
     path: "/products/physical/product-list",
     title: "Product List",
     icon: Box,

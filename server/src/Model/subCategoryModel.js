@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 
 const subCategorySchema = new mongoose.Schema({
-    category: String,
-    subCategory: String,
-    value: String,
+  category: String,
+  subCategory: String,
+  value: String,
+  image: String,
   createdAt: { type: Date, default: Date.now },
 });
 

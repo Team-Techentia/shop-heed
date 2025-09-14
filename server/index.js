@@ -14,6 +14,7 @@ const promocodeRoutes = require('./src/Route/promocodeRoute');
 const bannerRoutes = require('./src/Route/bannerRoute'); 
 const { scheduleCron } = require("./src/scheduler/token")
 const announcementRoute = require('./src/Route/announcement');
+const featuredSectionRouter = require('./src/Route/feature');
 const imageRoutes = require("./src/Route/routes");
 
 const cors = require("cors");
@@ -47,6 +48,7 @@ app.use("/api/api/blog", blogRoute)
 app.use("/api/returnAndExchangeRoutes", returnAndExchangeRoute)
 app.use("/api/promocode", promocodeRoutes);
 app.use("/api/announcement", announcementRoute);
+app.use("/api/featured-section", featuredSectionRouter);
 app.use("/api", imageRoutes);
 
 //scheduler

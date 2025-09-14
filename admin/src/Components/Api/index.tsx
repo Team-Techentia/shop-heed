@@ -6,7 +6,15 @@ const postsApi = axios.create({
 
 const Api = {
   uploadSingleImage: (data: any) => postsApi.post("/api/upload-single-image", data),
+  // Add these functions to your existing Api object in the Api/index.js file
 
+  // Featured Section APIs
+  createFeaturedSection: (data: any, token: any) => postsApi.post("/featured-section/create-featured-section", data, token),
+  getAllFeaturedSections: (token: any) => postsApi.get("/featured-section/get-all-featured-sections", token),
+  getFeaturedSectionById: (id: any, token: any) => postsApi.get(`/featured-section/get-featured-section/${id}`, token),
+  updateFeaturedSection: (id: any, data: any, token: any) => postsApi.put(`/featured-section/update-featured-section/${id}`, data, token),
+  deleteFeaturedSection: (id: any, token: any) => postsApi.delete(`/featured-section/delete-featured-section/${id}`, token),
+  getActiveFeaturedSections: () => postsApi.get("/featured-section/active-featured-sections"), // Public route for frontend
   // Product APIs
   createProduct: (data: any, token: any) => postsApi.post("/product-api/create-product", data, token),
   getAllProductAdmin: () => postsApi.get(`/product-api/get-all-product-admin`),
@@ -82,19 +90,19 @@ const Api = {
   getAllBanners: (token: any) => postsApi.get("banner/get-all-banners", token),
   getBannerById: (id: any, token: any) => postsApi.get(`banner/get-banner/${id}`, token),
   updateBanner: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, { ...data, bannerType: "home" }, token),
-  deleteBanner: (id: any, token: any) => postsApi.delete(`banner/delete-banner/${id}`,token),
+  deleteBanner: (id: any, token: any) => postsApi.delete(`banner/delete-banner/${id}`, token),
   updateBannerStatus: (id: any, data: any, token: any) => postsApi.put(`banner/update-banner/${id}`, data, token), // Reuse update for status
 
   // ✅ Announcement APIs
-  getAnnouncement: () => 
-  postsApi.get("/announcement/get-latest"),
+  getAnnouncement: () =>
+    postsApi.get("/announcement/get-latest"),
 
-// Admin routes
-updateAnnouncement: (data: any, token: any) =>
-  postsApi.post("/announcement/create-or-update", data, token),
+  // Admin routes
+  updateAnnouncement: (data: any, token: any) =>
+    postsApi.post("/announcement/create-or-update", data, token),
 
-toggleAnnouncement: (token: any) =>
-  postsApi.patch("/announcement/toggle", {}, token),
+  toggleAnnouncement: (token: any) =>
+    postsApi.patch("/announcement/toggle", {}, token),
 
 
 }

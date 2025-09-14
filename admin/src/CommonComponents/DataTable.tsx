@@ -461,6 +461,274 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
       });
 
     }
+    else if (
+      typeUse === "promocode-list"
+    ) {
+
+
+
+      let selectorFunction = (row) => row[key];
+
+
+      if (
+        key === "Actions"
+      ) {
+        selectorFunction = (row) => {
+          return (
+
+            <>
+
+              <div style={{ display: "flex", justifyContent: "center" }}>
+
+                <div onClick={() => {
+                  openPopUp(row[key])
+                }} style={{ cursor: "pointer" }}>
+                  <i
+                    className="fa fa-pencil-square-o"
+                    style={{
+                      width: 35,
+                      fontSize: 20,
+                      padding: 11,
+                      color: "#e4566e",
+                      cursor: "pointer",
+                    }}
+                  ></i>
+
+                </div>
+
+                <div onClick={() => {
+                  handleDelete(row[key])
+                }} style={{ cursor: "pointer" }}>
+
+                  <i
+                    className="fa fa-trash"
+                    style={{
+                      width: 35,
+                      fontSize: 20,
+                      padding: 11,
+                      color: "#e4566e",
+                      cursor: "pointer",
+                    }}
+                  ></i>
+
+                </div>
+              </div>
+            </>
+
+
+          )
+
+
+
+
+
+
+        };
+      }
+      if(key==="Delete"){
+        selectorFunction=(row)=>{
+          return <div onClick={() => {
+            handleDeleteComment(row[key] , )
+          }} style={{ cursor: "pointer" }}>  <i
+          className="fa fa-trash"
+          style={{
+            width: 35,
+            fontSize: 20,
+            padding: 11,
+            color: "#e4566e",
+            cursor: "pointer",
+          }}
+        ></i> </div>
+        }
+      }
+
+      if (
+        key === "Comment"
+      ) {
+        selectorFunction = (row) => {
+          return <div onClick={() => {
+            openCommentPopUp(row[key])
+          }} style={{ cursor: "pointer" }}> Comment </div>
+        };
+      }
+
+      if (
+        key === "Shopping Type"
+      ) {
+        selectorFunction = (row) => {
+          return <div >     <Input
+            style={{ width: "140px" }}
+            type="select"
+            value={row[key]}
+            onChange={(e: any) => {
+              handleChangeShopType(e.target.value, row["Product Id"])
+
+            }}
+          >
+            <option value="" >Select Type</option>
+            
+            <option value="trending">Trending</option>
+
+          </Input> </div>
+        };
+      }
+
+
+
+      columns.push({
+        name: <b>{Capitalize(key.toString())}</b>,
+        header: <b>{Capitalize(key.toString())}</b>,
+        selector: selectorFunction,
+        Cell: editable,
+        style: {
+          textAlign: "center",
+        },
+      });
+
+    }
+    else if (
+      typeUse === "featured-sections"
+    ) {
+
+
+
+      let selectorFunction = (row) => row[key];
+     if(
+       key === "Size"
+      ) {
+        selectorFunction = (row) => {
+          return (
+            <> <div style={{textTransform:"uppercase"}}>
+              {row[key]}</div> </>
+     )
+    }
+  }
+
+      if (
+        key === "Image"
+      ) {
+        selectorFunction = (row) => {
+          const image = <img style={{ height: "50px" }} src={row[key]} alt="" />;
+          return image
+        };
+      }
+
+      if (
+        key === "Actions"
+      ) {
+        selectorFunction = (row) => {
+          return (
+
+            <>
+
+              <div style={{ display: "flex", justifyContent: "center" }}>
+
+                <div onClick={() => {
+                  openPopUp(row[key])
+                }} style={{ cursor: "pointer" }}>
+                  <i
+                    className="fa fa-pencil-square-o"
+                    style={{
+                      width: 35,
+                      fontSize: 20,
+                      padding: 11,
+                      color: "#e4566e",
+                      cursor: "pointer",
+                    }}
+                  ></i>
+
+                </div>
+
+                <div onClick={() => {
+                  handleDelete(row[key])
+                }} style={{ cursor: "pointer" }}>
+
+                  <i
+                    className="fa fa-trash"
+                    style={{
+                      width: 35,
+                      fontSize: 20,
+                      padding: 11,
+                      color: "#e4566e",
+                      cursor: "pointer",
+                    }}
+                  ></i>
+
+                </div>
+              </div>
+            </>
+
+
+          )
+
+
+
+
+
+
+        };
+      }
+      if(key==="Delete"){
+        selectorFunction=(row)=>{
+          return <div onClick={() => {
+            handleDeleteComment(row[key] , )
+          }} style={{ cursor: "pointer" }}>  <i
+          className="fa fa-trash"
+          style={{
+            width: 35,
+            fontSize: 20,
+            padding: 11,
+            color: "#e4566e",
+            cursor: "pointer",
+          }}
+        ></i> </div>
+        }
+      }
+
+      if (
+        key === "Comment"
+      ) {
+        selectorFunction = (row) => {
+          return <div onClick={() => {
+            openCommentPopUp(row[key])
+          }} style={{ cursor: "pointer" }}> Comment </div>
+        };
+      }
+
+      if (
+        key === "Shopping Type"
+      ) {
+        selectorFunction = (row) => {
+          return <div >     <Input
+            style={{ width: "140px" }}
+            type="select"
+            value={row[key]}
+            onChange={(e: any) => {
+              handleChangeShopType(e.target.value, row["Product Id"])
+
+            }}
+          >
+            <option value="" >Select Type</option>
+            
+            <option value="trending">Trending</option>
+
+          </Input> </div>
+        };
+      }
+
+
+
+      columns.push({
+        name: <b>{Capitalize(key.toString())}</b>,
+        header: <b>{Capitalize(key.toString())}</b>,
+        selector: selectorFunction,
+        Cell: editable,
+        style: {
+          textAlign: "center",
+        },
+      });
+
+    }
 
 
     else if (
@@ -468,6 +736,50 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
     ) {
 
       let selectorFunction = (row) => row[key];
+      
+      // Handle Image column specifically
+      if (key === "Image") {
+        selectorFunction = (row) => {
+          if (row[key]) {
+            return (
+              <img 
+                style={{ 
+                  height: "50px", 
+                  width: "50px", 
+                  objectFit: "cover", 
+                  borderRadius: "5px" 
+                }} 
+                src={row[key]} 
+                alt="SubCategory" 
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            );
+          } else {
+            return (
+              <div 
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  backgroundColor: "#f8f9fa",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "5px",
+                  fontSize: "10px",
+                  color: "#6c757d",
+                  border: "1px solid #ddd"
+                }}
+              >
+                No Image
+              </div>
+            );
+          }
+        };
+      }
+      
       if (
         key === "Edit"
       ) {

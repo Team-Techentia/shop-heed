@@ -159,7 +159,7 @@ const ProductList = () => {
         if (item.products && item.products.length > 0) {
           const newObject = {
             Image: item.products[0].image?.[0] || "no",
-            "Product Id": item._id || "no",
+            // SKU: item.sku || "no",
             Title: item.products[0].title || "no",
             Variants: item.products.length || "no",
             Price: item.price ? <div>₹ {item.price}</div> : "no",
@@ -226,6 +226,7 @@ const ProductList = () => {
         storeData.push(newObject);
       });
       await Promise.all(createPromise);
+      console.log(subProductData)
       setSubProductData(storeData);
     } catch (error) {
       return console.log(error);

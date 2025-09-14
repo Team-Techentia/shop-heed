@@ -85,37 +85,7 @@ const ListCoupons = () => {
           Usage: getUsageDisplay(item),
           "Valid Period": getDateRangeDisplay(item),
           Status: getStatusText(item),
-          Actions: (
-            <div className="d-flex gap-2">
-              <Button
-                color="info"
-                size="sm"
-                title="Edit"
-                onClick={() => openEditModal(item._id!)}
-                className="btn-square"
-              >
-                <i className="fa fa-edit"></i>
-              </Button>
-              <Button
-                color="danger"
-                size="sm"
-                title="Delete"
-                onClick={() => openConfirmationModal(item._id!)}
-                className="btn-square"
-              >
-                <i className="fa fa-trash"></i>
-              </Button>
-              <Button
-                color="primary"
-                size="sm"
-                title="View Details"
-                onClick={() => openViewModal(item._id!)}
-                className="btn-square"
-              >
-                <i className="fa fa-eye"></i>
-              </Button>
-            </div>
-          ),
+          Actions: item._id,
         }));
 
         setPromocodeTableData(transformedData);
@@ -402,7 +372,7 @@ const ListCoupons = () => {
                     pageSize={10}
                     pagination={true}
                     handleDelete={openConfirmationModal}
-                    openEditModal={openEditModal}
+                    openPopUp={openEditModal}
                     openViewModal={openViewModal}
                     class="-striped -highlight"
                   />
