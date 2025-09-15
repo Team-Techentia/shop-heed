@@ -20,6 +20,7 @@ const ProductItem = ({
   const currency = curContext.state;
   const [image, setImage] = useState("");
   const uniqueTags = [];
+  console.log(product,Math.random())
   
   return ( product &&
     <div
@@ -106,6 +107,7 @@ const ProductItem = ({
         product={product}
         productDetail={productDetail}
         currency={currency}
+        
         uniqueTags={uniqueTags}
         title={title}
         des={des}

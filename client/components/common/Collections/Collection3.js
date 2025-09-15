@@ -17,9 +17,9 @@ const TopCollection = ({ dataContStart , dataContEnd, title, subtitle, designCla
   const [product, setProduct] = useState([]);
   const [modal, setModal] = useState(false);
   const { data, isLoading, } = useQuery({
-    queryKey: ['getAllProduct'],
+    queryKey: ['getNewProduct'],
     queryFn: async () => {
-      const res = await Api.getAllProduct();
+      const res = await Api.getNewProduct();
         const data =res.data.data.filter(item=>item)
       return data;
     },

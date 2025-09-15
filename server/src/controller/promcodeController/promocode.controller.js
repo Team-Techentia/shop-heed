@@ -29,7 +29,7 @@ const createPromocode = async function (req, res) {
         if (data.discountType === 'percent' && (data.discountValue < 0 || data.discountValue > 100)) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Percentage discount must be between 0 and 100" 
+                message: "Percentage discount must be between 0 and 100"
             });
         }
 
@@ -326,26 +326,8 @@ const validatePromocode = async function (req, res) {
             });
         }
 
-        // Check maximum spend (if still exists in old promocodes)
-        if (promocode.maximumSpend && cartTotal > promocode.maximumSpend) {
-            return res.status(400).json({ 
-                success: false, 
-                message: `Maximum spend of $${promocode.maximumSpend} exceeded` 
-            });
-        }
 
-        // Check product restrictions
-        if (promocode.products && promocode.products.length > 0 && products) {
-            const hasValidProduct = products.some(product => 
-                promocode.products.includes(product)
-            );
-            if (!hasValidProduct) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "Promocode is not valid for the products in your cart" 
-                });
-            }
-        }
+        
 
         // Check category restrictions
         if (promocode.categories && promocode.categories.length > 0 && categories) {

@@ -24,6 +24,7 @@ import { discountCount, getDiscountPercentage } from "../../../services/script";
 import { ListItem } from "@mui/material";
 import Api from "../../../components/Api";
 import axios from "axios";
+
 const DetailsWithPrice = ({
   item,
   stickyClass,
@@ -40,6 +41,7 @@ const DetailsWithPrice = ({
   const [checkEstimateTime, setCheckEstimateTime] = useState('');
   const [expectDelivery, setExpectDelivery] = useState('');
   const [expectDeliveryError, setExpectDeliveryError] = useState('');
+  const [isCheckingDelivery, setIsCheckingDelivery] = useState(false);
   const [modal, setModal] = useState(false);
   const toggle = () => setModal(!modal);
   const [open, setOpen] = useState("");
@@ -50,11 +52,11 @@ const DetailsWithPrice = ({
       setOpen(id);
     }
   };
+
   const changeInc = () => {
     if (product.quantity <= quantity) {
       return;
     }
-
     setQuantity((value) => value + 1);
   };
 
@@ -98,15 +100,6 @@ const DetailsWithPrice = ({
       colorName: colorData[data.color],
     }));
 
-  // const uniqueColors = (
-  //   selectedSize
-  //     ? sameProductData.filter((data) => data.size === selectedSize)
-  //     : sameProductData
-  // ).map((data) => ({
-  //   color: data.color,
-  //   image: data.image[0],
-  //   colorName: colorData[data.color],
-  // }));
   console.log(uniqueColors);
 
   const handleSizeClick = (selectedProduct) => {
@@ -118,7 +111,6 @@ const DetailsWithPrice = ({
           .replaceAll(" ", "-")}/${selectedProduct._id}`
       );
     }
-    // setSelectedSize(size);
   };
 
   const handleColorClick = (color) => {
@@ -138,100 +130,119 @@ const DetailsWithPrice = ({
     }
   };
   
-  console.log("discountCount", getDiscountPercentage(product.price, product.finalPrice))
+  console.log("discountCount", getDiscountPercentage(product.price, product.finalPrice));
+
+  // Updated static checkHandle function
   const checkHandle = async () => { 
+    // Reset states
     setExpectDelivery('');
-   try {
-    const res = await axios.get(`https://shopheed.com/api/product-api/service/availability?pickup_postcode=110008&delivery_postcode=${checkEstimateTime}`);
-    if (res.data.data) {
-      const data = res.data.data.available_courier_companies;
+    setExpectDeliveryError('');
+    
+    // Validate pincode
+    if (!checkEstimateTime || checkEstimateTime.length < 6) {
+      setExpectDeliveryError('Please enter a valid 6-digit pincode');
+      return;
+    }
+    
+    setIsCheckingDelivery(true);
+    
+    try {
+      // Simulate API delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Get the minimum date as a timestamp
-      const minTimestamp = Math.min(...data.map(item => new Date(item.etd).getTime()));
+      // Calculate delivery date (3 days from today)
+      const today = new Date();
+      const deliveryDate = new Date(today);
+      deliveryDate.setDate(today.getDate() + 3);
       
-      // Convert the timestamp back to a Date object
-      const minDate = new Date(minTimestamp);
-      
-      // Format the date as a string
-      const formattedDate = minDate.toLocaleDateString("en-US", {
+      const formattedDate = deliveryDate.toLocaleDateString("en-US", {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
       
-      // Set the formatted date
+      // Always set successful delivery
       setExpectDelivery(formattedDate);
-    
-      console.log("data===>", formattedDate);
-    } else {
-      setExpectDelivery(false);
-      setExpectDeliveryError(res.data.message);
+      
+      console.log("Static delivery date===>", formattedDate);
+      
+    } catch (e) {
+      setExpectDeliveryError('Unable to check delivery. Please try again.');
+      console.log("error--->", e);
+    } finally {
+      setIsCheckingDelivery(false);
     }
-  } catch (e) {
-    setExpectDeliveryError(e.response.data.error ?? 'Internal Server Error');
-    console.log("error--->", e);
-  }
-  }
+  };
 
   return (
     <>
       <div className={`product-right ${stickyClass}`}>
-        <h2 style={{ fontSize: "22px" }}> {product.title} </h2>
-        {/* <p> {product && product.sku && `SKU: ${product.sku}`} </p> */}
-        <div className="mt-3" style={{ display: "flex" }}>
-          <h3 style={{ fontSize: "22px" }}>₹ {product.finalPrice}</h3>
-          <h4 className="mt-1 ms-2">
-            <del style={{ fontSize: "15px" }}>₹{product.price}</del>
-            {/* <span style={{ fontSize: "15px" }} className="ms-1">{product.discount}% off</span> */}
-            <span style={{ fontSize: "15px" }} className="ms-1">{getDiscountPercentage(product.price, product.finalPrice)} off</span>
+        {/* Product Title */}
+        <h2 className="product-title"> {product.title} </h2>
+        
+        {/* Price Section - Redesigned */}
+        <div className="price-section">
+          <div className="d-flex align-items-center">
+            <h3 className="current-price">₹{product.finalPrice}</h3>
+            {product.price > product.finalPrice && (
+              <>
+                <h4 className="original-price">
+                  <del>₹{product.price}</del>
+                </h4>
+                <div className="discount-badge">
+                  {getDiscountPercentage(product.price, product.finalPrice)} OFF
+                </div>
+              </>
+            )}
+          </div>
+          <div className="free-shipping-badge">
+            <i className="fa fa-truck me-1"></i> FREE SHIPPING
+          </div>
+        </div>
 
-          </h4>
-          <span className="ms-3"> FREE SHIPPING</span>
+        {/* Rating */}
+        <div className="rating-section mb-3">
+          <div className="stars">
+           
+          </div>
+
         </div>
 
         {stock === "Out of Stock" ? (
-          <div
-            className="my-3"
-            style={{ fontSize: "20px", color: "#ff00009c" }}
-          >
-            <strong> Out Of Stock</strong>
+          <div className="out-of-stock-banner">
+            <strong>Out Of Stock</strong>
           </div>
         ) : (
           <>
             {sameProductData && sameProductData.length >= 1 && (
               <>
-                <hr />
-                {product.category === "shirt" ? (
-                  <p
-                    style={{ display: "flex", justifyContent: "space-between", color: "#808080", fontWeight: 500 }}
-                    className="mt-2"
-                  >
-                    SELECT SIZE{" "}
-                    <a
-                      href={null}
-                      data-toggle="modal"
-                      data-target="#sizemodal"
+                <hr className="section-divider" />
+                
+                {/* Size Selection */}
+                {product.category === "shirt" && (
+                  <div className="selection-header">
+                    <span>SELECT SIZE</span>
+                    <button
+                      className="size-chart-link"
                       onClick={toggle}
-                      style={{ cursor: "pointer" }}
                     >
                       Size Chart
-                    </a>
-                  </p>
-                ) : (
-                  ""
+                    </button>
+                  </div>
                 )}
+                
                 <Modal
                   isOpen={modal}
                   toggle={toggle}
                   centered
-                  style={{ height: "100vh", borderRadius: "20px" }}
+                  className="size-chart-modal"
                 >
-                  <ModalHeader toggle={toggle}>Shop Heed</ModalHeader>
+                  <ModalHeader toggle={toggle}>Size Guide</ModalHeader>
                   <ModalBody>
                     <Media
                       src={sizeChart2.src}
                       alt="size"
-                      className="img-fluid"
+                      className="img-fluid mb-3"
                     />
                     <Media
                       src={sizeChart1.src}
@@ -240,277 +251,135 @@ const DetailsWithPrice = ({
                     />
                   </ModalBody>
                 </Modal>
-                <div className="size-box mt-3">
-                  {/* {allSizes.map((size, i) => (
-                      <li
-                        key={i}
-                        onClick={() => handleSizeClick(size)}
-                        style={{
-                          border:
-                            selectedSize === size && uniqueSizes[i].size ==size
-                              ? "0.2px solid #121212"
-                              : "",
-                          borderRadius: "5px",
-                          padding: "0px 10px",
-                          textTransform: "capitalize",
+                
+                <div className="size-selector mt-2">
+                  {allSizes.map((size) => {
+                    const matchedProduct = uniqueSizes.find(
+                      (data) => data.size === size
+                    );
+                    const isAvailable = !!matchedProduct;
 
-                          textDecoration: uniqueSizes.size ==size
-                            ? "none"
-                            : "line-through",
-                          pointerEvents: uniqueSizes.includes(size)
-                            ? "auto"
-                            : "none",
-                        }}
+                    return (
+                      <div
+                        key={size}
+                        className={`size-option ${!isAvailable ? 'unavailable' : ''} ${product.size === size ? 'selected' : ''}`}
+                        onClick={() =>
+                          isAvailable && handleSizeClick(matchedProduct)
+                        }
                       >
-                     
-                          <a
-                            href="#"
-                            style={{
-                              fontWeight:600,
-                              color: uniqueSizes.includes(size)
-                                ? "#000"
-                                : "#8d89898c",textTransform:"uppercase"
-                            }}
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            {size}
-                          </a>
-                       
-                      </li>
-                    ))} */}
-
-                  <ul style={{ gap: "30px", display: "flex" }}>
-                    {allSizes.map((size) => {
-                      // Check if the size is available in uniqueSizes
-                      const matchedProduct = uniqueSizes.find(
-                        (data) => data.size === size
-                      );
-                      const isAvailable = !!matchedProduct;
-
-                      return (
-                        <li
-                          className="hover-hover-hover"
-                          key={size}
-                          onClick={() =>
-                            isAvailable && handleSizeClick(matchedProduct)
-                          }
-                          style={{
-                            border:
-                              product.size === size
-                                ? "0.2px solid #121212"
-                                : "",
-                            borderRadius: "5px",
-                            padding: "0px 10px",
-                            textTransform: "capitalize",
-                            cursor: isAvailable ? "pointer" : "not-allowed",
-                            color: isAvailable ? "#000" : "#8d89898c",
-                            textDecoration: !isAvailable
-                              ? "line-through"
-                              : "none",
-                          }}
-                        >
-                          <a
-                            href="#"
-                            style={{
-                              fontWeight: 600,
-                              color: isAvailable ? "#000" : "#8d89898c",
-                              textTransform: "uppercase",
-                              pointerEvents: isAvailable ? "auto" : "none",
-                            }}
-                          >
-                            {size}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                        {size.toUpperCase()}
+                      </div>
+                    );
+                  })}
                 </div>
-                <p
-                    style={{ display: "flex", justifyContent: "space-between", color: "#808080", fontWeight: 500 }}
-                    className="mt-2"
-                  >
-                    SELECT COLOUR{" "}
-                  </p>
+                
+                {/* Color Selection */}
+                <div className="selection-header mt-3">
+                  <span>SELECT COLOUR</span>
+                </div>
+                
                 {uniqueColors && (
-                  <div className="size-box">
-                    <div
-                      style={{ gap: "10px", display: "flex", flexWrap: "wrap" }}
-                    >
-                      {uniqueColors.map((data, i) => (
-                        <div
-                          key={i}
-                          onClick={() => handleColorClick(data.color)}
-                          style={{
-                            display: "flex",
-                            padding: "5px",
-                            cursor: "pointer",
-                            borderRadius: "8px",
-                            flexWrap: "wrap",
-
-                            border:
-                              product.color === data.color
-                                ? "1px solid black"
-                                : "",
-                          }}
-                          className="hover-hover-hover"
-                        >
-                          <div>
-                            <img
-                              style={{
-                                width: "50px ",
-                                height: "50px",
-                                objectFit: "cover",
-                              }}
-                              src={data.image}
-                            />
-                            <div
-                              style={{
-                                textAlign: "center",
-                              }}
-                            >
-                              {" "}
-                              <strong>{data.colorName}</strong>{" "}
-                            </div>
-                          </div>
+                  <div className="color-selector mt-2">
+                    {uniqueColors.map((data, i) => (
+                      <div
+                        key={i}
+                        className={`color-option ${product.color === data.color ? 'selected' : ''}`}
+                        onClick={() => handleColorClick(data.color)}
+                        title={data.colorName}
+                      >
+                        <div className="color-thumbnail">
+                          <img src={data.image} alt={data.colorName} />
                         </div>
-                      ))}
-                    </div>
+                        <div className="color-name">{data.colorName}</div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </>
             )}
 
-            <div className="product-description border-product ">
-            <p style={{ display: "flex", justifyContent: "space-between", fontWeight: 500, color: "#808080" }} className="mt-2" > QUANTITY {" "}</p>
-              <div className="qty-box my-1">
-                <div className="input-group">
-                  <span className="input-group-prepend">
-                    <button
-                      type="button"
-                      className="btn quantity-left-minus"
-                      onClick={changeless}
-                      data-type="minus"
-                      data-field=""
-                    >
-                      <RemoveIcon style={{ fontSize: "15px" }} />
-                    </button>
-                  </span>
-                  <Input
-                    type="text"
-                    name="quantity"
-                    value={quantity}
-                    className="form-control input-number"
-                    readOnly
-                  />
-                  <span className="input-group-prepend">
-                    <button
-                      type="button"
-                      className="btn quantity-right-plus"
-                      onClick={changeInc}
-                      data-type="plus"
-                      data-field=""
-                    >
-                      <AddIcon style={{ fontSize: "15px" }} />
-                    </button>
-                  </span>
-                </div>
+            {/* Quantity Selector */}
+            <div className="quantity-section">
+              <div className="selection-header">
+                <span>QUANTITY</span>
               </div>
-              <span className="instock-cls" style={{ color: "green" }}>
-                {" "}
-                In Stock{" "}
-              </span>
+              <div className="quantity-selector">
+                <button className="quantity-btn" onClick={changeless}>
+                  <RemoveIcon />
+                </button>
+                <div className="quantity-display">{quantity}</div>
+                <button className="quantity-btn" onClick={changeInc}>
+                  <AddIcon />
+                </button>
+              </div>
+              <div className="stock-status">
+                <i className="fa fa-check-circle me-1"></i> In Stock
+              </div>
             </div>
 
-            <div className="product-buttons mt-3">
-              <div
-                className="btn btn-solid"
+            {/* Action Buttons */}
+            <div className="action-buttons mt-4">
+              <button
+                className="btn btn-add-to-cart"
                 onClick={() => {
                   context.addToCart(product, product._id, quantity);
                 }}
               >
-                Add to Cart
-              </div>
-
-              <Link
-                href={"#"}
-                className="btn btn-solid"
-                onClick={() => {
-                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                  if (cart.length == 0) {
-                    return toast.error(
-                      "You must have at least one item in your cart to checkout"
-                    );
-                  } else {
-                    router.push("/page/account/checkout");
-                  }
-                }}
-              >
-                Checkout
-              </Link>
+                <i className="fa fa-shopping-cart me-2"></i> Add to Cart
+              </button>
+              
+              <button
+  className="btn btn-buy-now"
+  onClick={() => {
+    // Add the current product to cart before checkout
+    context.addToCart(product, product._id, quantity);
+    
+    // Then redirect to checkout
+    router.push("/page/account/checkout");
+  }}
+  style={{
+    flex: 1,
+    background: '#8B4513', // SaddleBrown
+    color: 'white',
+    border: 'none',
+    padding: '12px',
+    borderRadius: '8px',
+    fontWeight: '600',
+    transition: 'all 0.2s',
+  }}
+  onMouseOver={(e) => {
+    e.target.style.background = '#A0522D'; // Darker brown on hover (Sienna)
+  }}
+  onMouseOut={(e) => {
+    e.target.style.background = '#8B4513'; // Original brown
+  }}
+>
+  <i className="fa fa-bolt me-2"></i> Buy Now
+</button>
             </div>
           </>
         )}
 
-<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {/* Key Specifications */}
+        <div className="key-specifications">
+          <h5>Key Features</h5>
           {product &&
             product.specificationSingleLine &&
-            product.specificationSingleLine.slice(0, 5).map((data, index) => {
-              return (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    columnGap: 10,
-                  }}
-                >
-                  <div>
-                    <p className="mt-1">{data}</p>
-                  </div>
-                </div>
-              );
-            })}
+            product.specificationSingleLine.slice(0, 5).map((data, index) => (
+              <div key={index} className="spec-item">
+                <i className="fa fa-check spec-icon"></i>
+                <span>{data}</span>
+              </div>
+            ))}
         </div>
 
-        <div className="mt-3">
+        {/* Product Details Accordion */}
+        <div className="product-details-accordion mt-4">
           <Accordion flush open={open} toggle={togglee}>
-            {/* <AccordionItem>
-              <AccordionHeader targetId={4}>PRODUCT DETAILS</AccordionHeader>
-              <AccordionBody accordionId={4}>
-                {product &&
-                  product.specificationArray &&
-                  product.specificationArray.map((data, index) => {
-                    return (
-                      <div key={index}>
-                        <p className="mt-1">
-                          <strong>{data.question}:</strong> {data.answer}
-                        </p>
-                      </div>
-                    );
-                  })}
-              </AccordionBody>
-            </AccordionItem> */}
-
-            {/* <AccordionItem> */}
-              {/* <AccordionHeader targetId={5}>
-                PRODUCT SPECIFICATION
-              </AccordionHeader> */}
-              {/* <AccordionBody accordionId={5}>
-                {product &&
-                  product.specificationSingleLine &&
-                  product.specificationSingleLine.map((data, index) => {
-                    return (
-                      <div key={index}>
-                        <p className="mt-1">
-                          <strong>{data}</strong>
-                        </p>
-                      </div>
-                    );
-                  })}
-              </AccordionBody>
-            </AccordionItem> */}
-            {console.log("product==>", product)}
             <AccordionItem>
-              <AccordionHeader targetId={2}>PRODUCT DESCRIPTION</AccordionHeader>
+              <AccordionHeader targetId={2}>
+                <i className="fa fa-file-text-o me-2"></i> PRODUCT DESCRIPTION
+              </AccordionHeader>
               <AccordionBody accordionId={2}>
                 <div>
                   {product && product.description && (
@@ -519,104 +388,497 @@ const DetailsWithPrice = ({
                 </div>
                 <br></br>
                 <div>
-                <h5>Specification</h5>
-                  {product && product.specificationArray && product.specificationArray.length > 0  && product.specificationArray.map((item) => {
-                    return <p><span style={{fontWeight: 500}}>{item.question}: </span>{item.answer}</p>
+                  <h5>Specification</h5>
+                  {product && product.specificationArray && product.specificationArray.length > 0 && product.specificationArray.map((item, index) => {
+                    return <p key={index}><span style={{fontWeight: 500}}>{item.question}: </span>{item.answer}</p>
                   }) 
                   }
                 </div>
-                {/* <p>{product && product.description}</p> */}
               </AccordionBody>
             </AccordionItem>
 
             <AccordionItem>
-              <AccordionHeader targetId={3}>MORE INFORMATION</AccordionHeader>
+              <AccordionHeader targetId={3}>
+                <i className="fa fa-info-circle me-2"></i> MORE INFORMATION
+              </AccordionHeader>
               <AccordionBody accordionId={3}>
-                <p>
-                  {" "}
-                  <strong style={{color: "black"}}> Manufactured & Marketed by:</strong>{" "}
-                </p>
-                {/* <p className="mt-2">
-                  {" "}
-                  <strong> Heed Attentive</strong>{" "}
-                </p> */}
-                <p className="mt-2">
-                  {" "}
-                  BRANDS.IN
-                </p>
-                <p className="mt-2">
-                  {" "}
-                  A-39, West Patel Nagar, New Delhi – 110008
-                </p>
-                <br></br>
-                <p>
-                  {" "}
-                  <strong style={{color: "black"}}> Country of Origin:</strong>{" "}
-                </p>
-                <p className="mt-2">
-                   India
-                </p>
-
-                {/* <p className="mt-2">
-                  {" "}
-                  <strong> Country of Origin:</strong>{" "}
-                </p>
-                <p> India</p> */}
+                <div className="info-item">
+                  <strong>Manufactured & Marketed by:</strong>
+                  <p>BRANDS.IN</p>
+                  <p>A-39, West Patel Nagar, New Delhi – 110008</p>
+                </div>
+                <div className="info-item">
+                  <strong>Country of Origin:</strong>
+                  <p>India</p>
+                </div>
               </AccordionBody>
             </AccordionItem>
+            
             <AccordionItem>
-              <AccordionHeader targetId={3}>{"RETURN AND EXCHANGE"}</AccordionHeader>
-              <AccordionBody accordionId={3}>
-                <ul>
-                  <li><span style={{fontWeight: 900, position: "relative", top: "-5px"}}>.</span> {"Hassle-free return within 4 day - no questions asked."}</li>
-                  <li><span style={{fontWeight: 900, position: "relative", top: "-5px"}}>.</span> {"Issues with defective, incorrect and damaged product should be reported within 24 hours of delivery."}</li>
-                  <li><span style={{fontWeight: 900, position: "relative", top: "-5px"}}>.</span> {"For hygiene, Inner Wear & Accessories are not eligible for Return or Exchanges."}</li>
+              <AccordionHeader targetId={4}>
+                <i className="fa fa-exchange me-2"></i> RETURN AND EXCHANGE
+              </AccordionHeader>
+              <AccordionBody accordionId={4}>
+                <ul className="return-policy-list">
+                  <li><i className="fa fa-check-circle text-success me-2"></i> Hassle-free return within 4 days - no questions asked.</li>
+                  <li><i className="fa fa-check-circle text-success me-2"></i> Issues with defective, incorrect and damaged product should be reported within 24 hours of delivery.</li>
+                  <li><i className="fa fa-times-circle text-danger me-2"></i> For hygiene, Inner Wear & Accessories are not eligible for Return or Exchanges.</li>
                 </ul>
-                <p className="mt-2">
-                    {"For more details on our Return and Exchange Policies,"} 
-                    <Link href={"/return_and_exchange"}>{"Click here"}</Link>
-                    {/* <a href="your-refund-exchange-policy-link" target="_blank">click here</a>. */}
-                </p>
-                <p className="mt-2">
-                    {"To place a Return / Exchange Request, "}
-                    <Link href={"/contact-us"}>{"Click here"}</Link>
-                    {/* <a href="contact-us" target="_blank">click here</a>. */}
+                <div className="return-links">
+                  <p>
+                    For more details on our Return and Exchange Policies, 
+                    <Link href={"/return_and_exchange"}> Click here</Link>
                   </p>
-
-                {/* <p className="mt-2">
-                  {" "}
-                  <strong> Country of Origin:</strong>{" "}
-                </p>
-                <p> India</p> */}
+                  <p>
+                    To place a Return / Exchange Request, 
+                    <Link href={"/contact-us"}> Click here</Link>
+                  </p>
+                </div>
               </AccordionBody>
             </AccordionItem>
           </Accordion>
-          {/* Check estimate time */}
-          <br></br>
-            <div className="mt-3">
-               <label>Estimated Delivery Date</label><br></br>
-               <input
+          
+          {/* Delivery Estimate Section */}
+          <div className="delivery-estimate-section mt-4">
+            <h6>
+              <i className="fa fa-truck me-2"></i> Enter Pincode
+            </h6>
+            <div className="pincode-input-group">
+              <input
                 type="number"
-                className="form-control"
-                max={10}
+                className="form-control pincode-input"
+                placeholder="Enter 6-digit pincode"
+                maxLength={6}
                 value={checkEstimateTime}
                 onChange={(e) => {
-                    setCheckEstimateTime(e.target.value);
+                  const value = e.target.value.slice(0, 6);
+                  setCheckEstimateTime(value);
+                  if (expectDelivery || expectDeliveryError) {
+                    setExpectDelivery('');
+                    setExpectDeliveryError('');
+                  }
                 }}
               />
-            <span>
-              {expectDelivery ? (
-                <>
-                  Expect delivery by <p style={{ color: "green", display: "inline", fontWeight: 500 }}>{expectDelivery}</p>
-                </>
-              ) : <p style={{color: "red"}}>{expectDeliveryError}</p>}
-            </span>
-              <br></br>
-               <button style={{marginTop: "4px"}} type="button" className="btn btn-solid" onClick={checkHandle}>Check</button>
+              <button 
+                type="button" 
+                className="btn btn-check-delivery"
+                onClick={checkHandle}
+                disabled={isCheckingDelivery}
+              >
+                {isCheckingDelivery ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                    Checking...
+                  </>
+                ) : 'Check'}
+              </button>
             </div>
-          {/* End estimate time */}
+            
+            {expectDelivery && (
+              <div className="delivery-success mt-3">
+                <div className="d-flex align-items-center">
+                  <i className="fa fa-check-circle text-success me-2"></i>
+                  <div>
+                    <div className="delivery-text">Expected delivery by</div>
+                    <div className="delivery-date">{expectDelivery}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {expectDeliveryError && (
+              <div className="delivery-error mt-2">
+                <i className="fa fa-exclamation-circle me-2"></i>
+                {expectDeliveryError}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .product-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: #2d2d2d;
+          margin-bottom: 15px;
+        }
+        
+        .price-section {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .current-price {
+          font-size: 28px;
+          font-weight: 700;
+          color: #2d2d2d;
+          margin-right: 12px;
+          margin-bottom: 0;
+        }
+        
+        .original-price {
+          font-size: 18px;
+          color: #6c757d;
+          margin-right: 12px;
+          margin-bottom: 0;
+        }
+        
+        .discount-badge {
+          background: #dc3545;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        
+        .free-shipping-badge {
+          background: #28a745;
+          color: white;
+          padding: 5px 10px;
+          border-radius: 4px;
+          font-size: 12px;
+          display: inline-block;
+          margin-top: 8px;
+        }
+        
+        .rating-section {
+          display: flex;
+          align-items: center;
+        }
+        
+        .stars {
+          margin-right: 8px;
+        }
+        
+        .rating-text {
+          font-size: 14px;
+          color: #6c757d;
+        }
+        
+        .out-of-stock-banner {
+          background: #fff0f0;
+          color: #dc3545;
+          padding: 12px 15px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 16px;
+          border: 1px solid #ffcccc;
+          margin: 15px 0;
+        }
+        
+        .section-divider {
+          border-top: 1px solid #e9ecef;
+          margin: 20px 0;
+        }
+        
+        .selection-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 500;
+          color: #495057;
+          margin-bottom: 10px;
+        }
+        
+        .size-chart-link {
+          background: none;
+          border: none;
+          color: #007bff;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .size-selector {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        
+        .size-option {
+          width: 50px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #dee2e6;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        
+        .size-option:hover {
+          border-color: #495057;
+        }
+        
+        .size-option.selected {
+          border: 2px solid #000;
+          background: #f8f9fa;
+        }
+        
+        .size-option.unavailable {
+          color: #adb5bd;
+          text-decoration: line-through;
+          cursor: not-allowed;
+          background: #f8f9fa;
+        }
+        
+        .color-selector {
+          display: flex;
+          gap: 15px;
+          flex-wrap: wrap;
+        }
+        
+        .color-option {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          padding: 5px;
+          border-radius: 8px;
+        }
+        
+        .color-option:hover {
+          background: #f8f9fa;
+        }
+        
+        .color-option.selected {
+          border: 2px solid #000;
+        }
+        
+        .color-thumbnail {
+          width: 50px;
+          height: 50px;
+          border-radius: 6px;
+          overflow: hidden;
+          margin-bottom: 5px;
+        }
+        
+        .color-thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .color-name {
+          font-size: 12px;
+          text-align: center;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        .quantity-section {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 15px;
+          margin: 20px 0;
+        }
+        
+        .quantity-selector {
+          display: flex;
+          align-items: center;
+          margin: 10px 0;
+        }
+        
+        .quantity-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #dee2e6;
+          background: white;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        
+        .quantity-display {
+          width: 50px;
+          text-align: center;
+          font-weight: 600;
+          margin: 0 10px;
+        }
+        
+        .stock-status {
+          color: #28a745;
+          font-weight: 500;
+        }
+        
+        .action-buttons {
+          display: flex;
+          gap: 15px;
+        }
+        
+        .btn-add-to-cart {
+          flex: 1;
+          background: white;
+          color: #495057;
+          border: 1px solid #dee2e6;
+          padding: 12px;
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        
+        .btn-add-to-cart:hover {
+          background: #f8f9fa;
+          border-color: #adb5bd;
+        }
+        
+        .btn-buy-now {
+          flex: 1;
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 12px;
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        
+        .btn-buy-now:hover {
+          background: #218838;
+        }
+        
+        .key-specifications {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 15px;
+          margin: 20px 0;
+        }
+        
+        .key-specifications h5 {
+          margin-bottom: 12px;
+          font-weight: 600;
+        }
+        
+        .spec-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        
+        .spec-icon {
+          color: #28a745;
+          margin-right: 10px;
+        }
+        
+        .product-details-accordion {
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        
+        .accordion-button {
+          font-weight: 600;
+          padding: 15px;
+        }
+        
+        .accordion-button:not(.collapsed) {
+          background: #f8f9fa;
+          color: #2d2d2d;
+        }
+        
+        .info-item {
+          margin-bottom: 15px;
+        }
+        
+        .return-policy-list {
+          list-style: none;
+          padding-left: 0;
+        }
+        
+        .return-policy-list li {
+          margin-bottom: 10px;
+        }
+        
+        .return-links {
+          margin-top: 20px;
+        }
+        
+        .return-links a {
+          color: #007bff;
+          text-decoration: none;
+          margin-left: 5px;
+        }
+        
+        .return-links a:hover {
+          text-decoration: underline;
+        }
+        
+        .delivery-estimate-section {
+          padding: 15px;
+        }
+        
+        .delivery-estimate-section h6 {
+          font-weight: 600;
+          margin-bottom: 12px;
+        }
+        
+        .pincode-input-group {
+          display: flex;
+          gap: 10px;
+        }
+        
+        .pincode-input {
+          max-width: 180px;
+        }
+        
+        .btn-check-delivery {
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 8px 15px;
+          border-radius: 6px;
+          font-weight: 500;
+        }
+        
+        .btn-check-delivery:disabled {
+          opacity: 0.65;
+        }
+        
+        .delivery-success {
+          background: #d4edda;
+          color: #155724;
+          padding: 10px 15px;
+          border-radius: 6px;
+        }
+        
+        .delivery-text {
+          font-size: 14px;
+        }
+        
+        .delivery-date {
+          font-weight: 600;
+        }
+        
+        .delivery-error {
+          color: #dc3545;
+          font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+          .action-buttons {
+            flex-direction: column;
+          }
+          
+          .pincode-input-group {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .btn-check-delivery {
+            margin-top: 10px;
+          }
+        }
+      `}</style>
     </>
   );
 };

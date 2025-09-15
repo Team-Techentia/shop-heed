@@ -38,14 +38,11 @@ const Fashion = () => {
       />
 
       <TopCollection 
-      // dataContStart = {0}
-      //  dataContEnd = {50}
-       noTitle="null" backImage={true} type="fashion" title="Most Selling Products" subtitle="special offer" productSlider={Product4} designClass="section-b-space p-t-0 ratio_asos px-2" noSlider="false" cartClass="cart-info cart-wrap"
-      />
-      {/* <TopCollection 
-      // dataContStart = {40} dataContEnd = {70}
+      dataContStart = {0}
+       dataContEnd = {50}
        noTitle="null" backImage={true} type="fashion" title="Most Selling Products" subtitle="special offer" productSlider={Product45} designClass="section-b-space p-t-0 ratio_asos px-2" noSlider="false" cartClass="cart-info cart-wrap"
-      /> */}
+      />
+     
          <Paragraph
         title="title1 section-t-space"
         inner="title-inner1"
