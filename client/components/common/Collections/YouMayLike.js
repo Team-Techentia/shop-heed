@@ -6,17 +6,16 @@ import { Row, Col, Container } from "reactstrap";
 import PostLoader from '../PostLoader';
 import ProductItems from "../product-box/ProductBox1";
 
-export default function TopCollection({dontRepeat, title, cartClass, backImage}) {
+export default function YouMayLikeCollection({dontRepeat, title, cartClass, backImage}) {
     const { catchErrors, setLoading, loading } = useContext(LoaderContext);
     const [product, setProduct] = useState([]);
     const [modal, setModal] = useState(false);
     const { data, isLoading, } = useQuery({
-        queryKey: ['getNewProduct'],
+        queryKey: ['getAllProduct'],
         queryFn: async () => {
-            const res = await Api.getNewProduct();
+            const res = await Api.getAllProduct();
             const data = res.data.data.filter(item => item)
-            // return dontRepeat ? data.filter(p => p._id !== dontRepeat) : data;
-            return data;
+            return dontRepeat ? data.filter(p => p._id !== dontRepeat) : data;
         },
         staleTime: 60000,
         cacheTime: 120000,

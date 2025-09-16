@@ -184,7 +184,7 @@ const DetailsWithPrice = ({
         <div className="price-section">
           <div className="d-flex align-items-center">
             <h3 className="current-price">₹{product.finalPrice}</h3>
-            {product.price > product.finalPrice && (
+            {parseInt(product.price) > parseInt(product.finalPrice) && (
               <>
                 <h4 className="original-price">
                   <del>₹{product.price}</del>

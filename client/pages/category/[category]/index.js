@@ -57,7 +57,7 @@ export default function CategoryPage() {
     }
   }, [categoryy]);
 
-  if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
+  // if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
 
   return (
     <CategorySidebar_popup

@@ -48,7 +48,51 @@ const getCategory = async function (req, res) {
 
     }
 }
-
+const getNavbarCategories = async function (req, res) {
+    try {
+        // Get all categories
+        const categories = await categoryModel.find().sort({ createdAt: -1 });
+        
+        // Get all subcategories
+        const subcategories = await subCategoryModel.find().sort({ createdAt: -1 });
+        
+        // Group subcategories by category name
+        const navbarCategories = categories.map(category => {
+            // Find subcategories that belong to this category
+            const categorySubcategories = subcategories.filter(
+                subcategory => subcategory.category === category.category
+            );
+            
+            return {
+                id: category._id,
+                name: category.category,
+                slug: category.value || category.category.toLowerCase().replace(/\s+/g, '-'),
+                image: category.image,
+                subcategories: categorySubcategories.map(sub => ({
+                    id: sub._id,
+                    name: sub.subCategory,
+                    slug: sub.value || sub.subCategory.toLowerCase().replace(/\s+/g, '-'),
+                    image: sub.image,
+                    icon: 'alert', // Default icon since not in schema
+                    path: `/collections/${sub.value || sub.subCategory.toLowerCase().replace(/\s+/g, '-')}`
+                }))
+            };
+        });
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: "Navbar categories fetched successfully", 
+            data: navbarCategories 
+        });
+        
+    } catch (error) {
+        console.error("Error fetching navbar categories:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Internal server error" 
+        });
+    }
+};
 
 const getSubCategory = async function (req, res) {
     try {
@@ -250,4 +294,4 @@ const editSubcategory = async function (req, res) {
 
 
 
-module.exports = { createCategory, subCreateCategory, getCategoryById, getSubCategoryById, getCategory, getSubCategory, getSubCategoryByCategoryName, deteletCategory, deteletSubCategory, categoriesWithSubcategories, editCategory , editSubcategory }
+module.exports = { createCategory,getNavbarCategories, subCreateCategory, getCategoryById, getSubCategoryById, getCategory, getSubCategory, getSubCategoryByCategoryName, deteletCategory, deteletSubCategory, categoriesWithSubcategories, editCategory , editSubcategory }

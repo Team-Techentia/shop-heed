@@ -43,6 +43,7 @@ const Api = {
   sendOTP: (postData) => postsApi.post("/auth-api/send-otp", postData),
   verifyOtp: (postData) => postsApi.post("/auth-api/verify-otp", postData),
   getCategory: () => postsApi.get("/api/category/get-category"),
+  getNavbarCategories: () => postsApi.get("/api/category/navbar-categories"),
   getOrderByUserId: (token) => postsApi.get("/api/orders/order-List", token),
 
   getOrderById: (id, token) =>
