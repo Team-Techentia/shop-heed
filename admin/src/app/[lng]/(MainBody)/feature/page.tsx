@@ -59,6 +59,7 @@ const FeaturedSectionList = () => {
                     Category: item.category,
                     "Sub Category": item.subCategory || "All",
                     Priority: item.priority,
+                    Image: item.image,
                     Status: item.isActive ?
                         <span className="badge badge-success">Active</span> :
                         <span className="badge badge-danger">Inactive</span>,

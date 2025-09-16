@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const subCategorySchema = new mongoose.Schema({
-  category: String,
-  subCategory: String,
-  value: String,
-  image: String,
+  category: { type: String, required: [true,"Missing category"] },
+  subCategory: { type: String, required: [true,"Missing subcategory"] },
+  value: { type: String, required: [true,"Missing value"] },
+  image: { type: String, required: [true,"Missing image"] },
   createdAt: { type: Date, default: Date.now },
 });
 

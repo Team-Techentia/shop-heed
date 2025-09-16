@@ -181,6 +181,7 @@ export const Product7 = {
   autoplay: true,
   arrows: false,
   autoplaySpeed: 4000,
+  // rows:2,
   responsive: [
     {
       breakpoint: 1366,

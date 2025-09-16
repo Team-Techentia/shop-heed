@@ -165,7 +165,7 @@ const SubCategory = () => {
         category: text,
         subCategory: text1,
         value: value.toLowerCase(),
-        Image: imageUrl
+        image: imageUrl
       };
 
       const createData = await Api.createsubCategory(payLoad, token);

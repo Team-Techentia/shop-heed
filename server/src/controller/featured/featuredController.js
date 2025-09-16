@@ -1,5 +1,7 @@
 // featuredSectionController.js
+const categoryModel = require("../../Model/categoryModel.js");
 const FeaturedSection = require("../../Model/featuredSection.js");
+const subCategoryModel = require("../../Model/subCategoryModel.js");
 
 // Create a new featured section
 const createFeaturedSection = async (req, res) => {
@@ -39,13 +41,41 @@ const createFeaturedSection = async (req, res) => {
             });
         }
 
-        const newSection = new FeaturedSection(data);
-        const savedSection = await newSection.save();
+        let sectionDoc;
+
+        if (data.category && data.subCategory) {
+            sectionDoc = await subCategoryModel.findOne({
+                category: data.category,
+                subCategory: data.subCategory
+            });
+        } else {
+            sectionDoc = await categoryModel.findOne({
+                value: data.category
+            });
+        }
+
+        if (!sectionDoc) {
+            return res.status(404).json({
+                success: false,
+                message: "Category/Subcategory not found"
+            });
+        }
+
+         const newSection = new FeaturedSection({
+            category: data.category,
+            subCategory: data.subCategory || null,
+            priority: data.priority || 1,
+            description: data.description || "",
+            image: sectionDoc.image, // <-- important
+            isActive: true
+        });
+
+                const savedSection = await newSection.save();
 
         return res.status(201).json({
             success: true,
             message: "Featured section created successfully",
-            data: savedSection
+            // data: savedSection
         });
 
     } catch (error) {

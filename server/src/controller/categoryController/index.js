@@ -22,6 +22,7 @@ const createCategory = async function (req, res) {
 const subCreateCategory = async function (req, res) {
     try {
         const data = req.body
+        console.log(data)
         const postData = new subCategoryModel(data);
         const subCategoryData = postData.save()
         if (!subCategoryData) {

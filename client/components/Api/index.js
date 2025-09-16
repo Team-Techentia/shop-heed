@@ -80,6 +80,8 @@ toggleAnnouncement: (token) =>
     headers: { Authorization: `Bearer ${token}` },
   }),
 
+  getFeaturedSection :()=> postsApi.get("/featured-section/get-all-featured-sections"),
+
 
   getActiveBanners: () => postsApi.get("banner/public/active-banners"), 
   getAllBanners: (token) =>

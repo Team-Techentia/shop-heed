@@ -2,12 +2,13 @@
 const mongoose = require('mongoose');
 
 const featuredSectionSchema = new mongoose.Schema({
-    // title: { type: String, required: true, trim: true, maxlength: 100 },
     category: { type: String, required: true, trim: true },
-    subCategory: {type: String, trim: true, default: null},
+    subCategory: { type: String, trim: true, default: null },
     priority: { type: Number, default: 1, min: 1, max: 100 },
     isActive: { type: Boolean, default: true },
     description: { type: String, trim: true, maxlength: 500 },
+    // Add image fields
+    image: { type: String, trim: true, required: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 }, {

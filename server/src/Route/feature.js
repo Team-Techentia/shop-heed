@@ -15,7 +15,7 @@ const { authenticateToken, adminAuthorisation } = auth;
 
 // Admin routes (protected)
 featuredSectionRouter.post("/create-featured-section", authenticateToken, adminAuthorisation, createFeaturedSection);
-featuredSectionRouter.get("/get-all-featured-sections", authenticateToken, adminAuthorisation, getAllFeaturedSections);
+featuredSectionRouter.get("/get-all-featured-sections", getAllFeaturedSections);
 featuredSectionRouter.get("/get-featured-section/:id", authenticateToken, adminAuthorisation, getFeaturedSectionById);
 featuredSectionRouter.put("/update-featured-section/:id", authenticateToken, adminAuthorisation, updateFeaturedSection);
 featuredSectionRouter.delete("/delete-featured-section/:id", authenticateToken, adminAuthorisation, deleteFeaturedSection);
