@@ -16,8 +16,11 @@ class MyDocument extends Document {
             name="google-site-verification"
             content="adCFriqoB3IQiZ1Vg_gH7sq0otH1mQGfWbseW4WFNaY"
           />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200..800&display=swap" rel="stylesheet" />
         </Head>
-        <body>
+      <body style={{fontFamily:"'Assistant', sans-serif"}}>
 
         <noscript>
             <iframe

@@ -41,7 +41,7 @@ const Fashion = () => {
       <TopCollection
         dataContStart={0}
         dataContEnd={50}
-        noTitle="null" backImage={true} type="fashion" title="Most Selling Products" subtitle="special offer" productSlider={Product45} designClass="section-b-space p-t-0 ratio_asos px-2" noSlider="false" cartClass="cart-info cart-wrap"
+        noTitle="null" backImage={true} type="fashion"  subtitle="special offer" productSlider={Product45} designClass="section-b-space p-t-0 ratio_asos px-2" noSlider="false" cartClass="cart-info cart-wrap"
       />
 
       {/* <TopCollection 

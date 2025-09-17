@@ -21,9 +21,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import toast from "react-hot-toast";
 import MarkdownRenderer from "../../../components/MarkDown";
 import { discountCount, getDiscountPercentage } from "../../../services/script";
-import { ListItem } from "@mui/material";
-import Api from "../../../components/Api";
-import axios from "axios";
+
 
 const DetailsWithPrice = ({
   item,
@@ -129,43 +127,43 @@ const DetailsWithPrice = ({
       );
     }
   };
-  
+
   console.log("discountCount", getDiscountPercentage(product.price, product.finalPrice));
 
   // Updated static checkHandle function
-  const checkHandle = async () => { 
+  const checkHandle = async () => {
     // Reset states
     setExpectDelivery('');
     setExpectDeliveryError('');
-    
+
     // Validate pincode
     if (!checkEstimateTime || checkEstimateTime.length < 6) {
       setExpectDeliveryError('Please enter a valid 6-digit pincode');
       return;
     }
-    
+
     setIsCheckingDelivery(true);
-    
+
     try {
       // Simulate API delay for better UX
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Calculate delivery date (3 days from today)
       const today = new Date();
       const deliveryDate = new Date(today);
       deliveryDate.setDate(today.getDate() + 3);
-      
+
       const formattedDate = deliveryDate.toLocaleDateString("en-US", {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
-      
+
       // Always set successful delivery
       setExpectDelivery(formattedDate);
-      
+
       console.log("Static delivery date===>", formattedDate);
-      
+
     } catch (e) {
       setExpectDeliveryError('Unable to check delivery. Please try again.');
       console.log("error--->", e);
@@ -179,31 +177,39 @@ const DetailsWithPrice = ({
       <div className={`product-right ${stickyClass}`}>
         {/* Product Title */}
         <h2 className="product-title"> {product.title} </h2>
-        
+
         {/* Price Section - Redesigned */}
         <div className="price-section">
-          <div className="d-flex align-items-center">
-            <h3 className="current-price">₹{product.finalPrice}</h3>
+          <div
+            className="price-main-row"
+            style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "18px", fontWeight: "bold" }}
+          >
+            {/* <span className="currency-symbol">₹</span> */}
+            <span className="current-price">₹{product.finalPrice}</span>
             {parseInt(product.price) > parseInt(product.finalPrice) && (
-              <>
-                <h4 className="original-price">
-                  <del>₹{product.price}</del>
-                </h4>
-                <div className="discount-badge">
-                  {getDiscountPercentage(product.price, product.finalPrice)} OFF
-                </div>
-              </>
+              <span className="discount-amount" style={{ textDecoration: "line-through", color: "red", opacity: "0.7" }}>
+                ₹{parseInt(product.price) - parseInt(product.finalPrice)} OFF
+              </span>
             )}
           </div>
-          <div className="free-shipping-badge">
-            <i className="fa fa-truck me-1"></i> FREE SHIPPING
+
+
+          <div className="price-details-row">
+            <span className="mrp-text">
+              MRP: <span className="original-price">₹{product.price}</span>
+            </span>
+            <span className="tax-inclusive">Inclusive of all Taxes</span>
           </div>
+
+          {/* <div className="free-shipping-badge">
+            <i className="fa fa-truck me-1"></i> FREE SHIPPING
+          </div> */}
         </div>
 
         {/* Rating */}
         <div className="rating-section mb-3">
           <div className="stars">
-           
+
           </div>
 
         </div>
@@ -217,7 +223,7 @@ const DetailsWithPrice = ({
             {sameProductData && sameProductData.length >= 1 && (
               <>
                 <hr className="section-divider" />
-                
+
                 {/* Size Selection */}
                 {product.category === "shirt" && (
                   <div className="selection-header">
@@ -230,7 +236,7 @@ const DetailsWithPrice = ({
                     </button>
                   </div>
                 )}
-                
+
                 <Modal
                   isOpen={modal}
                   toggle={toggle}
@@ -251,7 +257,7 @@ const DetailsWithPrice = ({
                     />
                   </ModalBody>
                 </Modal>
-                
+
                 <div className="size-selector mt-2">
                   {allSizes.map((size) => {
                     const matchedProduct = uniqueSizes.find(
@@ -272,12 +278,12 @@ const DetailsWithPrice = ({
                     );
                   })}
                 </div>
-                
+
                 {/* Color Selection */}
                 <div className="selection-header mt-3">
                   <span>SELECT COLOUR</span>
                 </div>
-                
+
                 {uniqueColors && (
                   <div className="color-selector mt-2">
                     {uniqueColors.map((data, i) => (
@@ -327,35 +333,35 @@ const DetailsWithPrice = ({
               >
                 <i className="fa fa-shopping-cart me-2"></i> Add to Cart
               </button>
-              
+
               <button
-  className="btn btn-buy-now"
-  onClick={() => {
-    // Add the current product to cart before checkout
-    context.addToCart(product, product._id, quantity);
-    
-    // Then redirect to checkout
-    router.push("/page/account/checkout");
-  }}
-  style={{
-    flex: 1,
-    background: '#8B4513', // SaddleBrown
-    color: 'white',
-    border: 'none',
-    padding: '12px',
-    borderRadius: '8px',
-    fontWeight: '600',
-    transition: 'all 0.2s',
-  }}
-  onMouseOver={(e) => {
-    e.target.style.background = '#A0522D'; // Darker brown on hover (Sienna)
-  }}
-  onMouseOut={(e) => {
-    e.target.style.background = '#8B4513'; // Original brown
-  }}
->
-  <i className="fa fa-bolt me-2"></i> Buy Now
-</button>
+                className="btn btn-buy-now"
+                onClick={() => {
+                  // Add the current product to cart before checkout
+                  context.addToCart(product, product._id, quantity);
+
+                  // Then redirect to checkout
+                  router.push("/page/account/checkout");
+                }}
+                style={{
+                  flex: 1,
+                  background: '#8B4513', // SaddleBrown
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#A0522D'; // Darker brown on hover (Sienna)
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#8B4513'; // Original brown
+                }}
+              >
+                <i className="fa fa-bolt me-2"></i> Buy Now
+              </button>
             </div>
           </>
         )}
@@ -390,8 +396,8 @@ const DetailsWithPrice = ({
                 <div>
                   <h5>Specification</h5>
                   {product && product.specificationArray && product.specificationArray.length > 0 && product.specificationArray.map((item, index) => {
-                    return <p key={index}><span style={{fontWeight: 500}}>{item.question}: </span>{item.answer}</p>
-                  }) 
+                    return <p key={index}><span style={{ fontWeight: 500 }}>{item.question}: </span>{item.answer}</p>
+                  })
                   }
                 </div>
               </AccordionBody>
@@ -413,7 +419,7 @@ const DetailsWithPrice = ({
                 </div>
               </AccordionBody>
             </AccordionItem>
-            
+
             <AccordionItem>
               <AccordionHeader targetId={4}>
                 <i className="fa fa-exchange me-2"></i> RETURN AND EXCHANGE
@@ -426,18 +432,18 @@ const DetailsWithPrice = ({
                 </ul>
                 <div className="return-links">
                   <p>
-                    For more details on our Return and Exchange Policies, 
+                    For more details on our Return and Exchange Policies,
                     <Link href={"/return_and_exchange"}> Click here</Link>
                   </p>
                   <p>
-                    To place a Return / Exchange Request, 
+                    To place a Return / Exchange Request,
                     <Link href={"/contact-us"}> Click here</Link>
                   </p>
                 </div>
               </AccordionBody>
             </AccordionItem>
           </Accordion>
-          
+
           {/* Delivery Estimate Section */}
           <div className="delivery-estimate-section mt-4">
             <h6>
@@ -459,9 +465,20 @@ const DetailsWithPrice = ({
                   }
                 }}
               />
-              <button 
-                type="button" 
-                className="btn btn-check-delivery"
+              <button
+                type="button" style={{
+                  color: "#fff",
+                  width: "130px",
+                  padding: "10px 16px",
+                  background: "linear-gradient(90deg, #8b4513, #a0522d)",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  transition: "all 0.3s ease",
+                }}
                 onClick={checkHandle}
                 disabled={isCheckingDelivery}
               >
@@ -473,19 +490,58 @@ const DetailsWithPrice = ({
                 ) : 'Check'}
               </button>
             </div>
-            
+
             {expectDelivery && (
-              <div className="delivery-success mt-3">
-                <div className="d-flex align-items-center">
-                  <i className="fa fa-check-circle text-success me-2"></i>
-                  <div>
-                    <div className="delivery-text">Expected delivery by</div>
-                    <div className="delivery-date">{expectDelivery}</div>
-                  </div>
-                </div>
-              </div>
+<div
+  style={{
+    marginTop: "14px",
+    padding: "14px 18px",
+    borderRadius: "12px",
+    background: "linear-gradient(135deg, #fdfdfd, #f7f9fc)",
+    border: "1px solid #e6ebf1",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+    }}
+  >
+    <i
+      className="fa fa-check-circle"
+      style={{
+        color: "#4CAF50",
+        fontSize: "22px",
+      }}
+    ></i>
+    <div>
+      <div
+        style={{
+          fontSize: "15px",
+          fontWeight: "600",
+          color: "#222",
+          marginBottom: "4px",
+        }}
+      >
+        Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
+      </div>
+      <div
+        style={{
+          fontSize: "13px",
+          color: "#6b7280",
+          fontStyle: "italic",
+        }}
+      >
+        {expectDelivery}
+      </div>
+    </div>
+  </div>
+</div>
+
             )}
-            
+
             {expectDeliveryError && (
               <div className="delivery-error mt-2">
                 <i className="fa fa-exclamation-circle me-2"></i>
@@ -504,12 +560,8 @@ const DetailsWithPrice = ({
           margin-bottom: 15px;
         }
         
-        .price-section {
-          background: #f8f9fa;
-          border-radius: 8px;
-          padding: 15px;
-          margin-bottom: 15px;
-        }
+        
+
         
         .current-price {
           font-size: 28px;

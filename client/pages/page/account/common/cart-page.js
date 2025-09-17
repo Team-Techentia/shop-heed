@@ -6,25 +6,29 @@ import cart from "../../../../public/assets/images/icon-empty-cart.png";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import bagg from "../../../../public/assets/images/bagg.png";
-("");
+
 const CartPage = () => {
   const context = useContext(CartContext);
   const cartItems = context.state;
+  console.log("Cart Items:", cartItems);
   const total = context.cartTotal;
   const removeFromCart = context.removeFromCart;
+  
   const changeless = (item, id, quantity) => {
     if (quantity === 1) {
       return;
     }
     context.updateQuantity(item, id, -1);
   };
-  const changeInc = (item, id, quantity) => {
-    if (item.quantity <= quantity) {
-    
+  
+  const changeInc = (item, id, currentQuantity) => {
+    // Check against the product's available stock, not current quantity
+    if (currentQuantity >= item.quantity) {  // item.quantity is the available stock
       return;
     }
     context.updateQuantity(item, id, 1);
   };
+
   return (
     <div style={{ marginBottom: "10px" }}>
       {cartItems && cartItems.length > 0 ? (
@@ -34,8 +38,10 @@ const CartPage = () => {
               <Row>
                 {cartItems.map((item, index) => {
                   const product = item.product;
-                  const itemTotal = product.finalPrice * item.quantity;
-                 console.log(item)
+                  const price = parseFloat(product.finalPrice) || parseFloat(product.price) || 0;
+                  const quantity = parseInt(item.quantity) || 0;
+                  const itemTotal = price * quantity;
+                 
                   return (
                     <Col xl="3" lg="3" md="4" sm="6" xs="12" key={index}>
                       <div
@@ -80,15 +86,15 @@ const CartPage = () => {
                             </span>
                           </Link>
                           <p
-                                style={{
-                                  textDecoration: "none",
-                                  color: "#333",
-                                  fontWeight: "bold",
-                                  margin: "5px 0px"
-                                }}
-                              >
-                                Size: <span style={{textTransform:"uppercase"}}> {product.size}</span>
-                              </p>
+                            style={{
+                              textDecoration: "none",
+                              color: "#333",
+                              fontWeight: "bold",
+                              margin: "5px 0px"
+                            }}
+                          >
+                            Size: <span style={{textTransform:"uppercase"}}> {product.size}</span>
+                          </p>
 
                           <div>
                             <div className="qty-box my-1">
@@ -154,7 +160,7 @@ const CartPage = () => {
                                   margin: "5px 0px",
                                 }}
                               >
-                                Price: ₹{Math.floor(product.finalPrice)}
+                                Price: ₹{Math.floor(price)}
                               </p>
                               <p
                                 style={{
@@ -180,7 +186,6 @@ const CartPage = () => {
                                   color: "#000000",
                                   borderRadius: "4px",
                                   cursor: "pointer",
-                                  
                                 }}
                               >
                                 Remove

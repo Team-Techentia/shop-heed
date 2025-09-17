@@ -11,11 +11,11 @@ const ImageZoom = (props) => {
         alt="Product Image"
         layout="responsive"
         width={500}
-        height={maxHeight ? parseInt(maxHeight) : 650} 
-        objectFit="cover"
+        height={maxHeight ? parseInt(maxHeight) : 700} 
+        // objectFit="cover"
         quality={75} 
-        placeholder="blur"
-        blurDataURL={`${image}?w=10&q=10`} 
+        // placeholder="blur"
+        // blurDataURL={`${image}?w=10&q=10`} 
       />
     </div>
   );

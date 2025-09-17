@@ -12,7 +12,7 @@ import { getCookie } from "../../../components/cookies";
 import Slider from "react-slick";
 import { useMediaQuery } from "@mui/material";
 import ModalComponentt from "../../../components/common/CommonModal";
-import { Height } from "@mui/icons-material";
+
 const LeftSidebarPage = ({ pathId, setTopTitle }) => {
   const isSmallScreen = useMediaQuery("(max-width: 995px)");
   const token = getCookie("ectoken");
@@ -30,6 +30,8 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
   const [reviewIdUser, setReviewIdUser] = useState("");
   const [show, setShow] = useState(false);
   const [images, setImages] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const settings = {
     dots: true,
     infinite: true,
@@ -88,11 +90,19 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
     sliderRef.current.slickGoTo(index);
   };
 
+  const openModal = (clickedIndex) => {
+    // Set the images array to product images
+    if (productData && productData.image) {
+      setImages(productData.image);
+      setSelectedImageIndex(clickedIndex);
+      setShow(true);
+    }
+  };
+
   useEffect(() => {
-      console.log("images---->", images);
-      
-  }, [images])
-  // const [modal, setModal] = useState(false);
+    console.log("images---->", images);
+  }, [images]);
+
   return (
     <section style={{ paddingTop: "20px" }} className="">
       <div className="collection-wrapper">
@@ -139,24 +149,9 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
                                         }}
                                         onClick={() => {
                                           handleThumbnailClick(i);
-                                          setImages((prevImages) => {
-                                            let imageSet = new Set(prevImages); // Ensure uniqueness
-                                            productData.image.forEach((img) => imageSet.add(img)); // Add new images
-                                          
-                                            let updatedImages = Array.from(imageSet); // Convert Set back to an array
-                                          
-                                            // Ensure the first image from productData.image is always at index 0
-                                            if (productData.image.length > 0) {
-                                              const firstImage = productData.image[0]; 
-                                              updatedImages = [image, ...updatedImages.filter(img => img !== image)];
-                                            }
-                                          
-                                            return updatedImages;
-                                          });                                          
-                                          
-                                          setShow(!show);
+                                          openModal(i);
+                                          setSelectedImageIndex(i);
                                         }}
-                                        className="images-images"
                                       >
                                         <ImageZoom image={image} />
                                       </div>
@@ -178,27 +173,7 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
                                 productData.image.map((image, i) => (
                                   <div key={i}>
                                     <ImageZoom
-                                      onClick={() => {
-                                      handleThumbnailClick(i);
-                                      setImages((prevImages) => {
-                                        prevImages.filter((prev) => image != prev);
-                                        let imageSet = new Set(prevImages); // Ensure uniqueness
-                                        productData.image.forEach((img) => imageSet.add(img)); // Add new images
-                                      
-                                        let updatedImages = Array.from(imageSet); // Convert Set back to an array
-                                      
-                                        // Ensure the first image from productData.image is always at index 0
-                                        if (productData.image.length > 0) {
-                                          const firstImage = productData.image[0]; 
-                                          updatedImages = [image, ...updatedImages.filter(img => img !== image)];
-                                        }
-                                      
-                                        return updatedImages;
-                                      });                                          
-                                      
-                                      setShow(!show);
-                                    }}
-                                      // onClick={() => setModal(!modal)}
+                                      onClick={() => openModal(i)}
                                       maxHeight={"650px"}
                                       image={image}
                                     />
@@ -252,8 +227,13 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
         </Container>
       </div>
     
-      <ModalComponentt modal={show} setModal={setShow} images={images} />
-        {/* /> */}
+      <ModalComponentt 
+        modal={show} 
+        setModal={setShow} 
+        images={images}
+        selectedImageIndex={selectedImageIndex}
+        setSelectedImageIndex={setSelectedImageIndex}
+      />
     </section>
   );
 };

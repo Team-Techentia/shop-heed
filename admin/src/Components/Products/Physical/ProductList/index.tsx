@@ -1126,7 +1126,7 @@ const ProductList = () => {
 
           <ModalBody>
 
-            <Label className="fw-bold mb-0">Comments:</Label>
+            <Label className="fw-bold mb-0">Comments: </Label>
 
             {comment && (
               <Datatable
