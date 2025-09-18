@@ -98,7 +98,7 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
           <div
             onClick={(e) => {
               e.stopPropagation(); // prevent redirect
-              cartContext.addToCart(product);
+              cartContext.addToCart(product,product.id,1);
             }}
             style={{
               position: "absolute",

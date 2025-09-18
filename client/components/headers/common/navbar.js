@@ -34,6 +34,7 @@ const NavBar = () => {
         title: category.name,
         slug: category.slug,
         type: "sub",
+        path: `/category/${category.slug}`,
         children: category.subcategories.map(subcategory => ({
           title: subcategory.name,
           path: `/category/${category.slug}/${subcategory.slug}`,
@@ -56,8 +57,8 @@ const NavBar = () => {
           children: [
             ...dynamicMenuItems,
             // Keep existing static categories that aren't replaced
-            ...menuItem.children.filter(child => 
-              !dynamicMenuItems.some(dynamic => 
+            ...menuItem.children.filter(child =>
+              !dynamicMenuItems.some(dynamic =>
                 dynamic.title.toLowerCase() === child.title.toLowerCase()
               )
             )
@@ -205,9 +206,9 @@ const NavBar = () => {
                         </div>
                       </Link>
                     ) : (
-                      <a 
-                        href={`${menuItem.children.length == 0 ? "" : ""}`} 
-                        className="nav-link" 
+                      <a
+                        href={`${menuItem.children.length == 0 ? "" : ""}`}
+                        className="nav-link"
                         onClick={(e) => openMblNav(e)}
                       >
                         <div className="underline-hover" style={{ position: 'relative', display: 'inline-block' }}>
@@ -222,9 +223,8 @@ const NavBar = () => {
                           return (
                             <li
                               key={index}
-                              className={`${
-                                childrenItem.children ? "sub-menu " : ""
-                              }`}>
+                              className={`${childrenItem.children ? "sub-menu " : ""
+                                }`}>
                               {childrenItem.type === "sub" ? (
                                 <a
                                   href={null}
@@ -254,9 +254,8 @@ const NavBar = () => {
                               )}
                               {childrenItem.children ? (
                                 <ul
-                                  className={`nav-sub-childmenu ${
-                                    childrenItem.active ? "menu-open " : "active"
-                                  }`}>
+                                  className={`nav-sub-childmenu ${childrenItem.active ? "menu-open " : "active"
+                                    }`}>
                                   {childrenItem.children.map(
                                     (childrenSubItem, key) => (
                                       <li key={key}>
@@ -289,38 +288,35 @@ const NavBar = () => {
                       <>
                         {menuItem.type !== "link" && (
                           <div
-                            className={`mega-menu-container${
-                              menuItem.megaMenu ? "" : " opensubmenu"
-                            }`}>
+                            className={`mega-menu-container${menuItem.megaMenu ? "" : " opensubmenu"
+                              }`}>
                             {menuItem.megaMenu === true ? (
                               <Container>
                                 <Row>
                                   {menuItem.children.map((megaMenuItem, i) => {
                                     return (
                                       <div
-                                        className={`${
-                                          menuItem.megaMenuType == "small"
+                                        className={`${menuItem.megaMenuType == "small"
                                             ? "col-xl-2 col-lg-3 col-md-4 col-sm-6 mega-box"
                                             : menuItem.megaMenuType == "medium"
-                                            ? "col-xl-3 col-lg-4 col-md-6 col-sm-12"
-                                            : menuItem.megaMenuType == "large"
-                                            ? "col-xl-4 col-lg-6 col-md-12"
-                                            : "col-xl-2 col-lg-3 col-md-4 col-sm-6"
-                                        } mb-3`}
+                                              ? "col-xl-3 col-lg-4 col-md-6 col-sm-12"
+                                              : menuItem.megaMenuType == "large"
+                                                ? "col-xl-4 col-lg-6 col-md-12"
+                                                : "col-xl-2 col-lg-3 col-md-4 col-sm-6"
+                                          } mb-3`}
                                         key={i}
                                         style={{
                                           minWidth: '200px',
-                                          maxWidth: menuItem.megaMenuType == "small" ? '220px' : 
-                                                   menuItem.megaMenuType == "medium" ? '280px' : '350px'
+                                          maxWidth: menuItem.megaMenuType == "small" ? '220px' :
+                                            menuItem.megaMenuType == "medium" ? '280px' : '350px'
                                         }}>
                                         <div className="link-section">
                                           <div className="menu-title">
-                                            <h5
-                                              onClick={(e) =>
-                                                handleMegaSubmenu(e)
-                                              }>
-                                              {megaMenuItem.title}
-                                            </h5>
+                                            <Link href={megaMenuItem.path}>
+                                              <h5>
+                                                {megaMenuItem.title}
+                                              </h5>
+                                            </Link>
                                           </div>
                                           <div className="menu-content">
                                             <ul>

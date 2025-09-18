@@ -7,7 +7,7 @@ import Paragraph from "../../components/common/Paragraph";
 
 const CategorySidebar_popup = ({ product, banner, subCategory }) => {
   console.log("subCategory", subCategory);
-  
+
   return (
     <>
       <HeaderOne noTopBar={false} logoName={"logo.png"} topClass="top-header" />
@@ -33,7 +33,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory }) => {
                 title="title1 "
                 inner=""
                 hrClass={false}
-                titleData={subCategory && subCategory.replaceAll("-", " ")}
+                titleData={subCategory ? subCategory == "new" ? "Our Top Shelf Pick" : subCategory.replaceAll("-", " ") : false}
               />
 
             </div>
@@ -41,7 +41,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory }) => {
             <Row className="margin-default">
               <CatogeryPopupSidebar
                 product={product}
-               
+
               />
             </Row>
           </Container>

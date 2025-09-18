@@ -72,6 +72,10 @@ function Category() {
             params.subCategory = "";
             params.shopType = subCategory;
           }
+          if(subCategory == "new") {
+            params.subCategory = "";
+            params.shopType = subCategory;
+          }
           setLoading(true)
           const res = await Api.filterProduct(params)
           setData(res.data)
@@ -94,13 +98,6 @@ function Category() {
       },[subCategory, categoryy])
   return (
     <>
-    {subCategory==="plain-shirts" && <PlainMetaTag />}
-    {subCategory==="stripe-shirts" && <StripeMetaTag />}
-    {subCategory==="half-sleeve-shirt" && <HalfSleveMetaTag />}
-    {subCategory==="printed-shirts" && <PrintedMetaTag />}
-    {subCategory==="cargo-shirts" && <CargoMetaTag />}
-    {subCategory==="formal wear" && <FormalWearMetaTag />}
-    {subCategory==="check-shirts" && <CheckShirtsMeta />}
     
     <CategorySidebar_popup subCategory={subCategory} banner = {banner} product={data}/>
     </>
