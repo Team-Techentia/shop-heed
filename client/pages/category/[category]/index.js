@@ -1,4 +1,3 @@
-// pages/category/[category]/index.js
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Api from "../../../components/Api";
@@ -21,17 +20,25 @@ export default function CategoryPage() {
   const [products, setProducts] = useState([]);
   const [banner, setBanner] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    priceRange: [0, 3500],
+    selectedColors: [],
+    sizes: [],
+  });
 
+  const [showSidebar, setShowSidebar] = useState(false); // 👈 control popup open/close
+
+  // fetch API products
   useEffect(() => {
     if (categoryy) {
       const fetchProducts = async () => {
         try {
           let params = {
-            category: categoryy ? categoryy.toLocaleLowerCase() : "",
+            category: categoryy ? categoryy.toLowerCase() : "",
             subCategory: "",
+            ...filters,
           };
 
-          // if category itself matches shopType, handle here
           if (specialShopTypes.includes(categoryy)) {
             params.subCategory = "";
             params.shopType = categoryy;
@@ -42,7 +49,6 @@ export default function CategoryPage() {
 
           setProducts(res?.data || []);
 
-          // 🔑 use category image (if API returns category info)
           if (res?.categoryData?.image) {
             setBanner({ src: res.categoryData.image });
           }
@@ -55,15 +61,25 @@ export default function CategoryPage() {
 
       fetchProducts();
     }
-  }, [categoryy]);
-
-  // if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
+  }, [categoryy, filters]);
 
   return (
-    <CategorySidebar_popup
-      subCategory={categoryy} // pass category name as heading
-      banner={banner}
-      product={products}
-    />
+    <div className="category-page flex gap-6">
+      {/* Sidebar popup */}
+      <CategorySidebar_popup
+        subCategory={categoryy}
+        banner={banner}
+        product={products}
+        onClose={() => setShowSidebar(false)} // 👈 pass close handler
+      />
+
+      {/* Main content */}
+      <div className="flex-1">
+        {/* If you want filter UI later */}
+        {/* <Filters filters={filters} setFilters={setFilters} /> */}
+
+        
+      </div>
+    </div>
   );
 }

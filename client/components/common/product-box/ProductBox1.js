@@ -14,12 +14,14 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
   const [image, setImage] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isMobile1, setIsMobile1] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
 
   // detect mobile screen
   useEffect(() => {
     const handleResize = () => {
+      setIsTablet(window.innerWidth <= 800);
       setIsMobile(window.innerWidth <= 640);
-      setIsMobile1(window.innerWidth <= 380) // mobile breakpoint
+      setIsMobile1(window.innerWidth <= 380);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -47,7 +49,7 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
           <div
             style={{
               position: "absolute",
-              top: isMobile  ?isMobile1? "16px" :"15px": "20px",
+              top: isMobile  ?isMobile1?  "10px" :"13px": "16px",
               left: isMobile ? "15px" : "20px",
               background: "linear-gradient(90deg, #4AA184, #5ab195)",
               color: "#fff",
@@ -85,7 +87,7 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
               alt={product.title}
               layout="responsive"
               style={{ maxHeight: "500px", borderRadius: "8px" }}
-              width={600}
+              width={550}
               height={500}
               // objectFit="cover"
               quality={100}
@@ -122,78 +124,90 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
 
         {/* Product Brand */}
         {product.brand && (
-          <p
-            style={{
-              marginTop:"7px",
-              fontSize: isMobile ? "15px" : "20px",
-              fontWeight: "600",
-              color: "#000",
-              marginBottom: "4px",
-              textAlign: "center",
-            }}
-          >
-            {product.brand}
-          </p>
-        )}
+  <p
+    style={{
+      marginTop: "15px",
+      fontSize: isMobile ? "15px" : "20px",
+      fontWeight: "600",
+      color: "#000",
+      marginBottom: "4px",
+      marginLeft: "7px",
+      letterSpacing: "1px", // Increased character spacing for better readability
+      textTransform: "uppercase", // Added text transformation for a more modern look
+    }}
+  >
+    {product.brand}
+  </p>
+)}
 
-        {/* Product Title */}
-        <h4
-          style={{
-            marginTop: "10px",
-            color: "gray",
-            fontSize: isMobile ? "13px" : "16px",
-            textAlign: "center",
-          }}
-        >
-          {product.title}
-        </h4>
+{/* Product Title */}
+<h4
+  style={{
+    marginTop: "6px",
+    color: "gray",
+    fontSize: isMobile ? "13px" : "16px",
+    marginLeft: "7px",
+    letterSpacing: "1.5px", // Increased character spacing for the title
+    fontFamily: "'Roboto', sans-serif", // Added modern font
+    fontWeight: "500", // Slightly reduced font weight for a balanced look
+    textTransform: "capitalize", // Capitalizes the first letter of each word
+  }}
+>
+  {product.title}
+</h4>
 
-        {/* Price Section */}
-        <div style={{ margin: "8px 0", textAlign: "center" }}>
-          {product?.discount ? (
-            <>
-              {/* Original Price */}
-              <span
-                style={{
-                  textDecoration: "line-through",
-                  color: "#888",
-                  marginRight: "8px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                }}
-              >
-                ₹{product.price}
-              </span>
+{/* Price Section */}
+<div style={{ marginLeft:"8px", marginTop: "0px" }}>
+  {product?.discount ? (
+    <>
+      {/* Original Price */}
+      <span
+        style={{
+          textDecoration: "line-through",
+          color: "#888",
+          marginRight: "8px",
+          fontSize: "14px",
+          fontWeight: "bold",
+          letterSpacing: "1px", // Slight character spacing for original price
+        }}
+      >
+        ₹{product.price}
+      </span>
 
-              {/* Discounted Price */}
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  background: "linear-gradient(90deg, #4AA184, #5ab195)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  display: "inline-block",
-                }}
-              >
-                ₹{product.finalPrice}
-              </span>
-            </>
-          ) : (
-            <span
-              style={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                background: "linear-gradient(90deg, #4AA184, #5ab195)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                display: "inline-block",
-              }}
-            >
-              ₹{product.price}
-            </span>
-          )}
-        </div>
+      {/* Discounted Price */}
+      <span
+        style={{
+          fontWeight: "bold",
+          fontSize: "16px",
+          background: "linear-gradient(90deg, #4AA184, #5ab195)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          display: "inline-block",
+          letterSpacing: "1px", // Increased character spacing for the final price
+          textTransform: "uppercase", // Added uppercase for the discounted price
+        }}
+      >
+        ₹{product.finalPrice}
+      </span>
+    </>
+  ) : (
+    <span
+      style={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        background: "linear-gradient(90deg, #4AA184, #5ab195)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        display: "inline-block",
+        letterSpacing: "1px", // Added spacing to the price
+        textTransform: "uppercase", // Uppercase for consistency
+      }}
+    >
+      ₹{product.price}
+    </span>
+  )}
+</div>
+
 
         {/* Colors available */}
         {product.colors && (

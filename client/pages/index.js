@@ -57,6 +57,7 @@ const Fashion = () => {
         titleData="Featured Category"
       />
       <FeaturedSections />
+      
 
       <TabCollection9 type="marijuana" midBox={true} spanClass={true} />
       <MasterFooter
