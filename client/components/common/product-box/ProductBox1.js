@@ -49,7 +49,7 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
           <div
             style={{
               position: "absolute",
-              top: isMobile  ?isMobile1?  "10px" :"13px": "16px",
+              top: isMobile  ?isMobile1?  "15px" :"18px": "20px",
               left: isMobile ? "15px" : "20px",
               background: "linear-gradient(90deg, #4AA184, #5ab195)",
               color: "#fff",
@@ -87,7 +87,7 @@ const ProductItem = ({ product, backImage, des, productDetail, title, onClick })
               alt={product.title}
               layout="responsive"
               style={{ maxHeight: "500px", borderRadius: "8px" }}
-              width={550}
+              width={600}
               height={500}
               // objectFit="cover"
               quality={100}
