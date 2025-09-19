@@ -5,60 +5,7 @@ import HeaderOne from "../../components/headers/header-one";
 import MasterFooter from "../../components/footers/common/MasterFooter";
 import Paragraph from "../../components/common/Paragraph";
 import ProductItems from "../../components/common/product-box/ProductBox1";
-
-// Price sorting options
-const SORT_OPTIONS = [
-    { value: 'default', label: 'Recommended' },
-    { value: 'low-to-high', label: 'Price: Low to High' },
-    { value: 'high-to-low', label: 'Price: High to Low' },
-    { value: 'newest', label: 'Newest First' }
-];
-
-// Predefined colors
-const ALL_COLORS = [
-    { name: 'Red', hex: '#FF0000' },
-    { name: 'Orange', hex: '#FFA500' },
-    { name: 'Yellow', hex: '#FFFF00' },
-    { name: 'Green', hex: '#008000' },
-    { name: 'Blue', hex: '#0000FF' },
-    { name: 'Purple', hex: '#800080' },
-    { name: 'Pink', hex: '#FFC0CB' },
-    { name: 'Brown', hex: '#A52A2A' },
-    { name: 'Black', hex: '#000000' },
-    { name: 'White', hex: '#FFFFFF' },
-    { name: 'Gray', hex: '#808080' },
-    { name: 'Beige', hex: '#F5F5DC' },
-    { name: 'Turquoise', hex: '#40E0D0' },
-    { name: 'Cyan', hex: '#00FFFF' },
-    { name: 'Magenta', hex: '#FF00FF' },
-    { name: 'Lavender', hex: '#E6E6FA' },
-    { name: 'Indigo', hex: '#4B0082' },
-    { name: 'Maroon', hex: '#800000' },
-    { name: 'Olive', hex: '#808000' },
-    { name: 'Teal', hex: '#008080' },
-    { name: 'Navy', hex: '#000080' },
-    { name: 'Violet', hex: '#EE82EE' },
-    { name: 'Silver', hex: '#C0C0C0' },
-    { name: 'Gold', hex: '#FFD700' },
-    { name: 'Charcoal', hex: '#36454F' },
-    { name: 'Coral', hex: '#FF7F50' },
-    { name: 'Crimson', hex: '#DC143C' },
-    { name: 'Emerald', hex: '#50C878' },
-    { name: 'Ivory', hex: '#FFFFF0' },
-    { name: 'Khaki', hex: '#F0E68C' },
-    { name: 'Mint', hex: '#98FF98' },
-    { name: 'Peach', hex: '#FFDAB9' },
-    { name: 'Plum', hex: '#DDA0DD' },
-    { name: 'Rose', hex: '#FF007F' },
-    { name: 'Sapphire', hex: '#0F52BA' },
-    { name: 'Tan', hex: '#D2B48C' },
-    { name: 'Aquamarine', hex: '#7FFFD4' },
-];
-
-// Predefined sizes
-const ALL_SIZES = [
-    'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'
-];
+import { ALL_COLORS, ALL_SIZES, SORT_OPTIONS } from "../../components/constant/filters";
 
 // Helper functions
 const extractValues = (value) => {
@@ -75,9 +22,10 @@ const normalizeString = (str) => {
 
 const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title, cartClass }) => {
     console.log("subCategory", subCategory);
-    
+
     const [showFilters, setShowFilters] = useState(false);
-    
+    const [isMobile, setIsMobile] = useState(false);
+
     // Filter states
     const [filters, setFilters] = useState({
         priceRange: [0, 3500],
@@ -89,6 +37,31 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
     const [filteredData, setFilteredData] = useState([]);
     const [availableSizes] = useState(ALL_SIZES);
     const [availableColors] = useState(ALL_COLORS);
+
+    // Check if device is mobile
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 991);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Prevent body scroll when mobile filter is open
+    useEffect(() => {
+        if (isMobile && showFilters) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isMobile, showFilters]);
 
     // Apply filters and sorting whenever product data or filters change
     useEffect(() => {
@@ -185,6 +158,13 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
         });
     };
 
+    // Apply filters and close mobile overlay
+    const applyFilters = () => {
+        if (isMobile) {
+            setShowFilters(false);
+        }
+    };
+
     // Check if any filters are active
     const hasActiveFilters = filters.priceRange[0] !== 0 ||
         filters.priceRange[1] !== 3500 ||
@@ -192,14 +172,18 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
         filters.selectedColors.length > 0 ||
         filters.sortBy !== 'default';
 
+    const activeFiltersCount = filters.selectedSizes.length +
+        filters.selectedColors.length +
+        (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 3500 ? 1 : 0);
+
     return (
         <>
             <HeaderOne topClass="top-header" logoName="logo.png" />
-            
+
             {banner && banner.src && (
                 <Paragraph title={banner.title} inner={banner.title} />
             )}
-            
+
             <section className="section-b-space ratio_asos">
                 <div className="premium-collection">
                     <Container>
@@ -236,9 +220,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                                             Filters
                                             {hasActiveFilters && (
                                                 <span className="filter-badge">
-                                                    {filters.selectedSizes.length +
-                                                        filters.selectedColors.length +
-                                                        (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 3500 ? 1 : 0)}
+                                                    {activeFiltersCount}
                                                 </span>
                                             )}
                                         </Button>
@@ -250,120 +232,154 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                         <Row>
                             {/* Filter Sidebar */}
                             <Col lg="3" className={showFilters ? "d-block" : "d-none"}>
-                                <div className="filter-sidebar">
-                                    {/* Price Range Filter */}
-                                    <div className="filter-section mb-4">
-                                        <h6 className="filter-title">Price Range</h6>
-                                        <div className="price-inputs d-flex align-items-center gap-2 mb-3">
-                                            <div className="price-input-group">
-                                                <Label className="small text-muted">Min</Label>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="0"
+                                <div className={`filter-sidebar ${isMobile && showFilters ? 'mobile-filter-open' : ''}`}>
+                                    {/* Mobile Filter Header */}
+                                    {isMobile && (
+                                        <div className="mobile-filter-header">
+                                            <h5 className="mb-0">Filters</h5>
+                                            <button
+                                                className="close-filter-btn"
+                                                onClick={() => setShowFilters(false)}
+                                            >
+                                                <i className="fa fa-times"></i>
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="filter-content">
+                                        {/* Price Range Filter */}
+                                        <div className="filter-section mb-4">
+                                            <h6 className="filter-title">Price Range</h6>
+                                            <div className="price-inputs d-flex align-items-center gap-2 mb-3">
+                                                <div className="price-input-group">
+                                                    <Label className="small text-muted">Min</Label>
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        value={filters.priceRange[0]}
+                                                        onChange={(e) => handlePriceRangeChange(e.target.value, "min")}
+                                                        min="0"
+                                                        max="3500"
+                                                        className="price-input"
+                                                    />
+                                                </div>
+                                                <span className="dash">-</span>
+                                                <div className="price-input-group">
+                                                    <Label className="small text-muted">Max</Label>
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="3500"
+                                                        value={filters.priceRange[1]}
+                                                        onChange={(e) => handlePriceRangeChange(e.target.value, "max")}
+                                                        min="0"
+                                                        max="3500"
+                                                        className="price-input"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="price-slider position-relative">
+                                                <input
+                                                    type="range"
+                                                    className="form-range range-min"
+                                                    min="0"
+                                                    max="3500"
+                                                    step="50"
                                                     value={filters.priceRange[0]}
                                                     onChange={(e) => handlePriceRangeChange(e.target.value, "min")}
+                                                />
+                                                <input
+                                                    type="range"
+                                                    className="form-range range-max"
                                                     min="0"
                                                     max="3500"
-                                                    className="price-input"
-                                                />
-                                            </div>
-                                            <span className="dash">-</span>
-                                            <div className="price-input-group">
-                                                <Label className="small text-muted">Max</Label>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="3500"
+                                                    step="50"
                                                     value={filters.priceRange[1]}
                                                     onChange={(e) => handlePriceRangeChange(e.target.value, "max")}
-                                                    min="0"
-                                                    max="3500"
-                                                    className="price-input"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="price-slider position-relative">
-                                            <input
-                                                type="range"
-                                                className="form-range range-min"
-                                                min="0"
-                                                max="3500"
-                                                step="50"
-                                                value={filters.priceRange[0]}
-                                                onChange={(e) => handlePriceRangeChange(e.target.value, "min")}
-                                            />
-                                            <input
-                                                type="range"
-                                                className="form-range range-max"
-                                                min="0"
-                                                max="3500"
-                                                step="50"
-                                                value={filters.priceRange[1]}
-                                                onChange={(e) => handlePriceRangeChange(e.target.value, "max")}
-                                            />
-                                        </div>
-                                    </div>
 
-                                    {/* Size Filter */}
-                                    <div className="filter-section mb-4">
-                                        <h6 className="filter-title">Size</h6>
-                                        <div className="size-filters d-flex flex-wrap gap-2">
-                                            {availableSizes.map((size) => (
-                                                <button
-                                                    key={size}
-                                                    className={`size-btn ${filters.selectedSizes.includes(size) ? "active" : ""}`}
-                                                    onClick={() => handleSizeToggle(size)}
-                                                >
-                                                    {size}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Color Filter */}
-                                    <div className="filter-section mb-4">
-                                        <h6 className="filter-title">Color</h6>
-                                        <div className="color-filters d-flex flex-wrap gap-2">
-                                            {availableColors.map(({ name, hex }) => {
-                                                const isSelected = filters.selectedColors.includes(hex);
-                                                return (
+                                        {/* Size Filter */}
+                                        <div className="filter-section mb-4">
+                                            <h6 className="filter-title">Size</h6>
+                                            <div className="size-filters d-flex flex-wrap gap-2">
+                                                {availableSizes.map((size) => (
                                                     <button
-                                                        key={hex}
-                                                        className={`color-btn ${isSelected ? "active" : ""}`}
-                                                        onClick={() => handleColorToggle(hex)}
-                                                        title={name}
-                                                        style={{ backgroundColor: hex }}
+                                                        key={size}
+                                                        className={`size-btn ${filters.selectedSizes.includes(size) ? "active" : ""}`}
+                                                        onClick={() => handleSizeToggle(size)}
                                                     >
-                                                        {isSelected && <i className="fa fa-check"></i>}
+                                                        {size}
                                                     </button>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
                                         </div>
+
+                                        {/* Color Filter */}
+                                        <div className="filter-section mb-4">
+                                            <h6 className="filter-title">Color</h6>
+                                            <div className="color-filters d-flex flex-wrap gap-2">
+                                                {availableColors.map(({ name, hex }) => {
+                                                    const isSelected = filters.selectedColors.includes(hex);
+                                                    return (
+                                                        <button
+                                                            key={hex}
+                                                            className={`color-btn ${isSelected ? "active" : ""}`}
+                                                            onClick={() => handleColorToggle(hex)}
+                                                            title={name}
+                                                            style={{ backgroundColor: hex }}
+                                                        >
+                                                            {isSelected && <i className="fa fa-check"></i>}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Clear Filters Button */}
+                                        {hasActiveFilters && (
+                                            <div className="text-center mb-3">
+                                                <Button
+                                                    color="outline-dark"
+                                                    size="sm"
+                                                    onClick={clearAllFilters}
+                                                    className="w-100"
+                                                >
+                                                    Clear All Filters
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Clear Filters Button */}
-                                    {hasActiveFilters && (
-                                        <div className="text-center">
-                                            <Button 
-                                                color="outline-dark" 
-                                                size="sm" 
-                                                onClick={clearAllFilters}
+                                    {/* Mobile Apply Button */}
+                                    {isMobile && (
+                                        <div className="mobile-filter-footer">
+                                            <Button
+                                                color="dark"
+                                                onClick={applyFilters}
                                                 className="w-100"
+                                                size="lg"
                                             >
-                                                Clear All Filters
+                                                Apply Filters ({filteredData.length} items)
                                             </Button>
                                         </div>
                                     )}
                                 </div>
                             </Col>
 
+                            {/* Mobile Overlay */}
+                            {isMobile && showFilters && (
+                                <div className="mobile-filter-overlay" onClick={() => setShowFilters(false)}></div>
+                            )}
+
                             {/* Products Grid */}
-                            <Col lg={showFilters ? "9" : "12"}>
+                            <Col lg={showFilters && !isMobile ? "9" : "12"}>
                                 <Row className="margin-default">
                                     {filteredData.length > 0 ? (
                                         filteredData.map((prod, index) => (
                                             <Col
-                                                xl={showFilters ? "4" : "3"}
-                                                lg={showFilters ? "4" : "4"}
+                                                xl={showFilters && !isMobile ? "4" : "3"}
+                                                lg={showFilters && !isMobile ? "4" : "4"}
                                                 md="6"
                                                 sm="6"
                                                 xs="6"
@@ -398,13 +414,13 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                         </Row>
                     </Container>
 
-                    {/* Add the same styles from TopCollection */}
+                    {/* Styles */}
                     <style jsx>{`
-                        // .premium-collection {
-                        //     font-family: 'Inter', 'Helvetica Neue', sans-serif;
-                        //     color: #2c2c2c;
-                        //     background: #fff;
-                        // }
+                        .premium-collection {
+                            font-family: 'Inter', 'Helvetica Neue', sans-serif;
+                            color: #2c2c2c;
+                            background: #fff;
+                        }
                         
                         .collection-title {
                             font-weight: 600;
@@ -472,7 +488,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                         }
                         
                         .price-input-group {
-                            margin-top:10px;
+                            margin-top: 10px;
                             flex: 1;
                         }
                         
@@ -597,46 +613,90 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                         .no-products {
                             padding: 40px 0;
                         }
-                        
+
+                        /* Change this in your existing mobile filter styles: */
+
                         @media (max-width: 991px) {
                             .filter-sidebar {
                                 position: fixed;
                                 top: 0;
-                                left: 0;
-                                width: 320px;
+                                right: -100%;
+                                width: 100%; /* Change from 100vw to 100% */
                                 height: 100vh;
-                                z-index: 1000;
+                                z-index: 1050;
                                 overflow-y: auto;
                                 border-radius: 0;
-                                box-shadow: 4px 0 20px rgba(0,0,0,0.1);
-                                transform: translateX(-100%);
-                                transition: transform 0.3s ease;
+                                box-shadow: none;
+                                background: #fff;
+                                padding: 0;
+                                transition: right 0.3s ease;
+                                display: flex;
+                                flex-direction: column;
                             }
                             
-                            .filter-sidebar.show {
-                                transform: translateX(0);
+                            .filter-sidebar.mobile-filter-open {
+                                right: 0;
+                            }
+
+                            .mobile-filter-overlay {
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%; /* Change from 100vw to 100% */
+                                height: 100vh;
+                                background: rgba(0, 0, 0, 0.5);
+                                z-index: 1040;
+                            }
+
+                            .mobile-filter-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 20px 16px; /* Reduce padding from 24px to 16px */
+                                border-bottom: 1px solid #eee;
+                                background: #fff;
+                            }
+
+                            .filter-content {
+                                flex: 1;
+                                padding: 16px; /* Reduce padding from 24px to 16px */
+                                overflow-y: auto;
+                                background: #f8f9fa;
+                            }
+
+                            .mobile-filter-footer {
+                                padding: 20px 16px; /* Reduce padding from 24px to 16px */
+                                background: #fff;
+                                border-top: 1px solid #eee;
                             }
                         }
-                        
+
                         @media (max-width: 575px) {
-                            .filter-toggle-btn {
-                                padding: 6px 12px;
-                                font-size: 14px;
+                            .mobile-filter-header {
+                                padding: 16px 12px; /* Reduce padding from 20px to 12px */
+                            }
+
+                            .filter-content {
+                                padding: 16px 12px; /* Reduce padding from 20px to 12px */
+                            }
+
+                            .mobile-filter-footer {
+                                padding: 16px 12px; /* Reduce padding from 20px to 12px */
                             }
                         }
                     `}</style>
                 </div>
             </section>
-            
-            <CatogeryPopupSidebar />
-          <MasterFooter
-        footerClass={`footer-light`}
-        footerLayOut={"light-layout upper-footer"}
-        footerSection={"small-section border-section border-top-0"}
-        belowSection={"section-b-space light-layout"}
-        newLatter={true}
-        logoName={"logo.png"}
-        />
+
+            {/* <CatogeryPopupSidebar /> */}
+            <MasterFooter
+                footerClass={`footer-light`}
+                footerLayOut={"light-layout upper-footer"}
+                footerSection={"small-section border-section border-top-0"}
+                belowSection={"section-b-space light-layout"}
+                newLatter={true}
+                logoName={"logo.png"}
+            />
         </>
     );
 };

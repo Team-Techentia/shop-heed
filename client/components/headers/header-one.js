@@ -55,8 +55,9 @@ const HeaderOne = ({ logoName }) => {
     var openmyslide = document.getElementById("mySidenav");
     if (openmyslide) {
       openmyslide.classList.add("open-side");
-    }
-  };
+      document.body.style.overflow = 'hidden';
+    };
+  }
 
   return (
     <div>

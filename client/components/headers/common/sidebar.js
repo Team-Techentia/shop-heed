@@ -46,7 +46,10 @@ const SideBar = () => {
 
   const closeNav = () => {
     var closemyslide = document.getElementById("mySidenav");
-    if (closemyslide) closemyslide.classList.remove("open-side");
+    if (closemyslide) {
+      closemyslide.classList.remove("open-side");
+      document.body.style.overflow = 'auto';
+    }
   };
 
   const handleMegaSubmenu = (event) => {
@@ -120,12 +123,12 @@ const SideBar = () => {
     // Render dynamic categories in columns
     const categoriesPerColumn = Math.ceil(dynamicCategories.length / 3);
     const columns = [];
-    
+
     for (let i = 0; i < 3; i++) {
       const startIndex = i * categoriesPerColumn;
       const endIndex = Math.min(startIndex + categoriesPerColumn, dynamicCategories.length);
       const columnCategories = dynamicCategories.slice(startIndex, endIndex);
-      
+
       if (columnCategories.length > 0) {
         columns.push(
           <Col xl="4" key={i}>
@@ -158,27 +161,27 @@ const SideBar = () => {
         <nav>
           <a href={null} onClick={closeNav}>
             <div className="sidebar-back text-start">
-              <i style={{marginTop:"-2px"}} className="fa fa-angle-left pe-2" aria-hidden="true"></i> Back
+              <i style={{ marginTop: "-2px" }} className="fa fa-angle-left pe-2" aria-hidden="true"></i> Back
             </div>
           </a>
           <ul id="sub-menu" className="sidebar-menu">
 
             {
               isLogin ? <>
-              <li>
-                <Link href={`/page/user/profile`}>profile</Link>
-              </li>
-              
-              <li>
-                <Link href="/page/user/orders">Orders</Link>
-              </li></> :<>
+                <li>
+                  <Link href={`/page/user/profile`}>profile</Link>
+                </li>
+
+                <li>
+                  <Link href="/page/user/orders">Orders</Link>
+                </li></> : <>
                 <li>
                   <Link href={`/page/account/login`}>Account</Link>
                 </li>
                 {/* <li>
                   <Link href={`/page/account/register`}>Register</Link>
                 </li> */}
-                </>
+              </>
             }
 
             <li>
@@ -189,17 +192,17 @@ const SideBar = () => {
                 {"Shop"}
                 <span className="sub-arrow" onClick={(e) => {
                   // e.stopPropagation(); // Prevents the event from bubbling up to <a>
-                 // Get the first element with the class 'mega-menu clothing-menu'
-                 const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
+                  // Get the first element with the class 'mega-menu clothing-menu'
+                  const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
                   // Check if the element contains a specific class
                   if (element && element.classList.contains('opensidesubmenu')) {
-                        element.classList.remove("opensidesubmenu");
+                    element.classList.remove("opensidesubmenu");
                   } else {
-                        element.classList.add("opensidesubmenu");
+                    element.classList.add("opensidesubmenu");
                   }
-                  }}></span>
+                }}></span>
               </a>
-             
+
               <ul className="mega-menu clothing-menu">
                 <li>
                   <Row m="0">
@@ -211,7 +214,7 @@ const SideBar = () => {
             <li>
               <Link href="/collections/trending"> Trending Now</Link>
             </li>
-          
+
             <li>
               <Link href="/bulk-enquiry">Bulk Enquiry </Link>
             </li>
@@ -220,21 +223,21 @@ const SideBar = () => {
             </li>
 
             <li>
-              <a style={{cursor:"pointer"}} onClick={()=>{
+              <a style={{ cursor: "pointer" }} onClick={() => {
                 closeNav()
                 var closemyslide = document.getElementById("search_side_bar");
                 if (closemyslide) closemyslide.classList.add("open-side");
               }}>Search</a>
             </li>
             {
-              isLogin ? 
-              <>
-                <li style={{cursor:"pointer"}} onClick={() => logOut()}>
-                  <a>Logout</a>
-                </li>
-              </> : ""
+              isLogin ?
+                <>
+                  <li style={{ cursor: "pointer" }} onClick={() => logOut()}>
+                    <a>Logout</a>
+                  </li>
+                </> : ""
             }
-          
+
           </ul>
         </nav>
       </div>

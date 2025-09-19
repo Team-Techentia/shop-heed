@@ -15,6 +15,7 @@ const IconTopbar = () => {
     var openmylside = document.getElementById("mySidenav");
     if (openmylside) {
       openmylside.classList.add("open-side");
+      document.body.style.overflow = 'auto';
     }
   };
 
