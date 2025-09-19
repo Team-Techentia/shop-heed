@@ -7,6 +7,7 @@ const ModalComponent = ({ modal, selectedImageIndex, setModal, images = [] }) =>
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [fade, setFade] = useState(false);
 
   const toggle = () => { 
     setModal(!modal);
@@ -17,27 +18,36 @@ const ModalComponent = ({ modal, selectedImageIndex, setModal, images = [] }) =>
 
   const nextSlide = () => {
     if (images.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-      // Reset zoom and position when changing images
-      setZoomLevel(1);
-      setPosition({ x: 0, y: 0 });
+      setFade(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+        setZoomLevel(1);
+        setPosition({ x: 0, y: 0 });
+        setFade(false);
+      }, 200);
     }
   };
 
   const prevSlide = () => {
     if (images.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-      // Reset zoom and position when changing images
-      setZoomLevel(1);
-      setPosition({ x: 0, y: 0 });
+      setFade(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+        setZoomLevel(1);
+        setPosition({ x: 0, y: 0 });
+        setFade(false);
+      }, 200);
     }
   };
 
   const selectSlide = (index) => {
-    setCurrentIndex(index);
-    // Reset zoom and position when changing images
-    setZoomLevel(1);
-    setPosition({ x: 0, y: 0 });
+    setFade(true);
+    setTimeout(() => {
+      setCurrentIndex(index);
+      setZoomLevel(1);
+      setPosition({ x: 0, y: 0 });
+      setFade(false);
+    }, 200);
   };
 
   const zoomIn = () => {
@@ -67,9 +77,11 @@ const ModalComponent = ({ modal, selectedImageIndex, setModal, images = [] }) =>
       });
     }
   };
-useEffect(()=>{
-  setCurrentIndex(selectedImageIndex);
-},[selectedImageIndex])
+
+  useEffect(() => {
+    setCurrentIndex(selectedImageIndex);
+  }, [selectedImageIndex]);
+
   const handleMouseMove = (e) => {
     if (isDragging && zoomLevel > 1) {
       const newX = e.clientX - dragStart.x;
@@ -97,138 +109,390 @@ useEffect(()=>{
     setIsDragging(false);
   };
 
+  // Premium styling variables
+  const premiumStyles = {
+    modalDialog: {
+      margin: 0,
+      maxWidth: 'none',
+      width: '100vw',
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    modalContent: {
+      width: '100%',
+      height: '100%',
+      margin: 0,
+      backgroundColor: "#000000",
+      border: "none",
+      borderRadius: 0,
+      boxShadow: "none",
+      overflow: "hidden",
+      display: 'flex',
+      flexDirection: 'column'
+    },
+    header: {
+      borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+      padding: "1rem 1.5rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      background: "rgba(0, 0, 0, 0.9)",
+      flexShrink: 0,
+      zIndex: 1000
+    },
+    closeButton: {
+      color: "#fff",
+      background: "rgba(255, 255, 255, 0.1)",
+      border: "none",
+      borderRadius: "50%",
+      width: "32px",
+      height: "32px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      fontSize: "18px",
+      fontWeight: "bold"
+    },
+    zoomButton: {
+      background: "rgba(255, 255, 255, 0.1)",
+      border: "none",
+      borderRadius: "8px",
+      color: "#fff",
+      width: "40px",
+      height: "40px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      margin: "0 4px",
+      fontSize: "18px",
+      fontWeight: "bold"
+    },
+    navButton: {
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "rgba(0, 0, 0, 0.7)",
+      border: "none",
+      borderRadius: "50%",
+      width: "50px",
+      height: "50px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer",
+      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.5)",
+      zIndex: 10,
+      color: "#fff",
+      fontSize: "20px",
+      transition: "all 0.3s ease"
+    },
+    thumbnail: {
+      width: "60px",
+      height: "60px",
+      objectFit: "cover",
+      cursor: "pointer",
+      borderRadius: "8px",
+      transition: "all 0.3s ease",
+      border: "2px solid transparent"
+    },
+    mainBody: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      background: "#000000",
+      position: 'relative',
+      overflow: 'hidden'
+    }
+  };
+
   return (
     <Modal
       isOpen={modal}
       toggle={toggle}
-      centered
+      centered={false}
       size="xl"
-      className="theme-modal image-modal"
-      style={{ backgroundColor: "white" }}
+      className="image-modal fullscreen-modal"
+      style={{ 
+        margin: 0,
+        maxWidth: 'none',
+        height: '100vh'
+      }}
+      contentClassName="fullscreen-modal-content"
     >
-      <div className="modal-header" style={{ borderBottom: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div className="zoom-controls">
-          <button className="btn btn-sm btn-outline-secondary me-2" onClick={zoomOut} disabled={zoomLevel <= 1}>
-            <i className="fas fa-search-minus"></i>
+      <style jsx>{`
+        .fullscreen-modal .modal-dialog {
+          margin: 0 !important;
+          max-width: none !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        .fullscreen-modal-content {
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          background-color: #000000 !important;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+      `}</style>
+      
+      <div style={premiumStyles.header}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <button 
+            style={premiumStyles.zoomButton} 
+            onClick={zoomOut} 
+            disabled={zoomLevel <= 1}
+            onMouseOver={(e) => e.target.style.background = "rgba(255, 255, 255, 0.2)"}
+            onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.1)"}
+          >
+            −
           </button>
-          <span className="zoom-percentage">{Math.round(zoomLevel * 100)}%</span>
-          <button className="btn btn-sm btn-outline-secondary ms-2" onClick={zoomIn} disabled={zoomLevel >= 5}>
-            <i className="fas fa-search-plus"></i>
+          <span style={{ 
+            margin: "0 12px", 
+            color: "#fff", 
+            fontWeight: "500",
+            minWidth: "60px",
+            textAlign: "center"
+          }}>
+            {Math.round(zoomLevel * 100)}%
+          </span>
+          <button 
+            style={premiumStyles.zoomButton} 
+            onClick={zoomIn} 
+            disabled={zoomLevel >= 5}
+            onMouseOver={(e) => e.target.style.background = "rgba(255, 255, 255, 0.2)"}
+            onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.1)"}
+          >
+            +
           </button>
           {zoomLevel > 1 && (
-            <button className="btn btn-sm btn-outline-secondary ms-2" onClick={resetZoom}>
+            <button 
+              style={{
+                ...premiumStyles.zoomButton,
+                marginLeft: "12px",
+                borderRadius: "20px",
+                width: "auto",
+                padding: "0 16px"
+              }} 
+              onClick={resetZoom}
+              onMouseOver={(e) => e.target.style.background = "rgba(255, 255, 255, 0.2)"}
+              onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.1)"}
+            >
               Reset
             </button>
           )}
         </div>
-        <button className="btn-close" onClick={toggle}></button>
+        <button 
+          style={premiumStyles.closeButton}
+          onClick={toggle}
+          onMouseOver={(e) => {
+            e.target.style.background = "rgba(255, 255, 255, 0.2)";
+            e.target.style.transform = "rotate(90deg)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "rgba(255, 255, 255, 0.1)";
+            e.target.style.transform = "rotate(0deg)";
+          }}
+        >
+          ×
+        </button>
       </div>
 
-      <div className="modal-body" style={{ textAlign: "center", position: "relative", overflow: "hidden" }}>
+      <div style={premiumStyles.mainBody}>
         {images.length > 0 ? (
           <>
             {/* Main Image Container */}
             <div 
-              className="image-container"
               style={{ 
-                overflow: "hidden", 
-                display: "inline-block",
-                cursor: zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default",
-                maxWidth: "90%",
-                maxHeight: "70vh"
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                padding: '20px'
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
             >
-              <img
-                src={images[currentIndex]}
-                alt={`Slide ${currentIndex}`}
-                style={{
+              <div 
+                className="image-container"
+                style={{ 
+                  overflow: "hidden", 
+                  display: "inline-block",
+                  cursor: zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default",
                   maxWidth: "100%",
-                  maxHeight: "70vh",
-                  objectFit: "contain",
-                  borderRadius: "5px",
-                  transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                  transition: isDragging ? "none" : "transform 0.3s ease",
+                  maxHeight: "100%",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 25px rgba(255, 255, 255, 0.1)",
+                  transition: "all 0.3s ease"
                 }}
-              />
-            </div>
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                <img
+                  src={images[currentIndex]}
+                  alt={`Slide ${currentIndex}`}
+                  style={{
+                    maxWidth: "calc(100vw - 40px)",
+                    maxHeight: "calc(100vh - 200px)",
+                    objectFit: "contain",
+                    borderRadius: "8px",
+                    transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                    transition: isDragging ? "none" : "transform 0.3s ease, opacity 0.2s ease",
+                    opacity: fade ? 0 : 1
+                  }}
+                />
+              </div>
 
-            {/* Navigation Buttons */}
-            <button
-              onClick={prevSlide}
-              className="nav-button prev-button"
-              style={{
-                position: "absolute",
-                left: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "rgba(255, 255, 255, 0.8)",
-                border: "none",
-                borderRadius: "50%",
-                padding: "12px 16px",
-                cursor: "pointer",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-                zIndex: 10,
-              }}
-            >
-              ❮
-            </button>
-            <button
-              onClick={nextSlide}
-              className="nav-button next-button"
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "rgba(255, 255, 255, 0.8)",
-                border: "none",
-                borderRadius: "50%",
-                padding: "12px 16px",
-                cursor: "pointer",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-                zIndex: 10,
-              }}
-            >
-              ❯
-            </button>
+              {/* Navigation Buttons */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    style={{
+                      ...premiumStyles.navButton,
+                      left: "20px"
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.background = "rgba(255, 255, 255, 0.15)";
+                      e.target.style.transform = "translateY(-50%) scale(1.1)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.background = "rgba(0, 0, 0, 0.7)";
+                      e.target.style.transform = "translateY(-50%) scale(1)";
+                    }}
+                  >
+                    ❮
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    style={{
+                      ...premiumStyles.navButton,
+                      right: "20px"
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.background = "rgba(255, 255, 255, 0.15)";
+                      e.target.style.transform = "translateY(-50%) scale(1.1)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.background = "rgba(0, 0, 0, 0.7)";
+                      e.target.style.transform = "translateY(-50%) scale(1)";
+                    }}
+                  >
+                    ❯
+                  </button>
+                </>
+              )}
+
+              {/* Image Counter */}
+              {images.length > 1 && (
+                <div style={{
+                  position: "absolute",
+                  top: "20px",
+                  right: "20px",
+                  background: "rgba(0, 0, 0, 0.7)",
+                  color: "#fff",
+                  padding: "8px 16px",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                  fontWeight: "500"
+                }}>
+                  {currentIndex + 1} / {images.length}
+                </div>
+              )}
+            </div>
 
             {/* Thumbnail Strip */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "center",
-                marginTop: "15px",
-                gap: "10px",
+                gap: "12px",
                 overflowX: "auto",
-                padding: "5px 0",
+                padding: "15px 20px",
+                background: "rgba(0, 0, 0, 0.8)",
+                borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+                flexShrink: 0
               }}
             >
               {images.map((img, idx) => (
-                <img
-                  key={idx}
-                  src={img}
-                  alt={`Thumb ${idx}`}
-                  onClick={() => selectSlide(idx)}
-                  style={{
-                    width: "60px",
-                    height: "60px",
-                    objectFit: "cover",
-                    cursor: "pointer",
-                    border: idx === currentIndex ? "3px solid #007bff" : "2px solid #dee2e6",
-                    borderRadius: "5px",
-                    opacity: idx === currentIndex ? 1 : 0.7,
-                    transition: "all 0.2s ease",
-                  }}
-                />
+                <div key={idx} style={{ position: "relative", flexShrink: 0 }}>
+                  <img
+                    src={img}
+                    alt={`Thumb ${idx}`}
+                    onClick={() => selectSlide(idx)}
+                    style={{
+                      ...premiumStyles.thumbnail,
+                      border: idx === currentIndex ? "2px solid #6366f1" : "2px solid rgba(255, 255, 255, 0.2)",
+                      opacity: idx === currentIndex ? 1 : 0.7,
+                      transform: idx === currentIndex ? "scale(1.1)" : "scale(1)"
+                    }}
+                    onMouseOver={(e) => {
+                      if (idx !== currentIndex) {
+                        e.target.style.opacity = "0.9";
+                        e.target.style.transform = "scale(1.05)";
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (idx !== currentIndex) {
+                        e.target.style.opacity = "0.7";
+                        e.target.style.transform = "scale(1)";
+                      }
+                    }}
+                  />
+                  {idx === currentIndex && (
+                    <div style={{
+                      position: "absolute",
+                      bottom: "-5px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "#6366f1",
+                      boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.3)"
+                    }}></div>
+                  )}
+                </div>
               ))}
             </div>
           </>
         ) : (
-          <p style={{ fontSize: "18px", fontWeight: "bold" }}>No images available</p>
+          <div style={{ 
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: "rgba(255, 255, 255, 0.7)"
+          }}>
+            <div style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+              background: "rgba(255, 255, 255, 0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "20px"
+            }}>
+              <span style={{ fontSize: "30px" }}>🖼️</span>
+            </div>
+            <p style={{ fontSize: "18px", fontWeight: "500", margin: 0 }}>No images available</p>
+          </div>
         )}
       </div>
     </Modal>

@@ -187,7 +187,7 @@ const DetailsWithPrice = ({
             {/* <span className="currency-symbol">₹</span> */}
             <span className="current-price">₹{product.finalPrice}</span>
             {parseInt(product.price) > parseInt(product.finalPrice) && (
-              <span className="discount-amount" style={{ textDecoration: "line-through", color: "red", opacity: "0.7" }}>
+              <span className="discount-amount" style={{ textDecoration: "line-through", color: "#cc0000", opacity: "0.7" }}>
                 ₹{parseInt(product.price) - parseInt(product.finalPrice)} OFF
               </span>
             )}
@@ -201,19 +201,12 @@ const DetailsWithPrice = ({
             <span className="tax-inclusive">Inclusive of all Taxes</span>
           </div>
 
-          {/* <div className="free-shipping-badge">
+          <div className="free-shipping-badge">
             <i className="fa fa-truck me-1"></i> FREE SHIPPING
-          </div> */}
+          </div>
         </div>
 
         {/* Rating */}
-        <div className="rating-section mb-3">
-          <div className="stars">
-
-          </div>
-
-        </div>
-
         {stock === "Out of Stock" ? (
           <div className="out-of-stock-banner">
             <strong>Out Of Stock</strong>
@@ -345,7 +338,7 @@ const DetailsWithPrice = ({
                 }}
                 style={{
                   flex: 1,
-                  background: '#8B4513', // SaddleBrown
+                  background: '#000', // SaddleBrown
                   color: 'white',
                   border: 'none',
                   padding: '12px',
@@ -354,10 +347,10 @@ const DetailsWithPrice = ({
                   transition: 'all 0.2s',
                 }}
                 onMouseOver={(e) => {
-                  e.target.style.background = '#A0522D'; // Darker brown on hover (Sienna)
+                  e.target.style.background = '#321414'; // Darker brown on hover (Sienna)
                 }}
                 onMouseOut={(e) => {
-                  e.target.style.background = '#8B4513'; // Original brown
+                  e.target.style.background = '#000'; // Original brown
                 }}
               >
                 <i className="fa fa-bolt me-2"></i> Buy Now
@@ -470,7 +463,7 @@ const DetailsWithPrice = ({
                   color: "#fff",
                   width: "130px",
                   padding: "10px 16px",
-                  background: "linear-gradient(90deg, #8b4513, #a0522d)",
+                  background: "#000",
                   border: "none",
                   borderRadius: "6px",
                   fontSize: "14px",
@@ -588,14 +581,31 @@ const DetailsWithPrice = ({
         }
         
         .free-shipping-badge {
-          background: #28a745;
-          color: white;
-          padding: 5px 10px;
-          border-radius: 4px;
-          font-size: 12px;
-          display: inline-block;
-          margin-top: 8px;
-        }
+  background: linear-gradient(90deg, #4AA184, #5ab195);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  box-shadow: 0 3px 8px rgba(74, 161, 132, 0.3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.free-shipping-badge i {
+  font-size: 14px;
+}
+
+.free-shipping-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(74, 161, 132, 0.45);
+}
+
         
         .rating-section {
           display: flex;
@@ -646,39 +656,51 @@ const DetailsWithPrice = ({
         }
         
         .size-selector {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        
-        .size-option {
-          width: 50px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid #dee2e6;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          transition: all 0.2s;
-        }
-        
-        .size-option:hover {
-          border-color: #495057;
-        }
-        
-        .size-option.selected {
-          border: 2px solid #000;
-          background: #f8f9fa;
-        }
-        
-        .size-option.unavailable {
-          color: #adb5bd;
-          text-decoration: line-through;
-          cursor: not-allowed;
-          background: #f8f9fa;
-        }
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.size-option {
+  width: 52px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: #212529;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+}
+
+.size-option:hover {
+  border-color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.size-option.selected {
+  border: 2px solid #000;
+  background: linear-gradient(145deg, #f9f9f9, #fff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #000;
+}
+
+.size-option.unavailable {
+  color: #b0b0b0;
+  border: 1.5px dashed #d6d6d6;
+  background: #f8f9fa;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  box-shadow: none;
+}
+
         
         .color-selector {
           display: flex;
@@ -786,7 +808,7 @@ const DetailsWithPrice = ({
         
         .btn-buy-now {
           flex: 1;
-          background: #28a745;
+          background: #000;
           color: white;
           border: none;
           padding: 12px;
@@ -796,7 +818,7 @@ const DetailsWithPrice = ({
         }
         
         .btn-buy-now:hover {
-          background: #218838;
+          background: #000;
         }
         
         .key-specifications {
