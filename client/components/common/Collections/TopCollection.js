@@ -2,7 +2,8 @@ import React, { useContext } from "react";
 import { LoaderContext } from "../../../helpers/loaderContext";
 import { useQuery } from "@tanstack/react-query";
 import Api from "../../Api";
-import { Row, Col, Container } from "reactstrap";
+import { Row, Col, Container, Button } from "reactstrap";
+import Link from "next/link";
 import PostLoader from "../PostLoader";
 import ProductItems from "../product-box/ProductBox1";
 
@@ -22,22 +23,22 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
 
   const showLoader = loading || isLoading;
 
+  // Show only 8 products initially
+  const productsToShow = data?.slice(0, 8);
+
   return (
     <div className="premium-collection">
       <Container>
         <Row className="margin-default">
           {showLoader ? (
-            <div className="row margin-default">
-              {[...Array(4)].map((_, i) => (
-                <div className="col-xl-3 col-lg-4 col-6" key={i}>
-                  <PostLoader />
-                </div>
-              ))}
-            </div>
+            [...Array(4)].map((_, i) => (
+              <Col xl="3" lg="4" sm="6" xs="12" key={i}>
+                <PostLoader />
+              </Col>
+            ))
           ) : (
-            data &&
-            data.slice(0, 20).map((product, index) => (
-              <Col xl="3" sm="6" xs="6" key={index}>
+            productsToShow?.map((product, index) => (
+              <Col xl="3" lg="4" sm="6" xs="6" key={index}>
                 <ProductItems
                   product={product}
                   backImage={backImage}
@@ -48,6 +49,15 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
             ))
           )}
         </Row>
+
+        {/* Link to full product page */}
+        {data && data.length > 8 && (
+          <div className="text-center mt-4">
+            <Link href="/collections/new" passHref>
+              <Button color="primary">View More</Button>
+            </Link>
+          </div>
+        )}
       </Container>
     </div>
   );

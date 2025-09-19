@@ -271,73 +271,66 @@ const deletePromocode = async function (req, res) {
     }
 };
 
-const validatePromocode = async function (req, res) {
+const validatePromocode = async (req, res) => {
     try {
         const { code, cartTotal, products, categories } = req.body;
-        const userId = req._id; 
-        console.log(code,userId);
+        const userId = req._id; // logged-in user ID (optional)
 
         if (!code) {
             return res.status(400).json({ success: false, message: "Promocode is required" });
         }
 
-        const promocode = await Promocode.findOne({ 
-            code: code.toUpperCase(), 
-            isDeleted: false 
+        // Fetch promocode from database
+        const promocode = await Promocode.findOne({
+            code: code.toUpperCase(),
+            isDeleted: false
         });
 
         if (!promocode) {
             return res.status(404).json({ success: false, message: "Invalid promocode" });
         }
 
-        // Check if promocode is active
-        if (!promocode.isActive) {
+        const now = new Date();
+
+        // Check if promocode is active and within date limits
+        if (!promocode.isActive || (promocode.startDate && promocode.startDate > now) || (promocode.endDate && promocode.endDate < now)) {
             let message = "Promocode is not active";
-            const now = new Date();
-            
-            if (!promocode.status) {
-                message = "Promocode is disabled";
-            } else if (promocode.startDate && promocode.startDate > now) {
-                message = "Promocode is not yet active";
-            } else if (promocode.endDate && promocode.endDate < now) {
-                message = "Promocode has expired";
-            } else if (promocode.perLimit && promocode.usedQuantity >= promocode.perLimit) {
-                message = "Promocode usage limit exceeded";
-            } else if (promocode.quantity && promocode.usedQuantity >= promocode.quantity) {
-                message = "Promocode usage limit exceeded";
-            }
-            
+            if (!promocode.isActive) message = "Promocode is disabled";
+            else if (promocode.startDate && promocode.startDate > now) message = "Promocode is not yet active";
+            else if (promocode.endDate && promocode.endDate < now) message = "Promocode has expired";
+
             return res.status(400).json({ success: false, message });
         }
 
-        // Check user-specific usage limits
+        // Total usage limits
+        if ((promocode.perLimit && promocode.usedQuantity >= promocode.perLimit) ||
+            (promocode.quantity && promocode.usedQuantity >= promocode.quantity)) {
+            return res.status(400).json({ success: false, message: "Promocode usage limit exceeded" });
+        }
+
+        // User-specific usage limits (only check, do not mark used)
         if (userId && !promocode.canBeUsedByUser(userId)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "You have exceeded the usage limit for this promocode" 
+            return res.status(400).json({
+                success: false,
+                message: "You have exceeded the usage limit for this promocode"
             });
         }
 
-        // Check minimum spend
-        if (promocode.minimumSpend && cartTotal < promocode.minimumSpend) {
-            return res.status(400).json({ 
-                success: false, 
-                message: `Minimum spend of $${promocode.minimumSpend} required` 
+        // Minimum spend check
+        if (typeof promocode.minimumSpend === 'number' && cartTotal < promocode.minimumSpend) {
+            return res.status(400).json({
+                success: false,
+                message: `Minimum spend of $${promocode.minimumSpend} required`
             });
         }
 
-
-        
-
-        // Check category restrictions
-        if (promocode.categories && promocode.categories.length > 0 && categories) {
-            const hasValidCategory = categories.some(category => 
-                promocode.categories.includes(category)
-            );
+        // Category restrictions
+        if (promocode.categories?.length > 0 && categories?.length > 0) {
+            const hasValidCategory = categories.some(cat => promocode.categories.includes(cat));
             if (!hasValidCategory) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "Promocode is not valid for the product categories in your cart" 
+                return res.status(400).json({
+                    success: false,
+                    message: "Promocode is not valid for the product categories in your cart"
                 });
             }
         }
@@ -350,9 +343,10 @@ const validatePromocode = async function (req, res) {
             discountAmount = promocode.discountValue;
         }
 
-        // Ensure discount doesn't exceed cart total
+        // Ensure discount does not exceed cart total
         discountAmount = Math.min(discountAmount, cartTotal);
 
+        // ✅ Return promocode info without marking it used
         return res.status(200).json({
             success: true,
             message: "Promocode is valid",
@@ -375,6 +369,7 @@ const validatePromocode = async function (req, res) {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 const applyPromocode = async function (req, res) {
     try {
@@ -404,7 +399,7 @@ const applyPromocode = async function (req, res) {
             });
         }
 
-        await promocode.applyUsage(userId);
+        // await promocode.applyUsage(userId);
 
         return res.status(200).json({
             success: true,
