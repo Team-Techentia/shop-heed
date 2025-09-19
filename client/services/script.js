@@ -175,54 +175,33 @@ export const Product45 = {
 
 
 export const Product7 = {
+  dots: false,
   infinite: true,
-  speed: 300,
-  slidesToShow: 4,
-  slidesToScroll: 2,
-  autoplay: true,
-  arrows: false,
-  autoplaySpeed: 4000,
-  // rows:2,
+  speed: 500,
+  slidesToShow: 4, // default for desktop
+  slidesToScroll: 1,
   responsive: [
     {
-      breakpoint: 1366,
+      breakpoint: 1024, // tablets & small laptops
       settings: {
-        slidesToShow: 4,
-        slidesToScroll: 2,
+        slidesToShow: 4, // still 4 items, just smaller
       },
     },
     {
-      breakpoint: 1200,
+      breakpoint: 768, // mobile screens
       settings: {
-        slidesToShow: 3.5,
-        slidesToScroll: 2,
+        slidesToShow: 2, // 2 per row on mobile
       },
     },
     {
-      breakpoint: 991,
+      breakpoint: 480, // extra small
       settings: {
-        slidesToShow: 2.5,
-        slidesToScroll: 1,
-      },
-    },
-    {
-      breakpoint: 700,
-      settings: {
-        slidesToShow: 2
-        ,
-        slidesToScroll: 1,
-      },
-    },
-
-    {
-      breakpoint: 500,
-      settings: {
-        slidesToShow: 1.5,
-        slidesToScroll: 1,
+        slidesToShow: 2, // still 2
       },
     },
   ],
 };
+
 
 
 export const Product5 = {

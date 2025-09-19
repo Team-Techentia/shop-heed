@@ -21,74 +21,49 @@ const MasterSection = ({ img, title, link }) => {
         position: "relative",
         height: "100%",
         cursor: "pointer",
-        paddingBottom: "80px",
       }}
       className="detail_section"
     >
       <Link href={link}>
-        <div style={{ width: "100%" }}>
+        <div style={{ width: "100%", height: "100%" }}>
           <Image
             className="image"
             style={{
               width: "100%",
               height: "100%",
-              maxHeight: "300px",
-              objectFit: "cover",
+              maxHeight: "450px",
+              // objectFit: "cover",
               transform: hovered
-                ? "scale(1.03) rotate(-1deg)"
-                : "scale(1) rotate(0deg)",
+                ? "scale(1.05)"
+                : "scale(1)",
               transition: "transform 0.3s ease",
             }}
-            src={img || defaultImage}
+            src={img}
             alt={title}
-            width={500}
-            height={200}
+            width={300}
+            height={300}
             layout="responsive"
           />
-        </div>
-      </Link>
 
-      <Link href={link}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
+          {/* Overlay text */}
           <div
             style={{
-              height: "80px",
               position: "absolute",
-              background: "#FFFFFF",
-              bottom: "20px",
-              width: "88%",
-              boxShadow: "0 4px 8px #0003, 0 6px 20px #00000030",
-              display: "flex",
-              borderRadius: "5px",
-              justifyContent: "start",
-              alignItems: "center",
+              bottom: "15px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              color: "#fff",
+              fontWeight: "600",
+              fontSize: "clamp(18px, 2vw, 25px)", // min 14px, max 25px, scales with screen
+              textShadow: "0px 2px 6px rgba(0,0,0,0.6)",
+              textAlign: "center",
+              width: "100%",
+              padding: "0 5px", // small padding for mobile so text doesn't touch edges
             }}
           >
-            <div
-              className="everday_related_category"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                width: "100%",
-              }}
-            >
-              <div style={{ textAlign: "center", width: "100%" }}>
-                <p
-                  style={{
-                    color: "#000",
-                    fontWeight: "500",
-                    fontSize: "16px",
-                    margin: "0",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {title}
-                </p>
-              </div>
-            </div>
+            {title}
           </div>
+
         </div>
       </Link>
     </div>
@@ -102,13 +77,13 @@ const FeaturedSections = () => {
   const fetchData = async () => {
     try {
       const getData = await Api.getFeaturedSection();
-      
+
       if (getData?.data?.success && getData?.data?.data) {
         // Sort by priority and filter active items
         const sortedData = getData.data.data
           .filter(item => item.isActive)
           .sort((a, b) => a.priority - b.priority);
-        
+
         setCategory(sortedData);
       }
     } catch (error) {
@@ -126,21 +101,21 @@ const FeaturedSections = () => {
   // Function to format category name for display
   const formatCategoryName = (category, subCategory) => {
     let displayName = category.toUpperCase().replace("-", " ");
-    
+
     if (subCategory) {
       displayName += ` - ${subCategory.toUpperCase()}`;
     }
-    
+
     return displayName;
   };
 
   // Function to generate link from category and subcategory
   const generateLink = (category, subCategory) => {
-  if (subCategory) {
-    return `/category/${category}/${subCategory}`; // handle subcategory case
-  }
-  return `/category/${category}`; // handle only category
-};
+    if (subCategory) {
+      return `/category/${category}/${subCategory}`; // handle subcategory case
+    }
+    return `/category/${category}`; // handle only category
+  };
 
   if (loading) {
     return (
@@ -172,20 +147,20 @@ const FeaturedSections = () => {
 
   return (
     <section className="section-b-space detail-cannabis bg-grey category">
-  <Container>
-    <Row style={{ gap: "25px 0px" }}>
-      {category.map((data, i) => (
-        <Col lg={3} md={4} sm={6} xs={12} key={data._id || i}>
-          <MasterSection
-            img={data.image}
-            title={formatCategoryName(data.category, data.subCategory)}
-            link={generateLink(data.category, data.subCategory)}
-          />
-        </Col>
-      ))}
-    </Row>
-  </Container>
-</section>
+      <Container>
+        <Row style={{ gap: "25px 0px" }}>
+          {category.map((data, i) => (
+            <Col lg={3} md={4} sm={6} xs={6} key={data._id || i}>
+              <MasterSection
+                img={data.image}
+                title={formatCategoryName(data.category, data.subCategory)}
+                link={generateLink(data.category, data.subCategory)}
+              />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    </section>
   );
 };
 

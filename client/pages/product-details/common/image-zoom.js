@@ -11,7 +11,7 @@ const ImageZoom = (props) => {
         alt="Product Image"
         layout="responsive"
         width={500}
-        height={maxHeight ? parseInt(maxHeight) : 700} 
+        height={maxHeight ? parseInt(maxHeight) : 600} 
         // objectFit="cover"
         quality={75} 
         // placeholder="blur"
