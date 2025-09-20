@@ -11,6 +11,7 @@ const {
   htmlContentForMailTemplate,
 } = require("../emailController");
 const { createInvoice } = require("./invoice");
+const { Promocode } = require("../../Model/promocode");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,
@@ -19,13 +20,27 @@ const razorpay = new Razorpay({
 
 const createOrder = async (req, res) => {
   try {
-    const { items, orderTotal, paymentMethod, customerDetails } = req.body;
+    const { items, orderTotal, paymentMethod, customerDetails, appliedPromocode } = req.body;
 
     const orderPromises = items.map(async (item) => {
       const product = await Product.findById(item.product._id).sort({ createdAt: -1 });
 
       if (!product) {
         throw new Error("Product not found");
+      }
+
+      if (appliedPromocode) {
+        const promo = await Promocode.findOne({ code: appliedPromocode })
+
+        if (!promo) {
+          throw new Error("Promocode not found");
+        }
+
+        if (!promo.canBeUsedByUser(req._id)) {
+          throw new Error("Usage limit exceeded for this promocode");
+        }
+
+        await promo.applyUsage(req._id);
       }
 
       const newOrder = new Order({
@@ -36,6 +51,7 @@ const createOrder = async (req, res) => {
         paymentMethod,
         customerDetails,
         status: "pending",
+        appliedPromocode: appliedPromocode ?? undefined
       });
 
       await newOrder.save();
@@ -43,6 +59,8 @@ const createOrder = async (req, res) => {
     });
 
     const savedOrders = await Promise.all(orderPromises);
+
+
 
     if (paymentMethod === "online") {
       const options = {
@@ -72,15 +90,16 @@ const createOrder = async (req, res) => {
       });
 
       await payment.save();
-      EmailSendComponent(
-        customerDetails.email,
-        "Order Confirmation success",
-        htmlContentForMailTemplate(
-          customerDetails.first_name,
-          " Purchase confirmation",
-          " Thanks for your purchase. We will send tracking info when your order ships. Your payment has been successfully"
-        )
-      );
+      // EmailSendComponent(
+      //   customerDetails.email,
+      //   "Order Confirmation success",
+      //   htmlContentForMailTemplate(
+      //     customerDetails.first_name,
+      //     " Purchase confirmation",
+      //     " Thanks for your purchase. We will send tracking info when your order ships. Your payment has been successfully"
+      //   )
+      // );
+
       return res.status(201).json({ success: true, orderId: razorpayOrder.id });
     } else {
       items.map(async (item) => {
@@ -114,7 +133,7 @@ const createOrder = async (req, res) => {
       return res.status(201).json({ success: true, orders: savedOrders });
     }
   } catch (error) {
-    
+
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -178,7 +197,7 @@ const verifyPayment = async (req, res) => {
         .json({ success: false, message: "Payment verification failed" });
     }
   } catch (error) {
-  
+
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -223,7 +242,7 @@ const updateOrderStatus = async function (req, res) {
     }
     return res.status(404).json({ success: false, message: "Order not found" });
   } catch (error) {
-    
+
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
@@ -252,7 +271,7 @@ cron.schedule("*/1 * * * *", async () => {
       try {
         razorpayPayment = await razorpay.payments.fetch(payment.paymentId);
       } catch (error) {
-        
+
         continue;
       }
 
@@ -278,7 +297,7 @@ cron.schedule("*/1 * * * *", async () => {
       }
     }
   } catch (error) {
- 
+
   }
 });
 
@@ -286,7 +305,7 @@ const getOrderById = async function (req, res) {
   try {
     const userId = req._id;
     const orderId = req.params.id;
-    
+
     if (!userId) {
       return res
         .status(400)
@@ -299,7 +318,7 @@ const getOrderById = async function (req, res) {
     }
 
     const getOrder = await Order.findById(orderId).populate("product");
-  
+
     if (!getOrder) {
       return res
         .status(400)
@@ -313,7 +332,7 @@ const getOrderById = async function (req, res) {
         message: "Order successfully by id",
       });
   } catch (error) {
-   
+
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
@@ -348,7 +367,7 @@ const deleteOrder = async function (req, res) {
       .status(200)
       .json({ success: true, message: "Order deleted successfully" });
   } catch (error) {
-   
+
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
@@ -358,13 +377,13 @@ const deleteOrder = async function (req, res) {
 
 async function generateInvoicing(req, res) {
   try {
-  const orderId = req.params.orderId;
+    const orderId = req.params.orderId;
 
     const order = await Order.find({ "paymentDetails.orderId": orderId }).populate("product");
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    
+
     const customerDetails = order[0].customerDetails;
     const items = await order.map((product, index) => ({
       sno: index + 1,
@@ -372,14 +391,14 @@ async function generateInvoicing(req, res) {
       Product: product.product.title,
       rate: product.product.finalPrice,
       subTotal: product.totalAmount,
-      productId:product.product.productId,
-      variantId:product.product._id
+      productId: product.product.productId,
+      variantId: product.product._id
     }));
     const totalSubTotal = items.reduce((sum, item) => sum + item.subTotal, 0);
     const url = await createInvoice({
       invoiceNumber: `INV-${Math.floor(Math.random() * 10000)}`,
       orderNumber: orderId,
-      invoiceDate:   new Date().toLocaleDateString('en-GB', {
+      invoiceDate: new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -399,12 +418,12 @@ async function generateInvoicing(req, res) {
       items: items
     });
     await Order.updateMany(
-      { "paymentDetails.orderId": orderId }, 
-      { $set: { inVoiceLink: url } } 
+      { "paymentDetails.orderId": orderId },
+      { $set: { inVoiceLink: url } }
     );
     return res.status(200).json({ message: "Invoice generated successfully", url: url });
   } catch (error) {
-    
+
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
@@ -416,5 +435,5 @@ module.exports = {
   getOrderByUserId,
   updateOrderStatus,
   getOrderById,
-  deleteOrder,generateInvoicing
+  deleteOrder, generateInvoicing
 };

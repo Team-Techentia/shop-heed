@@ -11,6 +11,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     ref: 'Product'
   },
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Product'
+  },
   totalAmount: {
     type: Number,
     required: true

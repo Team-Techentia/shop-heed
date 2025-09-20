@@ -6,6 +6,7 @@ import cart from "../../../../public/assets/images/icon-empty-cart.png";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import bagg from "../../../../public/assets/images/bagg.png";
+import useAuth from "../../../../components/protectRoutes/useAuth";
 
 const CartPage = () => {
   const context = useContext(CartContext);
@@ -13,6 +14,9 @@ const CartPage = () => {
   console.log("Cart Items:", cartItems);
   const total = context.cartTotal;
   const removeFromCart = context.removeFromCart;
+
+  const isAuthenticated = useAuth(false);
+  console.log(isAuthenticated)
   
   const changeless = (item, id, quantity) => {
     if (quantity === 1) {
@@ -210,7 +214,7 @@ const CartPage = () => {
                 <h4 style={{ margin: "0", padding: "0" }}>
                   <strong> Total Price: ₹{Math.floor(total)}</strong>
                 </h4>
-                <Link href={`/page/account/checkout`} className="btn btn-solid">
+                <Link href={isAuthenticated?`/page/account/checkout`:`/page/account/login`} className="btn btn-solid">
                   Check Out
                 </Link>
               </div>

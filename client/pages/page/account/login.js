@@ -15,7 +15,7 @@ const Login = () => {
   const userContext = useContext(UserContext);
   const isLogin = userContext.isLogin;
   const setIslogin = userContext.setIslogin;
-  const [user, setUser] = useState({ password: "", emailOrPhone: "" });
+  const [user, setUser] = useState({ password: "Prabh@123", emailOrPhone: "9650598120" });
   const router = useRouter();
   const LoaderContextData = useContext(LoaderContext);
   const { catchErrors, setLoading } = LoaderContextData;

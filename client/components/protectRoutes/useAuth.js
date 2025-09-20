@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getCookie } from '../cookies';
 
-const useAuth = () => {
+const useAuth = (navigate = true) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
@@ -13,7 +13,8 @@ const useAuth = () => {
       setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);
-      router.push('/page/account/login'); 
+      if (navigate)
+        router.push('/page/account/login');
     }
   }, [router]);
 

@@ -9,6 +9,7 @@ import Api from "../../../../components/Api";
 import { getCookie } from "../../../../components/cookies";
 import OpenModal from "../openModal";
 import { LoaderContext } from "../../../../helpers/loaderContext";
+import toast from "react-hot-toast";
 
 const CheckoutPage = ({ isLogin }) => {
   const cartContext = useContext(CartContext);
@@ -96,13 +97,15 @@ const CheckoutPage = ({ isLogin }) => {
         }, token);
 
         if (applyResponse.data && applyResponse.data.success) {
-       
+
           setPromocodeDiscount(applyResponse.data.data.discountValue);
           console.log('Setting discount to:',);
           setEnteredPromocode(applyResponse.data.data.code);
+          setAppliedPromocode(applyResponse.data.data.code);
           setShowPromocodeList(false);
           setPromocodeSuccess(`Promocode ${promocodeValue} applied successfully!`);
           setTimeout(() => setPromocodeSuccess(""), 5000);
+          toast.success("Promo applied successfully")
         } else {
           setPromocodeError(applyResponse.data?.message || "Failed to apply promocode");
           setTimeout(() => setPromocodeError(""), 3000);
@@ -149,9 +152,11 @@ const CheckoutPage = ({ isLogin }) => {
         );
         if (paymentVerification.data.success) {
           cartContext.clearCart();
+          toast.success(paymentVerification.data.message ?? "Order placed successfully")
           router.push("/page/order-success");
         } else {
           alert("Payment verification failed");
+          toast.error(paymentVerification.data.message ?? "Failed to verify payment")
         }
       },
       theme: {
@@ -162,6 +167,9 @@ const CheckoutPage = ({ isLogin }) => {
     rzp1.open();
   };
 
+  console.log("appliedPromocode:", appliedPromocode)
+  console.log("enteredPromocode:", enteredPromocode)
+
   const onSubmit = async (data) => {
     if (data !== "") {
       const orderData = {
@@ -169,7 +177,7 @@ const CheckoutPage = ({ isLogin }) => {
         orderTotal: Math.floor(finalTotal), // Use final total after discount - ALREADY CORRECT
         originalTotal: Math.floor(cartTotal), // Include original total for reference
         paymentMethod: payment,
-        appliedPromocode: appliedPromocode, // Include promocode in order data
+        appliedPromocode: appliedPromocode || enteredPromocode, // Include promocode in order data
         promocodeDiscount: Math.floor(promocodeDiscount), // Include discount amount
         customerDetails: {
           ...data,
@@ -184,15 +192,18 @@ const CheckoutPage = ({ isLogin }) => {
         const createOrder = await Api.createOrder(orderData, token);
         if (createOrder.data.success) {
           if (payment === "cod") {
-            cartContext.clearCart();
+            cartContext.clearCart();  
+            toast.success(createOrder.data.message ?? "Order placed successfully")
             router.push("/page/order-success");
           } else {
             handlePayment(createOrder.data.orderId);
           }
         } else {
-          alert("Order creation failed");
+          toast.error(createOrder.data.message ?? "Order creation failed")
         }
       } catch (error) {
+        console.log(error)
+        toast.error(error.message ?? "Order creation failed")
         catchErrors(error);
       } finally {
         setLoading(false);
@@ -537,7 +548,7 @@ const CheckoutPage = ({ isLogin }) => {
                                       cursor: "pointer"
                                     }}
                                   >
-                                    
+
                                   </button>
                                 </div>
 
@@ -668,7 +679,7 @@ const CheckoutPage = ({ isLogin }) => {
                                 style={{ fontWeight: "500", color: "#2e7d32" }}
                                 className="field-label"
                               >
-                                Discount ({enteredPromocode}) <span  style={{ fontWeight: "500", color: "red", cursor:"pointer" }}onClick={handleRemovePromocode}>X</span>
+                                Discount ({enteredPromocode}) <span style={{ fontWeight: "500", color: "red", cursor: "pointer" }} onClick={handleRemovePromocode}>X</span>
                               </h4>
                               <h4
                                 style={{ fontWeight: "500", color: "#2e7d32" }}
