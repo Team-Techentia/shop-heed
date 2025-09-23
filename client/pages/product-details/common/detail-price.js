@@ -274,7 +274,7 @@ const DetailsWithPrice = ({
 
                 {/* Color Selection */}
                 <div className="selection-header mt-3">
-                  <span>SELECT COLOUR</span>
+                  <span>MORE COLOURS</span>
                 </div>
 
                 {uniqueColors && (
@@ -289,7 +289,7 @@ const DetailsWithPrice = ({
                         <div className="color-thumbnail">
                           <img src={data.image} alt={data.colorName} />
                         </div>
-                        <div className="color-name">{data.colorName}</div>
+                        
                       </div>
                     ))}
                   </div>
@@ -311,9 +311,9 @@ const DetailsWithPrice = ({
                   <AddIcon />
                 </button>
               </div>
-              <div className="stock-status">
-                <i className="fa fa-check-circle me-1"></i> In Stock
-              </div>
+              {/* <div className="stock-status">
+                <i className="fa fa-check-circle me-1"></i> 2 LEFT ONLY
+              </div> */}
             </div>
 
             {/* Action Buttons */}
@@ -727,8 +727,8 @@ const DetailsWithPrice = ({
         }
         
         .color-thumbnail {
-          width: 50px;
-          height: 50px;
+          width: 55px;
+          height: 70px;
           border-radius: 6px;
           overflow: hidden;
           margin-bottom: 5px;

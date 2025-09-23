@@ -48,6 +48,8 @@ const MyOrders = () => {
       const response = await Api.getOrderByUserId(token);
       setOrder(response.data.data);
     } catch (error) {
+      catchErrors(error);
+      toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
     }
@@ -175,22 +177,39 @@ const MyOrders = () => {
                                   onClick={() => handleRowClick(d._id)}
                                 >
                                   <td>
-                                    <img
-                                      src={d.product.image[0]}
-                                      alt="product image"
-                                      style={{
-                                        maxWidth: "100px",
-                                        maxHeight: "100px",
-                                      }}
-                                    />
+                                    {d.product && d.product.image && d.product.image.length > 0 ? (
+                                      <img
+                                        src={d.product.image[0]}
+                                        alt="product image"
+                                        style={{
+                                          maxWidth: "100px",
+                                          maxHeight: "100px",
+                                        }}
+                                      />
+                                    ) : (
+                                      <div 
+                                        style={{
+                                          width: "100px",
+                                          height: "100px",
+                                          backgroundColor: "#f0f0f0",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontSize: "12px",
+                                          color: "#666"
+                                        }}
+                                      >
+                                        No Image
+                                      </div>
+                                    )}
                                   </td>
                                   <td style={{ whiteSpace: "nowrap" }}>
-                                    {d.product.title}
+                                    {d.product?.title || "Product Not Available"}
                                   </td>
-                                  <td>{d.status}</td>
-                                  <td>{d.orderStatus}</td>
-                                  <td>{d.totalQuantity}</td>
-                                  <td>₹ {d.totalAmount}</td>
+                                  <td>{d.status || "N/A"}</td>
+                                  <td>{d.orderStatus || "N/A"}</td>
+                                  <td>{d.totalQuantity || 0}</td>
+                                  <td>₹ {d.totalAmount || 0}</td>
                                 </tr>
                               );
                             })}

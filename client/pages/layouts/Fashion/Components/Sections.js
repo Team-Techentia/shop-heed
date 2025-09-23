@@ -80,8 +80,8 @@ const MasterSection = ({ img, title, link, img1 }) => {
             style={{
               width: "100%",
               height: "100%",
-              maxHeight: "300px",
-              objectFit: "cover",
+              maxHeight: "400px",
+             
               transform: hovered ? "scale(1.03) rotate(-1deg)" : "scale(1) rotate(0deg)",
               transition: "transform 0.3s ease",
             }}
@@ -190,7 +190,7 @@ const Sections = ({ type }) => {
                     lg={3}   
                     md={3}   
                     sm={6}   
-                    xs={6}   
+                    xs={12}   
                   >
                     <MasterSection
                       img={data.img}

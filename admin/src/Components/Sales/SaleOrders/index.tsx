@@ -11,8 +11,8 @@ import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import jsPDF from 'jspdf';
 import { useRouter } from "next/navigation";
-interface OrderData {
 
+interface OrderData {
   ["Order Id"]: string;
   SKU: string;
   Image: string;
@@ -21,10 +21,9 @@ interface OrderData {
   ["Order Status"]: any;
   Date: string;
   ["Total"]: any;
-  Invoicing: any;
+ 
   Actions: any,
 }
-
 
 const SalesOrders = () => {
   const {
@@ -33,21 +32,24 @@ const SalesOrders = () => {
     setValue,
     formState: { errors },
   } = useForm();
+  
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<OrderData[]>([]);
   const [orderDataById, setOrderDataById] = useState<any>(null);
   const [selectedCountry, setSelectedCountry] = useState<any | null>(null);
   const [selectedState, setSelectedState] = useState<any | null>(null);
   const [selectedCity, setSelectedCity] = useState<any | null>(null);
-  const [orderStatus, setOrderStatus] = useState('');
+  const [orderStatus, setOrderStatus] = useState('null'); // Changed from ''
   const [orderAction, setOrderAction] = useState("");
   const [selectedId, setSelectedId] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<string>('null'); // Changed from ''
   const token = getCookie();
   const router = useRouter()
+
   useEffect(() => {
-    fetchData(status, orderStatus);
+    console.log('Component mounted, fetching data...');
+    fetchData('null', 'null'); // Changed from ('', '')
   }, []);
 
   const onOpenModal = () => {
@@ -65,21 +67,19 @@ const SalesOrders = () => {
 
   const onCloseConfirmationModal = () => setConfirmDelete(false);
 
-
-
-
   const handleDropdownOne = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedStatus = e.target.value;
+    console.log('Payment Status changed to:', selectedStatus);
     setStatus(selectedStatus);
     fetchData(selectedStatus, orderStatus);
   };
+
   const handleDropdownOne1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOrderStatus = e.target.value;
+    console.log('Order Status changed to:', selectedOrderStatus);
     setOrderStatus(selectedOrderStatus)
     fetchData(status, selectedOrderStatus);
   };
-
-
 
   const handleDeleteOrder = async (id: any) => {
     try {
@@ -108,14 +108,29 @@ const SalesOrders = () => {
   const fetchData = async (selectedStatus: string, selectedOrderStatus: string) => {
     const storeData: OrderData[] = [];
     try {
-
+      console.log('Calling API with:', { selectedStatus, selectedOrderStatus, token: !!token });
+      
       const res = await Api.getOrdersByAdmin(token, selectedStatus, selectedOrderStatus);
+      console.log('API Response:', res.data);
+      
+      // Check if response has data
+      if (!res.data || !res.data.data || !Array.isArray(res.data.data)) {
+        console.log('No data found in response:', res.data);
+        setData([]);
+        return;
+      }
 
       const createPromise = res.data.data.map(async (item: any) => {
+        // Add null check for product
+        if (!item.product) {
+          console.log('Skipping item with null product:', item._id);
+          return null; // Skip items with null products
+        }
+
         const orderId = item.paymentDetails?.orderId || item._id;
 
         const newObject: OrderData = {
-          Image: item.product.image[0],
+          Image: item.product.image && item.product.image.length > 0 ? item.product.image[0] : '',
           ["Order Id"]: orderId,
           SKU: item.product.sku || "No",
           ["Payment Status"]: item.status === "pending" ? (
@@ -125,31 +140,37 @@ const SalesOrders = () => {
           ) : (
             <div className="capitalized">{item.status}</div>
           ),
-          ["Payment Method"]: item.paymentMethod.replaceAll(" ", "") === "cod" ? (
+          ["Payment Method"]: item.paymentMethod?.replaceAll(" ", "") === "cod" ? (
             <Badge color="secondary">Cash On Delivery</Badge>
           ) : (
-            <Badge className="capitalized" color="success">{item.paymentMethod}</Badge>
+            <Badge className="capitalized" color="success">{item.paymentMethod || 'N/A'}</Badge>
           ),
           ["Order Status"]: <div className="capitalized">{item.orderStatus}</div>,
           Date: formatDate(item.orderDate.slice(0, 10)),
           ["Total"]: <div>₹ {item.totalAmount}</div>,
-          ["Invoicing"]: item.inVoiceLink || "Generate Invoice",
+
           Actions: item._id,
         };
 
-        storeData.push(newObject);
+        return newObject;
       });
 
-      await Promise.all(createPromise);
-      setData(storeData);
+      const results = await Promise.all(createPromise);
+      // Filter out null results (items with null products)
+      const filteredResults = results.filter(item => item !== null);
+      
+      console.log('Processed data:', filteredResults);
+      setData(filteredResults);
+      
     } catch (error) {
+      console.error('API Error:', error);
       if (error && error.response && error.response.data && error.response.data.message) {
         if (error.response.data.message === "Order not found") {
-          setData([])
+          setData([]);
+          return;
         }
       }
-
-      console.error(error);
+      setData([]);
     }
   };
 
@@ -182,6 +203,7 @@ const SalesOrders = () => {
       setValue("height", res.data.data.height || "");
       setValue("breadth", res.data.data.breadth || "");
       setOrderStatus(res.data.data.orderStatus)
+      
       const country = Country.getAllCountries().find(country => country.name === customerDetails.country);
       const state = State.getStatesOfCountry(country?.isoCode ?? '').find(state => state.name === customerDetails.state);
       const city = City.getCitiesOfState(state?.countryCode ?? '', state?.isoCode ?? '').find(city => city.name === customerDetails.city);
@@ -194,16 +216,18 @@ const SalesOrders = () => {
     }
   };
 
-
   const onSubmit = async (data: any) => {
     const updatedData = {
       ...data,
       country: selectedCountry?.name,
       state: selectedState?.name,
       city: selectedCity?.name,
-      title: orderDataById.product.title, finalPrice: orderDataById.product.finalPrice,
-      totalQuantity: orderDataById.totalQuantity, totalAmount: orderDataById.totalAmount,
-      paymentMethod: orderDataById.paymentMethod, orderId: orderDataById.paymentDetails && orderDataById.paymentDetails.orderId || orderDataById._id
+      title: orderDataById.product.title, 
+      finalPrice: orderDataById.product.finalPrice,
+      totalQuantity: orderDataById.totalQuantity, 
+      totalAmount: orderDataById.totalAmount,
+      paymentMethod: orderDataById.paymentMethod, 
+      orderId: orderDataById.paymentDetails && orderDataById.paymentDetails.orderId || orderDataById._id
     };
     console.log(updatedData)
 
@@ -211,30 +235,12 @@ const SalesOrders = () => {
       await Api.updateOrder(orderDataById._id, updatedData, token);
       onCloseModal();
       fetchData(status, orderStatus);
-      setOrderStatus('')
+      setOrderStatus('null') // Reset to 'null' instead of ''
     } catch (error) {
       console.error("Failed to update order data", error);
     }
   };
 
-
-
-  const handleGenerateInvoicing = async (id: any) => {
-    try {
-      const res = await Api.generateInvoicing(token, id);
-      
-      const pdfUrl = res.data.url;
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      fetchData(status, orderStatus);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
 
   return (
@@ -255,27 +261,29 @@ const SalesOrders = () => {
                       <Form onSubmit={handleSubmit(onSubmit)}>
                         <Row className="">
                           <Col lg="6" sm="12" xs="12">
-
                             <h3>Product Details</h3>
                             <div className="form-group col-md-12 col-sm-12 col-xs-12">
                               <h5> <strong>Title</strong> </h5>
-                              <div className="field-label"> {orderDataById.product.title} </div>
+                              <div className="field-label"> {orderDataById.product?.title || 'N/A'} </div>
                               <h5> <strong>Size</strong> </h5>
-                              <div style={{textTransform:"uppercase"}}  className="field-label"> {orderDataById.product.size} </div>
+                              <div style={{textTransform:"uppercase"}}  className="field-label"> {orderDataById.product?.size || 'N/A'} </div>
                               <h5> <strong>SKU</strong> </h5>
-                              <div className="field-label"> {orderDataById.product.sku || "No"} </div>
+                              <div className="field-label"> {orderDataById.product?.sku || "No"} </div>
                               <h5> <strong> Product Id </strong></h5>
-                              <div className="field-label"> {orderDataById.product.productId} </div>
+                              <div className="field-label"> {orderDataById.product?.productId || 'N/A'} </div>
                               <h5>  <strong>Variants Id</strong> </h5>
-                              <div className="field-label"> {orderDataById.product._id} </div>
-                              <div className="field-label"> {orderDataById.product.title} </div>
+                              <div className="field-label"> {orderDataById.product?._id || 'N/A'} </div>
 
-                              <div className="field-label"> <img style={{ height: "150px" }} src={orderDataById.product.image[0]} alt="" /></div>
+                              {orderDataById.product?.image && orderDataById.product.image.length > 0 && (
+                                <div className="field-label"> 
+                                  <img style={{ height: "150px" }} src={orderDataById.product.image[0]} alt="" />
+                                </div>
+                              )}
 
                               <Row style={{ gap: " 13px 0px" }}>
                                 <Col lg="4" md="4" sm="2">
                                   <h5>Price </h5>
-                                  <div className="field-label"> ₹ {orderDataById.product.finalPrice} </div>
+                                  <div className="field-label"> ₹ {orderDataById.product?.finalPrice || 0} </div>
                                 </Col>
 
                                 <Col lg="4" md="4" sm="6">
@@ -288,7 +296,7 @@ const SalesOrders = () => {
                                 </Col>
                                 <Col lg="4" md="4" sm="6">
                                   <h5>Payment Method </h5>
-                                  <div className="field-label  text-capital "      >  {orderDataById.paymentMethod} </div>
+                                  <div className="field-label  text-capital ">{orderDataById.paymentMethod || 'N/A'}</div>
                                 </Col>
 
                                 <Col lg="4" md="4" sm="6">
@@ -313,28 +321,12 @@ const SalesOrders = () => {
                                   </Col>
                                 }
 
-
                                 {
                                   orderDataById.paymentDetails && orderDataById.paymentDetails.paymentId && <Col lg="4" md="4" sm="6">
                                     <h5>Payment Id </h5>
                                     <div className="field-label">  {orderDataById.paymentDetails.paymentId} </div>
                                   </Col>
                                 }
-
-                                {/* <div className="form-group  ">
-                                  <div className="field-label"> <strong>Order Action</strong> </div>
-                                  <select onChange={(e) => {
-                                    setOrderAction(e.target.value)
-                                  }} name="wc_order_action " className="input-input mt-1">
-                                    <option value="">Choose an action...</option>
-                                    <option value="send_order_details">Email invoice / order details to customer</option>
-                                    <option value="send_order_details_admin">Resend new order notification</option>
-                                    <option value="regenerate_download_permissions">Regenerate download permissions</option>
-                                  </select>
-                                </div> */}
-
-                                {/* <Button color="secondary" onClick={() => generateInvoice(orderDataById)}>Generate Invoice</Button> */}
-
                               </Row>
                             </div>
                           </Col>
@@ -368,11 +360,7 @@ const SalesOrders = () => {
                                   getOptionLabel={(options) => options["name"]}
                                   getOptionValue={(options) => options["name"]}
                                   value={selectedCountry}
-                                  // onChange={(item) => {
-                                  //   setSelectedCountry(item);
-                                  //   setSelectedState(null);
-                                  //   setSelectedCity(null);
-                                  // }}
+                                  isDisabled={true}
                                 />
                               </div>
                               <div className="form-group col-md-12 col-sm-12 col-xs-12">
@@ -382,10 +370,7 @@ const SalesOrders = () => {
                                   getOptionLabel={(options) => options["name"]}
                                   getOptionValue={(options) => options["name"]}
                                   value={selectedState}
-                                  // onChange={(item) => {
-                                  //   setSelectedState(item);
-                                  //   setSelectedCity(null);
-                                  // }}
+                                  isDisabled={true}
                                 />
                               </div>
                               <div className="form-group col-md-12 col-sm-12 col-xs-12">
@@ -395,7 +380,7 @@ const SalesOrders = () => {
                                   getOptionLabel={(options) => options["name"]}
                                   getOptionValue={(options) => options["name"]}
                                   value={selectedCity}
-                                  // onChange={(item) => setSelectedCity(item)}
+                                  isDisabled={true}
                                 />
                               </div>
                               <div className="form-group col-md-12 col-sm-6 col-xs-12">
@@ -501,8 +486,6 @@ const SalesOrders = () => {
               <CommonCardHeader title="Manage Order" />
 
               <CardBody className="order-datatable">
-
-
                 <Row>
                   <Col className="mb-2" sm="6" md="3" lg="3">
                     Payment Status
@@ -516,8 +499,6 @@ const SalesOrders = () => {
                         handleDropdownOne(e)
                       }}
                     >
-
-                      <option value="" disabled>Select Payment Status</option>
                       <option value="null">All</option>
                       <option value="failed">Failed</option>
                       <option value="pending">Pending</option>
@@ -537,7 +518,6 @@ const SalesOrders = () => {
                         handleDropdownOne1(e)
                       }}
                     >
-                      <option value="" disabled>Select Order Status</option>
                       <option value="null">All</option>
                       <option value="new-order">New Order</option>
                       <option value="pending-payment">Pending Payment</option>
@@ -552,11 +532,10 @@ const SalesOrders = () => {
                   </Col>
                 </Row>
 
-
                 {data && data.length > 0 ? (
                   <Datatable
                     handleStatusChange={handleStatusChange}
-                    handleGenerateInvoicing={handleGenerateInvoicing}
+                  
                     typeUse={"manaegOrder"}
                     myData={data}
                     pageSize={30}
@@ -566,7 +545,10 @@ const SalesOrders = () => {
                     class="-striped -highlight"
                   />
                 ) : (
-                  "Data Not Found"
+                  <div>
+                    <p>Data Not Found</p>
+                    <p>Debug info: Status="{status}", OrderStatus="{orderStatus}", DataLength={data.length}</p>
+                  </div>
                 )}
               </CardBody>
             </Card>
@@ -579,4 +561,3 @@ const SalesOrders = () => {
 };
 
 export default SalesOrders;
-
