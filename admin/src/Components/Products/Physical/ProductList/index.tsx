@@ -3,26 +3,7 @@ import Datatable from "@/CommonComponents/DataTable";
 import { Fragment, useEffect, useState } from "react";
 import { getCookie } from "@/Components/Cookies";
 import { ImagePath } from "@/Constants";
-import {
-  Button,
-  ButtonGroup,
-  Col,
-  Container,
-  Form,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Row,
-  FormGroup,
-  Input,
-  Label,
-  InputGroup,
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownMenu,
-} from "reactstrap";
+import { Button, ButtonGroup, Col, Container, Form, Modal, ModalBody, ModalFooter, ModalHeader, Row, FormGroup, Input, Label, InputGroup, Dropdown, DropdownToggle, DropdownItem, DropdownMenu, } from "reactstrap";
 import Api from "../../../../Components/Api/index";
 import "./index.css";
 import { toast, Toaster } from "react-hot-toast";
@@ -30,38 +11,66 @@ import MDEditor from "@uiw/react-md-editor";
 import { colorData } from "../AddProduct/ProductCodeAndPrice";
 import convertToJPEG from "@/Components/imageConvertor";
 import { XCircle } from "react-feather";
-interface Product {
-  title: string;
-  _id: string;
-  price: number;
-  discount: number;
-  variants: { image: string }[];
-}
-interface category {
-  category: string;
-  value: string;
-}
-interface subCategory {
-  category: string;
-  subCategory: string;
-  value: string;
-}
-type Specification = {
-  question: string;
-  answer: string;
-};
-// const shopTypeData = [{value:"formal-wear" ,item:'Formal Wear' } ,{value:"everyday-wear" ,item:'EveryDay Wear' } ,{value:"designer-wear" ,item:'Designer Wear' }  ,{value:"street-wear" ,item:'Street Wear' } ,{value:"trending" ,item:'Trending' }]
-const shopTypeData = [{value:"formal wear" ,item:'Formal Wear' } ,{value:"everyday wear" ,item:'EveryDay Wear' } ,{value:"designer wear" ,item:'Designer Wear' }  ,{value:"street wear" ,item:'Street Wear' } ,{value:"trending" ,item:'Trending' }]
+interface Product { title: string; _id: string; price: number; discount: number; variants: { image: string }[]; }
+interface category { category: string; value: string; }
+interface subCategory { category: string; subCategory: string; value: string; }
+type Specification = { question: string; answer: string; };
+const shopTypeData = [{ value: "formal wear", item: 'Formal Wear' }, { value: "everyday wear", item: 'EveryDay Wear' }, { value: "designer wear", item: 'Designer Wear' }, { value: "street wear", item: 'Street Wear' }, { value: "trending", item: 'Trending' }]
 
-
-
-
-// interface variants {
-
-// }
 const ProductList = () => {
+  interface SizeOption {
+    value: string;
+    label: string;
+  }
 
+  type SizeOptionsType = Record<string, SizeOption[]>;
+
+  interface VariantsData {
+    _id?: string;
+    image?: string[];
+    size?: string;
+    quantity?: number;
+    sizeQuantities?: Record<string, number>;
+    specificationArray?: string[];
+    specificationSingleLine?: string[];
+    category?: string;
+    [key: string]: any; // fallback for other fields
+  }
+
+  // --- Constants ---
+  const sizeOptions: SizeOptionsType = {
+    shirts: [
+      { value: "xs", label: "XS" },
+      { value: "s", label: "S" },
+      { value: "m", label: "M" },
+      { value: "l", label: "L" },
+      { value: "xl", label: "XL" },
+      { value: "xxl", label: "XXL" },
+      { value: "xxxl", label: "XXXL" },
+      { value: "xxxxl", label: "XXXXL" },
+      { value: "xxxxxl", label: "XXXXXL" }, 
+    ],
+    pants: [
+      { value: "28", label: "28" },
+      { value: "30", label: "30" },
+      { value: "32", label: "32" },
+      { value: "34", label: "34" },
+      { value: "36", label: "36" },
+      { value: "38", label: "38" },
+      { value: "40", label: "40" },
+      { value: "42", label: "42" },
+      { value: "44", label: "44" },
+      { value: "46", label: "46" },
+      { value: "48", label: "48" },
+    ],
+    oneSize: [{ value: "No-Size", label: "" }],
+  };
   const [productData, setProductData] = useState<Product[]>([]);
+// --- State ---
+const [sizeType, setSizeType] = useState<keyof SizeOptionsType>("shirts");
+const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
+
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [open2, setOpen2] = useState(false);
@@ -72,15 +81,10 @@ const ProductList = () => {
   const [variantsData, setVariantsData] = useState<any>({});
   const [comment, setComment] = useState<any>("")
   const [mainProductIdForDeleteComments, setMainProductIdForDeleteComments] = useState<any>("")
-  const [specification, setSpecification] = useState({
-    question: "",
-    answer: "",
-  });
+  const [specification, setSpecification] = useState({ question: "", answer: "", });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [specificationArray, setSpecificationArray] = useState<Specification[]>(
-    []
-  );
+  const [specificationArray, setSpecificationArray] = useState<Specification[]>([]);
   const [specificationArray1, setSpecificationArray1] = useState<string[]>([]);
   const [image, setImage] = useState<string[]>([]);
   const [specificationString, setSpecificationString] = useState<string>("");
@@ -169,7 +173,7 @@ const ProductList = () => {
           };
           storeData.push(newObject);
         }
-        
+
       });
       await Promise.all(createPromise);
       setProductData(storeData);
@@ -207,9 +211,6 @@ const ProductList = () => {
     }
   };
 
-
-
-
   const fetchDataSubProduct = async (id: any) => {
     const storeData: any = [];
     try {
@@ -217,8 +218,8 @@ const ProductList = () => {
       const createPromise = res.data.data.products.map(async (item: any) => {
         const newObject = {
           Image: item.image[0],
-          Size:item.size,
-          SKU:item.sku || "No",
+          Size: item.size,
+          SKU: item.sku || "No",
           "Product Id": item._id,
           Title: item.title,
           Actions: item._id
@@ -237,7 +238,6 @@ const ProductList = () => {
     fetchDataSubProduct(id);
     onOpenModal();
   };
-
 
   const handleSubProductDelete = async (id: any) => {
     try {
@@ -344,9 +344,6 @@ const ProductList = () => {
       console.log(error);
     }
   };
-
-
-
   const handleAddSpecification1 = () => {
     if (!specificationString) {
       toast.error("Please fill the field before adding.");
@@ -357,7 +354,6 @@ const ProductList = () => {
     setSpecificationArray1((prevArray) => [...prevArray, specificationString]);
     setSpecificationString(""); // Clear the input field
   };
-
   const handleChangeShopType = async (value: any, id: any) => {
     try {
       await Api.updateMainProduct(id, { shopType: value }, token)
@@ -367,6 +363,29 @@ const ProductList = () => {
       return console.log(error)
     }
   }
+
+  const handleSizeChange = (sizeValue: string, checked: boolean) => {
+    setSelectedSizes(prev =>
+      checked ? [...prev, sizeValue] : prev.filter(s => s !== sizeValue)
+    );
+
+    // reset qty if unchecked
+    if (!checked) {
+      setSizeQuantities(prev => {
+        const newQuantities = { ...prev };
+        delete newQuantities[sizeValue];
+        return newQuantities;
+      });
+    }
+  };
+
+  const handleQuantityChange = (sizeValue: string, qty: number) => {
+    setSizeQuantities(prev => ({
+      ...prev,
+      [sizeValue]: qty,
+    }));
+  };
+
 
   return (
     <>
@@ -408,10 +427,6 @@ const ProductList = () => {
         </ModalFooter>
       </Modal>
 
-
-
-
-
       <ButtonGroup className=" pull-right order-model">
         <Modal isOpen={open} toggle={onCloseModal} className="model-model">
           <ModalHeader >
@@ -431,7 +446,6 @@ const ProductList = () => {
                 class="-striped -highlight"
               />
             )}
-
             <ModalFooter>
               {/* <Button color="primary" type="submit">Save</Button> */}
               <Button color="primary" onClick={onCloseModal} >
@@ -469,7 +483,7 @@ const ProductList = () => {
                         setVariantsData((prevData: any) => ({
                           ...prevData,
                           category: e.target.value,
-                          subCategory:[]
+                          subCategory: []
                         }));
 
                         fetchDataSubCategoryByCategory(e.target.value);
@@ -491,8 +505,6 @@ const ProductList = () => {
                 </Row>
               </FormGroup>
 
-
-
               <FormGroup className="mb-3">
                 <Row>
                   <Col lg="3">
@@ -512,10 +524,10 @@ const ProductList = () => {
                                 if (e.target.checked) {
                                   setVariantsData((prevData: any) => ({
                                     ...prevData,
-                                    subCategory: [ e.target.value],
+                                    subCategory: [e.target.value],
                                   }));
 
-                                } 
+                                }
                               }}
                             />{" "}
                             {data.subCategory}
@@ -527,55 +539,48 @@ const ProductList = () => {
                   <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
-
-
               <FormGroup className="mb-3">
-  <Row>
-    <Col lg="3">
-      <Label className="fw-bold mb-0">Classification:
-      </Label>
-    </Col>
-    <Col lg="9">
-      
-      {shopTypeData.map((data, index) => {
-        return (
-          <FormGroup check inline key={index}>
-            <Label check>
-              <Input
-                type="checkbox"
-                name="shoppingType"
-                value={data.value}
-                checked={ variantsData?.shopType && variantsData?.shopType.includes(data.value)}
+                <Row>
+                  <Col lg="3">
+                    <Label className="fw-bold mb-0">Classification:
+                    </Label>
+                  </Col>
+                  <Col lg="9">
 
-                onChange={(e: any) => {
-                  if (e.target.checked) {
-                    setVariantsData((prevData: any) => ({
-                      ...prevData,
-                      shopType: [...prevData.shopType ,  e.target.value],
-                    }));
+                    {shopTypeData.map((data, index) => {
+                      return (
+                        <FormGroup check inline key={index}>
+                          <Label check>
+                            <Input
+                              type="checkbox"
+                              name="shoppingType"
+                              value={data.value}
+                              checked={variantsData?.shopType && variantsData?.shopType.includes(data.value)}
 
-                  } else {
-                    setVariantsData((prevData: any) => ({
-                      ...prevData,
-                      shopType: prevData.shopType.filter((val: any) => val !== e.target.value),
-                    }));
-                  
-                  }
-                }}
-                
-      
-              />{" "}
-              {data.item}
-            </Label>
-          </FormGroup>
-        );
-      })}
-    </Col>
-    <div className="valid-feedback">Looks good!</div>
-  </Row>
-</FormGroup>
+                              onChange={(e: any) => {
+                                if (e.target.checked) {
+                                  setVariantsData((prevData: any) => ({
+                                    ...prevData,
+                                    shopType: [...prevData.shopType, e.target.value],
+                                  }));
 
+                                } else {
+                                  setVariantsData((prevData: any) => ({
+                                    ...prevData,
+                                    shopType: prevData.shopType.filter((val: any) => val !== e.target.value),
+                                  }));
 
+                                }
+                              }}
+                            />{" "}
+                            {data.item}
+                          </Label>
+                        </FormGroup>
+                      );
+                    })}
+                  </Col>
+                </Row>
+              </FormGroup>
               <FormGroup className="mb-3 ">
                 <Row>
                   <Col xl="3" sm="4">
@@ -650,7 +655,6 @@ const ProductList = () => {
                 </Row>
                 <div className="valid-feedback">Looks good!</div>
               </FormGroup>
-
               <FormGroup className=" mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -674,7 +678,6 @@ const ProductList = () => {
                 </Row>
                 <div className="valid-feedback">Looks good!</div>
               </FormGroup>
-
               <FormGroup className=" mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -712,7 +715,6 @@ const ProductList = () => {
                       type="text"
                     />
                   </Col>
-
                   <div className="offset-xl-7 offset-sm-4 mt-3">
                     <Button
                       onClick={() => {
@@ -737,7 +739,6 @@ const ProductList = () => {
                 </Row>
                 <div className="valid-feedback">Looks good!</div>
               </FormGroup>
-
               {specificationArray &&
                 specificationArray.map((data, index) => {
                   return (
@@ -762,7 +763,6 @@ const ProductList = () => {
                             }}
                           />
                         </Col>
-
                         <Col xl="3" sm="4">
                           <Label className="fw-bold mb-0">Answer :</Label>
                         </Col>
@@ -773,7 +773,6 @@ const ProductList = () => {
                     </>
                   );
                 })}
-
               <FormGroup className="mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -796,16 +795,6 @@ const ProductList = () => {
 
                   <div className="offset-xl-7 offset-sm-4 mt-3">
                     <Button
-                      // onClick={() => {
-                      //   setSpecificationArray1([
-                      //     ...specificationArray1,
-                      //     specificationString,
-                      //   ]);
-                      //   setSpecificationString("");
-                      // }}
-
-
-
                       onClick={handleAddSpecification1}
                       type="button"
                       color="primary"
@@ -927,7 +916,7 @@ const ProductList = () => {
                         style={{ height: "50vh", overflow: "auto" }}
                       >
                         {colorData.map((color) => (
-                          <DropdownItem style={{display:"flex"}}
+                          <DropdownItem style={{ display: "flex" }}
                             key={color.code}
                             onClick={() => {
                               setVariantsData((prevData: any) => ({
@@ -946,7 +935,7 @@ const ProductList = () => {
                                 marginRight: "8px",
                               }}
                             ></span>
-                            <div style={{position:"relative" , top:"-2px"}}> {color.name}</div>
+                            <div style={{ position: "relative", top: "-2px" }}> {color.name}</div>
                           </DropdownItem>
                         ))}
                       </DropdownMenu>
@@ -958,97 +947,143 @@ const ProductList = () => {
 
               <FormGroup className=" mb-3">
                 <Row>
-                  <Col xl="3" sm="4">
-                    <Label className=" fw-bold mb-0">Total Products :</Label>
-                  </Col>
-
-                  <Col sm="7" xl="8">
-                    {" "}
-                    <fieldset className="qty-box ms-0">
-                      <InputGroup className="bootstrap-touchspin">
-                        <div className="input-group-prepend">
-                          <Button
-                            color="primary"
-                            className=" btn-square bootstrap-touchspin-down"
-                            onClick={() => {
-                              if (variantsData.quantity > 0) {
-                                setVariantsData((pre: any) => ({
-                                  ...pre,
-                                  quantity: variantsData.quantity - 1,
-                                }));
-                              } else {
-                                return null;
-                              }
-                            }}
-                          >
-                            <i className="fa fa-minus"></i>
-                          </Button>
-                        </div>
-
-                        <Input
-                          className="touchspin mx-1"
-                          style={{ width: "100px", maxWidth: "50px" }}
-                          type="text"
-                          value={variantsData.quantity}
-                          onChange={(e: any) => {
-                            setVariantsData((prevData: any) => ({
-                              ...prevData,
-                              quantity: e.target.value,
-                            }));
-                          }}
-                        />
-
-                        <div className="input-group-append ms-0">
-                          <Button
-                            color="primary"
-                            className="btn-square bootstrap-touchspin-up"
-                            onClick={() => {
-                              if (variantsData.quantity < 25) {
-                                setVariantsData((pre: any) => ({
-                                  ...pre,
-                                  quantity: variantsData.quantity + 1,
-                                }));
-                              } else {
-                                return null;
-                              }
-                            }}
-                          >
-                            <i className="fa fa-plus"></i>
-                          </Button>
-                        </div>
-                      </InputGroup>
-                    </fieldset>{" "}
-                  </Col>
                 </Row>
               </FormGroup>
 
-              <FormGroup className=" mb-3">
-                <Row>
-                  <Col xl="3" sm="4">
-                    <Label className="fw-bold mb-0">Select Size :</Label>
-                  </Col>
-                  <Col xl="1" sm="7">
-                    <Input
-                      value={variantsData.size}
-                      type="select"
-                      name="color"
-                      id="validationCustom03"
-                      onChange={(e: any) => {
-                        setVariantsData((prevData: any) => ({
-                          ...prevData,
-                          size: e.target.value,
-                        }));
-                      }}
-                    >
-                      <option value="">Select a size</option>
-                      <option value="m">M</option>
-                      <option value="l">L</option>
-                      <option value="xl">XL</option>
-                      <option value="xxl">XXL</option>
-                    </Input>
-                  </Col>
-                </Row>
-              </FormGroup>
+           <FormGroup className="mb-3">
+  <Row>
+    <Col lg="3">
+      <Label className="fw-bold mb-0">Select Sizes & Quantities:</Label>
+    </Col>
+    <Col lg="9">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "15px",
+        }}
+      >
+        {sizeOptions[sizeType]?.map((sizeOption) => (
+          <div
+            key={sizeOption.value}
+            style={{
+              border: "1px solid #ddd",
+              padding: "10px",
+              borderRadius: "5px",
+              backgroundColor: selectedSizes.includes(sizeOption.value)
+                ? "#f8f9fa"
+                : "white",
+            }}
+          >
+            <FormGroup check>
+              <Label check>
+                <Input
+                  type="checkbox"
+                  checked={selectedSizes.includes(sizeOption.value)}
+                  onChange={(e) =>
+                    handleSizeChange(sizeOption.value, e.target.checked)
+                  }
+                />
+                {" "}
+                <strong>Size: {sizeOption.label}</strong>
+              </Label>
+            </FormGroup>
+
+            {selectedSizes.includes(sizeOption.value) && (
+              <div style={{ marginTop: "8px" }}>
+                <Label style={{ fontSize: "12px", marginBottom: "5px" }}>
+                  Quantity:
+                </Label>
+                <InputGroup size="sm">
+                  <Button
+                    size="sm"
+                    color="outline-secondary"
+                    onClick={() =>
+                      handleQuantityChange(
+                        sizeOption.value,
+                        Math.max(0, (sizeQuantities[sizeOption.value] || 0) - 1)
+                      )
+                    }
+                  >
+                    -
+                  </Button>
+                  <Input
+                    style={{ textAlign: "center" }}
+                    type="number"
+                    min="0"
+                    max="999"
+                    value={sizeQuantities[sizeOption.value] || 0}
+                    onChange={(e) =>
+                      handleQuantityChange(
+                        sizeOption.value,
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                  />
+                  <Button
+                    size="sm"
+                    color="outline-secondary"
+                    onClick={() =>
+                      handleQuantityChange(
+                        sizeOption.value,
+                        Math.min(999, (sizeQuantities[sizeOption.value] || 0) + 1)
+                      )
+                    }
+                  >
+                    +
+                  </Button>
+                </InputGroup>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {selectedSizes.length > 0 && (
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            backgroundColor: "#e9ecef",
+            borderRadius: "5px",
+          }}
+        >
+          <strong>Selected Sizes Summary:</strong>
+          <div style={{ marginTop: "5px" }}>
+            {selectedSizes.map((size) => (
+              <span
+                key={size}
+                style={{
+                  display: "inline-block",
+                  margin: "2px 5px",
+                  padding: "2px 8px",
+                  backgroundColor: "#007bff",
+                  color: "white",
+                  borderRadius: "3px",
+                  fontSize: "12px",
+                }}
+              >
+                {sizeOptions[sizeType].find((s) => s.value === size)?.label}:{" "}
+                {sizeQuantities[size] || 0}
+              </span>
+            ))}
+          </div>
+          <div style={{ marginTop: "5px", fontSize: "14px" }}>
+            <strong>
+              Total Quantity:{" "}
+              {Object.values(sizeQuantities).reduce(
+                (sum, qty) => sum + (qty || 0),
+                0
+              )}
+            </strong>
+          </div>
+        </div>
+      )}
+    </Col>
+  </Row>
+</FormGroup>
+
+
 
               <Col className="offset-xl-3 offset-sm-4 mb-3 image-file">
                 <ul className="file-upload-product">
@@ -1103,7 +1138,6 @@ const ProductList = () => {
                   </div>
                 </ul>
               </Col>
-
               <ModalFooter>
                 <div className="offset-xl-9 offset-sm-4">
                   <Button type="submit" color="secondary">
@@ -1118,16 +1152,10 @@ const ProductList = () => {
           </ModalBody>
         </Modal>
       </ButtonGroup>
-
-
-      {/* comments section */}
       <ButtonGroup className=" pull-right order-model">
         <Modal isOpen={open3} toggle={onOpenModal3} className="model-model">
-
           <ModalBody>
-
-            <Label className="fw-bold mb-0">Comments: </Label>
-
+            <Label className="fw-bold mb-0">Comments: </Label>=
             {comment && (
               <Datatable
                 typeUse={"product-list"}
@@ -1139,8 +1167,6 @@ const ProductList = () => {
                 class="-striped -highlight"
               />
             )}
-
-
             <ModalFooter>
               <div className="offset-xl-9 offset-sm-4">
                 <Button color="secondary ms-2" onClick={onCloseModal3}>
@@ -1148,20 +1174,11 @@ const ProductList = () => {
                 </Button>
               </div>
             </ModalFooter>
-
-
           </ModalBody>
-
-
-
-
         </Modal>
       </ButtonGroup>
-
-
 
     </>
   );
 };
-
 export default ProductList;

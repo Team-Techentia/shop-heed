@@ -39,22 +39,32 @@ const shopTypeData = [
 // Different size options based on product type
 const sizeOptions = {
   shirts: [
-    { value: "xs", label: "XS" }, { value: "s", label: "S" }, { value: "m", label: "M" }, 
-    { value: "l", label: "L" }, { value: "xl", label: "XL" }, { value: "xxl", label: "XXL" }, 
-    { value: "xxxl", label: "XXXL" }
-  ],
+      { value: "xs", label: "XS" },
+      { value: "s", label: "S" },
+      { value: "m", label: "M" },
+      { value: "l", label: "L" },
+      { value: "xl", label: "XL" },
+      { value: "xxl", label: "XXL" },
+      { value: "xxxl", label: "XXXL" },
+      { value: "xxxxl", label: "XXXXL" },
+      { value: "xxxxxl", label: "XXXXXL" }, 
+    ],
   pants: [
-    { value: "30", label: "30" }, { value: "32", label: "32" }, { value: "34", label: "34" }, 
-    { value: "36", label: "36" }, { value: "38", label: "38" }, { value: "40", label: "40" }, 
-    { value: "42", label: "42" }, { value: "44", label: "44" }, { value: "46", label: "46" }
-  ],
-  shoes: [
-    { value: "6", label: "6" }, { value: "7", label: "7" }, { value: "8", label: "8" }, 
-    { value: "9", label: "9" }, { value: "10", label: "10" }, { value: "11", label: "11" }, 
-    { value: "12", label: "12" }
-  ],
+      { value: "28", label: "28" },
+      { value: "30", label: "30" },
+      { value: "32", label: "32" },
+      { value: "34", label: "34" },
+      { value: "36", label: "36" },
+      { value: "38", label: "38" },
+      { value: "40", label: "40" },
+      { value: "42", label: "42" },
+      { value: "44", label: "44" },
+      { value: "46", label: "46" },
+      { value: "48", label: "48" },
+    ],
+ 
   oneSize: [
-    { value: "one-size", label: "One Size" }
+    { value: "No-size", label: " " }
   ]
 };
 
@@ -824,8 +834,7 @@ const ProductCodeAndPrice = () => {
               >
                 <option value="shirts">Shirts/Tops (XS, S, M, L, XL, etc.)</option>
                 <option value="pants">Pants/Trousers (30, 32, 34, 36, etc.)</option>
-                <option value="shoes">Shoes (6, 7, 8, 9, etc.)</option>
-                <option value="oneSize">One Size</option>
+                <option value="oneSize">No Size</option>
               </Input>
             </Col>
           </Row>

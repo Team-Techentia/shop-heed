@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Accordion,
   AccordionBody,
@@ -15,6 +16,7 @@ import CartContext from "../../../helpers/cart";
 import { useRouter } from "next/router";
 import sizeChart1 from "../../../public/assets/images/size1.png";
 import sizeChart2 from "../../../public/assets/images/size2.jpg";
+import freedelivery from "../../../public/assets/images/freedeliverylogo.png";
 import { colorData } from "../../../data/colorData";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -71,7 +73,69 @@ const DetailsWithPrice = ({
       <i className="fa fa-star" style={{ color: "#ffa200" }} key={i}></i>
     );
   }
-  const allSizes = ["m", "l", "xl", "xxl"];
+
+  // Size options based on product category - matching ProductCodeAndPrice exactly
+  const sizeOptions = {
+    shirts: [
+      { value: "xs", label: "XS" },
+      { value: "s", label: "S" },
+      { value: "m", label: "M" },
+      { value: "l", label: "L" },
+      { value: "xl", label: "XL" },
+      { value: "xxl", label: "XXL" },
+      { value: "xxxl", label: "XXXL" }
+    ],
+    pants: [
+      { value: "30", label: "30" },
+      { value: "32", label: "32" },
+      { value: "34", label: "34" },
+      { value: "36", label: "36" },
+      { value: "38", label: "38" },
+      { value: "40", label: "40" },
+      { value: "42", label: "42" },
+      { value: "44", label: "44" },
+      { value: "46", label: "46" }
+    ],
+    shoes: [
+      { value: "6", label: "6" },
+      { value: "7", label: "7" },
+      { value: "8", label: "8" },
+      { value: "9", label: "9" },
+      { value: "10", label: "10" },
+      { value: "11", label: "11" },
+      { value: "12", label: "12" }
+    ],
+    oneSize: [
+      { value: "one-size", label: "One Size" }
+    ]
+  };
+
+  // Category mapping to determine which size type to use - matching ProductCodeAndPrice
+  const getCategorySizeType = (category) => {
+    const lowerCategory = category?.toLowerCase();
+
+    if (lowerCategory?.includes('shirt') || lowerCategory?.includes('t-shirt') ||
+      lowerCategory?.includes('top') || lowerCategory?.includes('jacket') ||
+      lowerCategory?.includes('hoodie') || lowerCategory?.includes('sweater')) {
+      return 'shirts';
+    }
+
+    if (lowerCategory?.includes('pant') || lowerCategory?.includes('trouser') ||
+      lowerCategory?.includes('jean') || lowerCategory?.includes('bottom') ||
+      lowerCategory?.includes('short') || lowerCategory?.includes('track')) {
+      return 'pants';
+    }
+
+    if (lowerCategory?.includes('shoe') || lowerCategory?.includes('sneaker') ||
+      lowerCategory?.includes('boot') || lowerCategory?.includes('sandal')) {
+      return 'shoes';
+    }
+
+    return 'oneSize';
+  };
+
+  const sizeType = getCategorySizeType(product.category);
+  const allSizes = sizeOptions[sizeType];
 
   useEffect(() => {
     const filterSize = sameProductData.filter((data) => {
@@ -176,37 +240,34 @@ const DetailsWithPrice = ({
     <>
       <div className={`product-right ${stickyClass}`}>
         {/* Product Title */}
-        <h2 className="product-title"> {product.title} </h2>
+        <h2 className="product-Brand">{product.brand}</h2>
+        <h2 className="product-title">{product.title}</h2>
 
-        {/* Price Section - Redesigned */}
         <div className="price-section">
-          <div
-            className="price-main-row"
-            style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "18px", fontWeight: "bold" }}
-          >
-            {/* <span className="currency-symbol">₹</span> */}
+          <div className="price-main-row">
             <span className="current-price">₹{product.finalPrice}</span>
+
+            <span className="mrp-badge">MRP</span>
+            <span className="original-price">₹{product.price}</span>
+
             {parseInt(product.price) > parseInt(product.finalPrice) && (
-              <span className="discount-amount" style={{ textDecoration: "line-through", color: "#cc0000", opacity: "0.7" }}>
-                ₹{parseInt(product.price) - parseInt(product.finalPrice)} OFF
+              <span className="discount-text">
+                ({Math.round(((product.price - product.finalPrice) / product.price) * 100)}% OFF)
               </span>
             )}
           </div>
 
-
           <div className="price-details-row">
-            <span className="mrp-text">
-              MRP: <span className="original-price">₹{product.price}</span>
-            </span>
-            <span className="tax-inclusive">Inclusive of all Taxes</span>
-          </div>
-
-          <div className="free-shipping-badge">
-            <i className="fa fa-truck me-1"></i> FREE SHIPPING
+            <span className="tax-inclusive">inclusive of all taxes</span>
           </div>
         </div>
+        <Image
+          src={freedelivery} // place this image inside /public/images
+          alt="Free Shipping"
+          width={150}   // adjust size
+          height={65}  // adjust size
+        />
 
-        {/* Rating */}
         {stock === "Out of Stock" ? (
           <div className="out-of-stock-banner">
             <strong>Out Of Stock</strong>
@@ -217,61 +278,51 @@ const DetailsWithPrice = ({
               <>
                 <hr className="section-divider" />
 
-                {/* Size Selection */}
-                {product.category === "shirt" && (
-                  <div className="selection-header">
-                    <span>SELECT SIZE</span>
-                    <button
-                      className="size-chart-link"
-                      onClick={toggle}
-                    >
-                      Size Chart
-                    </button>
+                {sizeType !== 'oneSize' && (
+                  <div className="size-selector mt-2">
+                    {uniqueSizes
+                      .filter((matchedProduct) => matchedProduct.quantity > 0) // hide out of stock
+                      .sort((a, b) => a.size - b.size) 
+                      .map((matchedProduct) => (
+                        <div
+                          key={matchedProduct.size}
+                          className="size-option-wrapper"
+                        >
+                          <div
+                            className={`size-option 
+              ${product.size === matchedProduct.size ? 'selected' : ''}`}
+                            onClick={() => handleSizeClick(matchedProduct)}
+                          >
+                            {matchedProduct.size}
+                          </div>
+
+                          {/* Low stock badge */}
+                          {matchedProduct.quantity <= 2 && (
+                            <span className="qty-badge">
+                              {matchedProduct.quantity} left
+                            </span>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 )}
+                 {/* Quantity Selector */}
+            <div className="quantity-section">
+              <div className="selection-header">
+                <span>QUANTITY</span>
+              </div>
+              <div className="quantity-selector">
+                <button className="quantity-btn" onClick={changeless}>
+                  <RemoveIcon />
+                </button>
+                <div className="quantity-display">{quantity}</div>
+                <button className="quantity-btn" onClick={changeInc}>
+                  <AddIcon />
+                </button>
+              </div>
+            </div>
 
-                <Modal
-                  isOpen={modal}
-                  toggle={toggle}
-                  centered
-                  className="size-chart-modal"
-                >
-                  <ModalHeader toggle={toggle}>Size Guide</ModalHeader>
-                  <ModalBody>
-                    <Media
-                      src={sizeChart2.src}
-                      alt="size"
-                      className="img-fluid mb-3"
-                    />
-                    <Media
-                      src={sizeChart1.src}
-                      alt="size"
-                      className="img-fluid"
-                    />
-                  </ModalBody>
-                </Modal>
-
-                <div className="size-selector mt-2">
-                  {allSizes.map((size) => {
-                    const matchedProduct = uniqueSizes.find(
-                      (data) => data.size === size
-                    );
-                    const isAvailable = !!matchedProduct;
-
-                    return (
-                      <div
-                        key={size}
-                        className={`size-option ${!isAvailable ? 'unavailable' : ''} ${product.size === size ? 'selected' : ''}`}
-                        onClick={() =>
-                          isAvailable && handleSizeClick(matchedProduct)
-                        }
-                      >
-                        {size.toUpperCase()}
-                      </div>
-                    );
-                  })}
-                </div>
-
+            {/* Action Buttons */}
                 {/* Color Selection */}
                 <div className="selection-header mt-3">
                   <span>MORE COLOURS</span>
@@ -289,35 +340,12 @@ const DetailsWithPrice = ({
                         <div className="color-thumbnail">
                           <img src={data.image} alt={data.colorName} />
                         </div>
-                        
+
                       </div>
                     ))}
                   </div>
                 )}
-              </>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="quantity-section">
-              <div className="selection-header">
-                <span>QUANTITY</span>
-              </div>
-              <div className="quantity-selector">
-                <button className="quantity-btn" onClick={changeless}>
-                  <RemoveIcon />
-                </button>
-                <div className="quantity-display">{quantity}</div>
-                <button className="quantity-btn" onClick={changeInc}>
-                  <AddIcon />
-                </button>
-              </div>
-              {/* <div className="stock-status">
-                <i className="fa fa-check-circle me-1"></i> 2 LEFT ONLY
-              </div> */}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="action-buttons mt-4">
+                 <div className="action-buttons mt-4">
               <button
                 className="btn btn-add-to-cart"
                 onClick={() => {
@@ -338,7 +366,7 @@ const DetailsWithPrice = ({
                 }}
                 style={{
                   flex: 1,
-                  background: '#000', // SaddleBrown
+                  background: '#10ADD6', // SaddleBrown
                   color: 'white',
                   border: 'none',
                   padding: '12px',
@@ -347,15 +375,18 @@ const DetailsWithPrice = ({
                   transition: 'all 0.2s',
                 }}
                 onMouseOver={(e) => {
-                  e.target.style.background = '#321414'; // Darker brown on hover (Sienna)
+                  e.target.style.background = '#10ADD1'; // Darker brown on hover (Sienna)
                 }}
                 onMouseOut={(e) => {
-                  e.target.style.background = '#000'; // Original brown
+                  e.target.style.background = '#10ADD6'; // Original brown
                 }}
               >
                 <i className="fa fa-bolt me-2"></i> Buy Now
               </button>
             </div>
+              </>
+            )}
+
           </>
         )}
 
@@ -485,53 +516,53 @@ const DetailsWithPrice = ({
             </div>
 
             {expectDelivery && (
-<div
-  style={{
-    marginTop: "14px",
-    padding: "14px 18px",
-    borderRadius: "12px",
-    background: "linear-gradient(135deg, #fdfdfd, #f7f9fc)",
-    border: "1px solid #e6ebf1",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-  }}
->
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-    }}
-  >
-    <i
-      className="fa fa-check-circle"
-      style={{
-        color: "#4CAF50",
-        fontSize: "22px",
-      }}
-    ></i>
-    <div>
-      <div
-        style={{
-          fontSize: "15px",
-          fontWeight: "600",
-          color: "#222",
-          marginBottom: "4px",
-        }}
-      >
-        Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
-      </div>
-      <div
-        style={{
-          fontSize: "13px",
-          color: "#6b7280",
-          fontStyle: "italic",
-        }}
-      >
-        {expectDelivery}
-      </div>
-    </div>
-  </div>
-</div>
+              <div
+                style={{
+                  marginTop: "14px",
+                  padding: "14px 18px",
+                  borderRadius: "12px",
+                  background: "linear-gradient(135deg, #fdfdfd, #f7f9fc)",
+                  border: "1px solid #e6ebf1",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                  }}
+                >
+                  <i
+                    className="fa fa-check-circle"
+                    style={{
+                      color: "#4CAF50",
+                      fontSize: "22px",
+                    }}
+                  ></i>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        color: "#222",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#6b7280",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {expectDelivery}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
             )}
 
@@ -546,40 +577,61 @@ const DetailsWithPrice = ({
       </div>
 
       <style jsx>{`
-        .product-title {
-          font-size: 24px;
-          font-weight: 600;
-          color: #2d2d2d;
-          margin-bottom: 15px;
-        }
-        
-        
+      .product-Brand {
+  font-size: 24px;     
+  font-weight: 700;      
+  color: #000;       
+  margin-bottom: 15px;   
+}
+       .product-title {
+  font-size: 19px;
+  font-weight: 400;
+  color: #6c757d;
+  margin-bottom: 15px;
+}
 
-        
-        .current-price {
-          font-size: 28px;
-          font-weight: 700;
-          color: #2d2d2d;
-          margin-right: 12px;
-          margin-bottom: 0;
-        }
-        
-        .original-price {
-          font-size: 18px;
-          color: #6c757d;
-          margin-right: 12px;
-          margin-bottom: 0;
-        }
-        
-        .discount-badge {
-          background: #dc3545;
-          color: white;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-        
+.current-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d2d2d;
+  
+}
+
+.mrp-badge {
+  
+   color: #6c757d;
+  font-size: 25px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  
+}
+
+.original-price {
+  font-size: 25px;
+  color: #6c757d;
+  text-decoration: line-through;
+}
+
+.discount-text {
+  font-size: 20px;
+  font-weight: 600;
+  color:#10ADD6;  /* blue text */
+}
+
+.price-main-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.tax-inclusive {
+  font-size: 15px;
+  color: #28a745;   /* Green text */
+  font-weight: 700;
+}
+
         .free-shipping-badge {
   background: linear-gradient(90deg, #4AA184, #5ab195);
   color: #fff;
@@ -680,16 +732,19 @@ const DetailsWithPrice = ({
 }
 
 .size-option:hover {
-  border-color: #000;
+  border-color: #10ADD6;
+  color:#10ADD6;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .size-option.selected {
-  border: 2px solid #000;
+  border: 2px solid #10ADD6;
+  color:#10ADD6;
+   border-color: #10ADD6;
   background: linear-gradient(145deg, #f9f9f9, #fff);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #000;
+  // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
 }
 
 .size-option.unavailable {
@@ -952,9 +1007,52 @@ const DetailsWithPrice = ({
             margin-top: 10px;
           }
         }
+          .size-option-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+}
+
+.size-option {
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  background: #fff;
+  position: relative;
+}
+
+.size-option.selected {
+  border: 2px solid #000;
+}
+
+.size-option.unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qty-badge {
+  position: absolute;
+  bottom: -13px;
+  right: 1px;
+  background: #ff7b54;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
       `}</style>
     </>
   );
+
 };
 
 export default DetailsWithPrice;
