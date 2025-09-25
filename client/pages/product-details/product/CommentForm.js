@@ -1,39 +1,43 @@
-import React, { useState,useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import Api from '../../../components/Api';
 import { getCookie } from "../../../components/cookies";
 import UserContext from '../../../helpers/user/UserContext';
 import { toast } from 'react-toastify';
 import { LoaderContext } from '../../../helpers/loaderContext';
 import { Modal, ModalBody, ModalHeader } from "reactstrap";
-const CommentForm = ({ productId, setComments, comments }) => {
-    const LoaderContextData = useContext(LoaderContext)
-    const { catchErrors  } = LoaderContextData
-  const [text, setText] = useState('');
+
+const RatingForm = ({ productId }) => {
+  const LoaderContextData = useContext(LoaderContext);
+  const { catchErrors } = LoaderContextData;
+
   const [rating, setRating] = useState(1);
-  const token = getCookie("ectoken");
-  const userContext = useContext(UserContext);
   const [modal, setModal] = useState(false);
   const toggle = () => setModal(!modal);
-  const isLogin = userContext.isLogin
+
+  const token = getCookie("ectoken");
+  const userContext = useContext(UserContext);
+  const isLogin = userContext.isLogin;
+
   const handleSubmit = async (e) => {
-  
     e.preventDefault();
-    if(!isLogin){
-        toast.error("Please login to comment");
-        return;
+
+    if (!isLogin) {
+      toast.error("Please login to give rating");
+      return;
     }
+
     try {
-      const response = await Api.createComments({
-        text,
-        rating,
-      }, productId, token);
-      setComments([response.data.comment, ...comments]);
-      setText('');
-      setRating(1);
-      toggle()
+      // Only send rating, no text/comment
+      await Api.createComments(
+        { rating },
+        productId,
+        token
+      );
+
+      toast.success("Rating submitted successfully!");
+      toggle();
     } catch (error) {
-        
-        catchErrors(error)
+      catchErrors(error);
     }
   };
 
@@ -43,55 +47,42 @@ const CommentForm = ({ productId, setComments, comments }) => {
 
   return (
     <>
-    
-  <div className='mt-3' style={{textAlign:"center"}}>
+      <div className='mt-3' style={{ textAlign: "center" }}>
+        <button onClick={toggle} style={{ maxWidth: "190px" }} className="btn btn-solid">
+          Add Rating
+        </button>
+      </div>
 
-  <button onClick={toggle} style={{maxWidth:"190px" }} type="submit" className=" btn btn-solid">
-        Add Comment
-      </button>
-  </div>
-
-  <Modal isOpen={modal} toggle={toggle} centered>
-        <ModalHeader toggle={toggle}>Add Review</ModalHeader>
+      <Modal isOpen={modal} toggle={toggle} centered>
+        <ModalHeader toggle={toggle}>Add Rating</ModalHeader>
         <ModalBody>
+          <form onSubmit={handleSubmit} className="rating-form" style={{ textAlign: "center" }}>
+            <div className="form-group mb-3">
+              <label><strong>Rating:</strong></label>
+              <div>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <i
+                    key={star}
+                    className={`fa fa-star${star <= rating ? ' highlighted' : ''} me-1`}
+                    onClick={() => handleRatingClick(star)}
+                    style={{
+                      cursor: 'pointer',
+                      color: star <= rating ? '#ffa200' : '#ccc',
+                      fontSize: '28px',
+                    }}
+                  ></i>
+                ))}
+              </div>
+            </div>
 
-    <form onSubmit={handleSubmit} className="comment-form">
-      <div className="form-group">
-        <label htmlFor="comment"> <strong>Comment:</strong> </label>
-        <textarea
-        maxLength="800"
-          id="comment"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          required
-          className="form-control-comment"
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="rating"> <storage>Rating:</storage> </label>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <i
-            key={star}
-            className={`fa fa-star${star <= rating ? ' highlighted' : ''} me-1`}
-            onClick={() => handleRatingClick(star)}
-            style={{ cursor: 'pointer', color: star <= rating ? '#ffa200' : '#ccc' }}
-          ></i>
-        ))}
-      </div>
-
-     <div style={{display:"flex" , justifyContent:"flex-end"}}>
-     <button style={{maxWidth:"200px"}} type="submit" className="btn btn-solid">
-        Add Comment
-      </button>
-     </div>
-    </form>
-    </ModalBody>
-    </Modal>
+            <button type="submit" className="btn btn-solid mt-3" style={{ maxWidth: "200px" }}>
+              Submit Rating
+            </button>
+          </form>
+        </ModalBody>
+      </Modal>
     </>
-
-
-   
   );
 };
 
-export default CommentForm;
+export default RatingForm;

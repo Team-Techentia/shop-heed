@@ -21,7 +21,6 @@ interface OrderData {
   ["Order Status"]: any;
   Date: string;
   ["Total"]: any;
- 
   Actions: any,
 }
 
@@ -35,21 +34,23 @@ const SalesOrders = () => {
   
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<OrderData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [orderDataById, setOrderDataById] = useState<any>(null);
   const [selectedCountry, setSelectedCountry] = useState<any | null>(null);
   const [selectedState, setSelectedState] = useState<any | null>(null);
   const [selectedCity, setSelectedCity] = useState<any | null>(null);
-  const [orderStatus, setOrderStatus] = useState('null'); // Changed from ''
+  const [orderStatus, setOrderStatus] = useState('null');
   const [orderAction, setOrderAction] = useState("");
   const [selectedId, setSelectedId] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [status, setStatus] = useState<string>('null'); // Changed from ''
+  const [status, setStatus] = useState<string>('null');
+  const [invoiceGenerating, setInvoiceGenerating] = useState<string>('');
   const token = getCookie();
   const router = useRouter()
 
   useEffect(() => {
     console.log('Component mounted, fetching data...');
-    fetchData('null', 'null'); // Changed from ('', '')
+    fetchData('null', 'null');
   }, []);
 
   const onOpenModal = () => {
@@ -105,7 +106,218 @@ const SalesOrders = () => {
     return `${day}/${month}/${year}`;
   };
 
+  // Invoice Generation Logic
+  const generateInvoice = async (orderId: string) => {
+    try {
+      setInvoiceGenerating(orderId);
+      
+      // Fetch order details for the invoice
+      const res = await Api.getOrderByIdAdmin(orderId, token);
+      const orderData = res.data.data;
+      
+      if (!orderData) {
+        toast.error("Order data not found");
+        return;
+      }
+
+      // Create new PDF document
+      const doc = new jsPDF();
+      
+      // Add some styling
+      doc.setFont("helvetica");
+      
+      // Company/Store Information Header
+      doc.setFontSize(24);
+      doc.setTextColor(51, 51, 51);
+      doc.text('INVOICE', 20, 25);
+      
+      // Add a line under the title
+      doc.setLineWidth(0.5);
+      doc.line(20, 30, 190, 30);
+      
+      // Company Details
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Your Company Name', 20, 45);
+      doc.text('123 Business Street', 20, 55);
+      doc.text('Business City, State 12345', 20, 65);
+      doc.text('Phone: +91 9876543210', 20, 75);
+      doc.text('Email: sales@yourcompany.com', 20, 85);
+      doc.text('GST: 07AAACH7409R1Z5', 20, 95);
+      
+      // Invoice Details (Right side)
+      const invoiceNumber = orderData.paymentDetails?.orderId || orderData._id.slice(-8);
+      const invoiceDate = new Date().toLocaleDateString('en-IN');
+      const orderDate = formatDate(orderData.orderDate.slice(0, 10));
+      
+      doc.setTextColor(51, 51, 51);
+      doc.setFontSize(12);
+      doc.text(`Invoice No: #${invoiceNumber}`, 140, 45);
+      doc.text(`Invoice Date: ${invoiceDate}`, 140, 55);
+      doc.text(`Order Date: ${orderDate}`, 140, 65);
+      doc.text(`Payment Status: ${orderData.status}`, 140, 75);
+      doc.text(`Order Status: ${orderData.orderStatus}`, 140, 85);
+      
+      // Customer Information
+      doc.setFontSize(14);
+      doc.setTextColor(51, 51, 51);
+      doc.text('Bill To:', 20, 115);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(80, 80, 80);
+      const customer = orderData.customerDetails;
+      doc.text(`${customer.first_name} ${customer.last_name}`, 20, 127);
+      doc.text(`${customer.address}`, 20, 137);
+      doc.text(`${customer.city}, ${customer.state}`, 20, 147);
+      doc.text(`${customer.country} - ${customer.pincode}`, 20, 157);
+      doc.text(`Phone: ${customer.phone}`, 20, 167);
+      doc.text(`Email: ${customer.email}`, 20, 177);
+      
+      // Table Headers Background
+      doc.setFillColor(245, 245, 245);
+      doc.rect(20, 190, 170, 12, 'F');
+      
+      // Table Headers
+      doc.setFontSize(10);
+      doc.setTextColor(51, 51, 51);
+      doc.setFont("helvetica", "bold");
+      doc.text('Product', 25, 198);
+      doc.text('SKU', 80, 198);
+      doc.text('Size', 110, 198);
+      doc.text('Qty', 130, 198);
+      doc.text('Price (₹)', 145, 198);
+      doc.text('Total (₹)', 170, 198);
+      
+      // Product Details
+      let yPosition = 210;
+      const product = orderData.product;
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      
+      // Truncate product title if too long
+      const productTitle = product?.title || 'N/A';
+      const truncatedTitle = productTitle.length > 20 ? productTitle.substring(0, 20) + '...' : productTitle;
+      
+      doc.text(truncatedTitle, 25, yPosition);
+      doc.text(product?.sku || 'No SKU', 80, yPosition);
+      doc.text((product?.size || 'N/A').toString().toUpperCase(), 110, yPosition);
+      doc.text(orderData.totalQuantity.toString(), 135, yPosition);
+      doc.text((product?.finalPrice || 0).toString(), 150, yPosition);
+      doc.text(orderData.totalAmount.toString(), 175, yPosition);
+      
+      // Add line after product
+      yPosition += 10;
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, yPosition, 190, yPosition);
+      
+      // Summary Section
+      yPosition += 20;
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      
+      // Calculate values (you can modify these based on your business logic)
+      const subtotal = orderData.totalAmount;
+      const taxRate = 0; // Set tax rate as needed
+      const taxAmount = Math.round(subtotal * taxRate);
+      const shippingCharges = 0; // Set shipping charges as needed
+      const totalAmount = subtotal + taxAmount + shippingCharges;
+      
+      doc.text('Subtotal:', 130, yPosition);
+      doc.text(`₹ ${subtotal}`, 170, yPosition);
+      
+      yPosition += 12;
+      doc.text(`Tax (${taxRate * 100}%):`, 130, yPosition);
+      doc.text(`₹ ${taxAmount}`, 170, yPosition);
+      
+      yPosition += 12;
+      doc.text('Shipping:', 130, yPosition);
+      doc.text(`₹ ${shippingCharges}`, 170, yPosition);
+      
+      // Total Amount with background
+      yPosition += 15;
+      doc.setFillColor(51, 51, 51);
+      doc.rect(125, yPosition - 8, 65, 15, 'F');
+      
+      doc.setFontSize(12);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.text('Total Amount:', 130, yPosition);
+      doc.text(`₹ ${totalAmount}`, 170, yPosition);
+      
+      // Payment Information
+      yPosition += 25;
+      doc.setFontSize(12);
+      doc.setTextColor(51, 51, 51);
+      doc.setFont("helvetica", "bold");
+      doc.text('Payment Information:', 20, yPosition);
+      
+      yPosition += 12;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Payment Method: ${orderData.paymentMethod || 'N/A'}`, 20, yPosition);
+      
+      if (orderData.paymentDetails?.paymentId) {
+        yPosition += 10;
+        doc.text(`Payment ID: ${orderData.paymentDetails.paymentId}`, 20, yPosition);
+      }
+      
+      if (orderData.paymentDetails?.razorpayOrderId) {
+        yPosition += 10;
+        doc.text(`Razorpay Order ID: ${orderData.paymentDetails.razorpayOrderId}`, 20, yPosition);
+      }
+      
+      // Notes section
+      yPosition += 20;
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Notes:', 20, yPosition);
+      yPosition += 8;
+      doc.text('• This is a computer-generated invoice and does not require a signature.', 20, yPosition);
+      yPosition += 6;
+      doc.text('• Please retain this invoice for your records.', 20, yPosition);
+      yPosition += 6;
+      doc.text('• For any queries regarding this invoice, please contact our support team.', 20, yPosition);
+      
+      // Footer
+      yPosition += 20;
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(51, 51, 51);
+      doc.line(20, yPosition, 190, yPosition);
+      
+      yPosition += 12;
+      doc.setFontSize(11);
+      doc.setTextColor(51, 51, 51);
+      doc.setFont("helvetica", "bold");
+      doc.text('Thank you for your business!', 20, yPosition);
+      
+      yPosition += 8;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      doc.text('For support: support@yourcompany.com | +91 9876543210', 20, yPosition);
+      
+      // Save the PDF with a meaningful filename
+      const customerName = `${customer.first_name}_${customer.last_name}`.replace(/\s+/g, '_');
+      const fileName = `Invoice_${invoiceNumber}_${customerName}_${new Date().getTime()}.pdf`;
+      
+      doc.save(fileName);
+      
+      toast.success("Invoice generated and downloaded successfully!");
+      
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast.error("Failed to generate invoice. Please try again.");
+    } finally {
+      setInvoiceGenerating('');
+    }
+  };
+
   const fetchData = async (selectedStatus: string, selectedOrderStatus: string) => {
+    setLoading(true);
     const storeData: OrderData[] = [];
     try {
       console.log('Calling API with:', { selectedStatus, selectedOrderStatus, token: !!token });
@@ -113,7 +325,6 @@ const SalesOrders = () => {
       const res = await Api.getOrdersByAdmin(token, selectedStatus, selectedOrderStatus);
       console.log('API Response:', res.data);
       
-      // Check if response has data
       if (!res.data || !res.data.data || !Array.isArray(res.data.data)) {
         console.log('No data found in response:', res.data);
         setData([]);
@@ -121,13 +332,12 @@ const SalesOrders = () => {
       }
 
       const createPromise = res.data.data.map(async (item: any) => {
-        // Add null check for product
         if (!item.product) {
           console.log('Skipping item with null product:', item._id);
-          return null; // Skip items with null products
+          return null;
         }
 
-        const orderId = item.paymentDetails?.orderId || item._id;
+        const orderId:string = "shopheed_001";
 
         const newObject: OrderData = {
           Image: item.product.image && item.product.image.length > 0 ? item.product.image[0] : '',
@@ -148,7 +358,6 @@ const SalesOrders = () => {
           ["Order Status"]: <div className="capitalized">{item.orderStatus}</div>,
           Date: formatDate(item.orderDate.slice(0, 10)),
           ["Total"]: <div>₹ {item.totalAmount}</div>,
-
           Actions: item._id,
         };
 
@@ -156,7 +365,6 @@ const SalesOrders = () => {
       });
 
       const results = await Promise.all(createPromise);
-      // Filter out null results (items with null products)
       const filteredResults = results.filter(item => item !== null);
       
       console.log('Processed data:', filteredResults);
@@ -171,6 +379,8 @@ const SalesOrders = () => {
         }
       }
       setData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,7 +388,7 @@ const SalesOrders = () => {
     try {
       await Api.updateOrderStatus({ id: orderId, status: newStatus }, token);
       toast.success("Order status updated successfully!");
-      fetchData(status, orderStatus); // Refresh data after update
+      fetchData(status, orderStatus);
     } catch (error) {
       console.log(error);
       toast.error("Failed to update order status!");
@@ -235,13 +445,50 @@ const SalesOrders = () => {
       await Api.updateOrder(orderDataById._id, updatedData, token);
       onCloseModal();
       fetchData(status, orderStatus);
-      setOrderStatus('null') // Reset to 'null' instead of ''
+      setOrderStatus('null')
     } catch (error) {
       console.error("Failed to update order data", error);
     }
   };
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="text-center py-4">
+          <div className="spinner-border" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+          <div className="mt-2">Loading orders...</div>
+        </div>
+      );
+    }
 
+    if (!data || data.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <div className="alert alert-info">
+            <h5>No Orders Found</h5>
+            <p>There are currently no orders matching the selected criteria.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Datatable
+        handleStatusChange={handleStatusChange}
+        typeUse={"manaegOrder"}
+        myData={data}
+        pageSize={30}
+        pagination={true}
+        openPopUp={openPopUp}
+        handleDelete={openConfirmationModal}
+        generateInvoice={generateInvoice}
+        invoiceGenerating={invoiceGenerating}
+        class="-striped -highlight"
+      />
+    );
+  };
 
   return (
     <Fragment>
@@ -464,6 +711,26 @@ const SalesOrders = () => {
                         </Row>
                         <ModalFooter>
                           <Button color="secondary" type="submit">Save</Button>
+                          {/* Generate Invoice Button in Modal */}
+                          <Button 
+                            color="info" 
+                            type="button" 
+                            onClick={() => generateInvoice(orderDataById._id)}
+                            disabled={invoiceGenerating === orderDataById._id}
+                            className="me-2"
+                          >
+                            {invoiceGenerating === orderDataById._id ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Generating Invoice...
+                              </>
+                            ) : (
+                              <>
+                                <i className="fa fa-file-pdf-o me-2"></i>
+                                Generate Invoice
+                              </>
+                            )}
+                          </Button>
                           <Button color="primary" onClick={onCloseModal}>Close</Button>
                         </ModalFooter>
                       </Form>
@@ -471,24 +738,27 @@ const SalesOrders = () => {
                   </Modal>
                 </ButtonGroup> : ""
               }
+              
+              {/* Delete Confirmation Modal */}
               <Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
                 <ModalHeader toggle={onCloseConfirmationModal}>
                   <h5 className="modal-title f-w-600">Confirm Deletion</h5>
                 </ModalHeader>
                 <ModalBody>
-                  Are you sure to want  delete this Order?
+                  Are you sure you want to delete this Order?
                 </ModalBody>
                 <ModalFooter>
-                  <Button color="primary" onClick={handleConfirmDelete}>Yes</Button>
-                  <Button color="secondary" onClick={onCloseConfirmationModal}>No</Button>
+                  <Button color="danger" onClick={handleConfirmDelete}>Yes, Delete</Button>
+                  <Button color="secondary" onClick={onCloseConfirmationModal}>Cancel</Button>
                 </ModalFooter>
               </Modal>
+
               <CommonCardHeader title="Manage Order" />
 
               <CardBody className="order-datatable">
                 <Row>
                   <Col className="mb-2" sm="6" md="3" lg="3">
-                    Payment Status
+                    <label>Payment Status</label>
                     <Input
                       className="mt-2"
                       type="select"
@@ -506,8 +776,8 @@ const SalesOrders = () => {
                     </Input>
                   </Col>
 
-                  <Col sm="6" md="3" lg="3">
-                    Order Status
+                  <Col className="mb-2" sm="6" md="3" lg="3">
+                    <label>Order Status</label>
                     <Input
                       className="mt-2"
                       type="select"
@@ -530,32 +800,52 @@ const SalesOrders = () => {
                       <option value="draft">Draft</option>
                     </Input>
                   </Col>
+                  
+                  <Col className="mb-2" sm="6" md="3" lg="3">
+                    <label>&nbsp;</label>
+                    <div className="mt-2">
+                      <Button 
+                        color="success" 
+                        onClick={() => fetchData(status, orderStatus)}
+                        className="me-2"
+                      >
+                        <i className="fa fa-refresh me-2"></i>
+                        Refresh
+                      </Button>
+                      <Button 
+                        color="primary" 
+                        onClick={() => {
+                          setStatus('null');
+                          setOrderStatus('null');
+                          fetchData('null', 'null');
+                        }}
+                      >
+                        <i className="fa fa-filter me-2"></i>
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </Col>
                 </Row>
 
-                {data && data.length > 0 ? (
-                  <Datatable
-                    handleStatusChange={handleStatusChange}
-                  
-                    typeUse={"manaegOrder"}
-                    myData={data}
-                    pageSize={30}
-                    pagination={true}
-                    openPopUp={openPopUp}
-                    handleDelete={openConfirmationModal}
-                    class="-striped -highlight"
-                  />
-                ) : (
-                  <div>
-                    <p>Data Not Found</p>
-                    <p>Debug info: Status="{status}", OrderStatus="{orderStatus}", DataLength={data.length}</p>
-                  </div>
-                )}
+                {/* Order Data Table */}
+                {renderContent()}
+                
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
-      <ToastContainer />
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </Fragment>
   );
 };

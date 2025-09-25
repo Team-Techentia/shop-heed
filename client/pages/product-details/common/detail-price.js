@@ -324,27 +324,29 @@ const DetailsWithPrice = ({
 
             {/* Action Buttons */}
                 {/* Color Selection */}
-                <div className="selection-header mt-3">
-                  <span>MORE COLOURS</span>
-                </div>
+                {uniqueColors && uniqueColors.length > 1 && (
+  <>
+    <div className="selection-header mt-3">
+      <span>MORE COLOURS</span>
+    </div>
 
-                {uniqueColors && (
-                  <div className="color-selector mt-2">
-                    {uniqueColors.map((data, i) => (
-                      <div
-                        key={i}
-                        className={`color-option ${product.color === data.color ? 'selected' : ''}`}
-                        onClick={() => handleColorClick(data.color)}
-                        title={data.colorName}
-                      >
-                        <div className="color-thumbnail">
-                          <img src={data.image} alt={data.colorName} />
-                        </div>
+    <div className="color-selector mt-2">
+      {uniqueColors.map((data, i) => (
+        <div
+          key={i}
+          className={`color-option ${product.color === data.color ? 'selected' : ''}`}
+          onClick={() => handleColorClick(data.color)}
+          title={data.colorName}
+        >
+          <div className="color-thumbnail">
+            <img src={data.image} alt={data.colorName} />
+          </div>
+        </div>
+      ))}
+    </div>
+  </>
+)}
 
-                      </div>
-                    ))}
-                  </div>
-                )}
                  <div className="action-buttons mt-4">
               <button
                 className="btn btn-add-to-cart"
@@ -404,11 +406,11 @@ const DetailsWithPrice = ({
         </div>
 
         {/* Product Details Accordion */}
-        <div className="product-details-accordion mt-4">
+        
           <Accordion flush open={open} toggle={togglee}>
             <AccordionItem>
               <AccordionHeader targetId={2}>
-                <i className="fa fa-file-text-o me-2"></i> PRODUCT DESCRIPTION
+               DETAILS
               </AccordionHeader>
               <AccordionBody accordionId={2}>
                 <div>
@@ -428,25 +430,8 @@ const DetailsWithPrice = ({
             </AccordionItem>
 
             <AccordionItem>
-              <AccordionHeader targetId={3}>
-                <i className="fa fa-info-circle me-2"></i> MORE INFORMATION
-              </AccordionHeader>
-              <AccordionBody accordionId={3}>
-                <div className="info-item">
-                  <strong>Manufactured & Marketed by:</strong>
-                  <p>BRANDS.IN</p>
-                  <p>A-39, West Patel Nagar, New Delhi – 110008</p>
-                </div>
-                <div className="info-item">
-                  <strong>Country of Origin:</strong>
-                  <p>India</p>
-                </div>
-              </AccordionBody>
-            </AccordionItem>
-
-            <AccordionItem>
               <AccordionHeader targetId={4}>
-                <i className="fa fa-exchange me-2"></i> RETURN AND EXCHANGE
+                RETURN 
               </AccordionHeader>
               <AccordionBody accordionId={4}>
                 <ul className="return-policy-list">
@@ -466,9 +451,13 @@ const DetailsWithPrice = ({
                 </div>
               </AccordionBody>
             </AccordionItem>
-          </Accordion>
+          
 
-          {/* Delivery Estimate Section */}
+        <AccordionItem>
+              <AccordionHeader targetId={5}>
+                DELIVERY ESTIMATE
+              </AccordionHeader>
+              <AccordionBody accordionId={5}>
           <div className="delivery-estimate-section mt-4">
             <h6>
               <i className="fa fa-truck me-2"></i> Enter Pincode
@@ -573,7 +562,9 @@ const DetailsWithPrice = ({
               </div>
             )}
           </div>
-        </div>
+          </AccordionBody>
+      </AccordionItem>
+      </Accordion>
       </div>
 
       <style jsx>{`
@@ -743,9 +734,8 @@ const DetailsWithPrice = ({
   color:#10ADD6;
    border-color: #10ADD6;
   background: linear-gradient(145deg, #f9f9f9, #fff);
-  // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  
-}
+  // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+} 
 
 .size-option.unavailable {
   color: #b0b0b0;

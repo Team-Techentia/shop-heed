@@ -12,6 +12,7 @@ import { getCookie } from "../../../components/cookies";
 import Slider from "react-slick";
 import { useMediaQuery } from "@mui/material";
 import ModalComponentt from "../../../components/common/CommonModal";
+import RatingForm from "./CommentForm";
 
 const LeftSidebarPage = ({ pathId, setTopTitle }) => {
   const isSmallScreen = useMediaQuery("(max-width: 995px)");
@@ -216,7 +217,7 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
                 setComments={setComments}
               />{" "}
               {showReviewSection && (
-                <CommentForm
+                <RatingForm
                   productId={productData.productId}
                   comments={comments}
                   setComments={setComments}

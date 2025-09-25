@@ -67,54 +67,6 @@ export const tools_product_4 = {
   ],
 };
 
-// export const Product4 = {
-//   infinite: true,
-//   speed: 300,
-//   slidesToShow: 5.5,
-//   slidesToScroll: 2,
-//   autoplay: true,
-//   arrows: false,
-//   autoplaySpeed: 4000,
-//   responsive: [
-//     {
-//       breakpoint: 1366,
-//       settings: {
-//         slidesToShow: 5,
-//         slidesToScroll: 1,
-//       },
-//     },
-//     {
-//       breakpoint: 1200,
-//       settings: {
-//         slidesToShow: 4,
-//         slidesToScroll: 2,
-//       },
-//     },
-//     {
-//       breakpoint: 991,
-//       settings: {
-//         slidesToShow: 3,
-//         slidesToScroll: 1,
-//       },
-//     },
-//     {
-//       breakpoint: 700,
-//       settings: {
-//         slidesToShow: 2,
-//         slidesToScroll: 1,
-//       },
-//     },
-
-//     {
-//       breakpoint: 500,
-//       settings: {
-//         slidesToShow: 2,
-//         slidesToScroll: 1,
-//       },
-//     },
-//   ],
-// };
-
 export const Product45 = {
   infinite: true,
   speed: 300,

@@ -8,14 +8,13 @@ const createComments = async function (req, res) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    const { text, rating } = req.body;
+    const { rating } = req.body;
     const user = await userModel.findById(req._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const comment = {
-      text,
       user: req._id,
       rating
     };
@@ -66,7 +65,7 @@ const checkReviewInListing = async function (req, res) {
 const updateReview = async function (req, res) {
   try {
     const productId = req.params.productId;
-    const { rating, text, userId } = req.body;
+    const { rating, userId } = req.body;
 
     
     if (userId !== req._id) {
@@ -89,7 +88,6 @@ const updateReview = async function (req, res) {
       {
         $set: {
           "comments.$.rating": rating,
-          "comments.$.text": text,
           "comments.$.updatedAt": new Date() 
         }
       }
