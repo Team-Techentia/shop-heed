@@ -46,23 +46,29 @@ const CheckoutPage = ({ isLogin }) => {
   const [selectedCity, setSelectedCity] = useState(null);
 
   // Calculate final total after promocode discount
-  const finalTotal = Math.max(0, cartTotal - promocodeDiscount); // Ensure total doesn't go negative
+  const finalTotal = Math.max(0, cartTotal - promocodeDiscount);
 
   // Fetch active promocodes on component mount
-  useEffect(() => {
+ 
     const fetchActivePromocodes = async () => {
       try {
-        const response = await Api.getAllPromocodes();
+        const response = await Api.getAllPromocodes(token);
         if (response.data && response.data.success) {
-          setAvailablePromocodes(response.data.promocodes || []);
+          // Filter only active promocodes (status: true and not expired)
+          const activePromocodes = response.data.data.filter(promo => {
+            const now = new Date();
+            const endDate = new Date(promo.endDate);
+            return promo.status && promo.isDeleted === false && endDate > now;
+          });
+          setAvailablePromocodes(activePromocodes);
         }
       } catch (error) {
         console.error("Error fetching promocodes:", error);
       }
     };
-
+ useEffect(() => {
     fetchActivePromocodes();
-  }, []);
+  },[]);
 
   const checkhandle = (value) => {
     setPayment(value);
@@ -97,15 +103,37 @@ const CheckoutPage = ({ isLogin }) => {
         }, token);
 
         if (applyResponse.data && applyResponse.data.success) {
-
-          setPromocodeDiscount(applyResponse.data.data.discountValue);
-          console.log('Setting discount to:',);
+          const appliedPromo = availablePromocodes.find(promo => promo.code === promocodeValue);
+          
+          // Debug: Log the full API response to see what we're getting
+          console.log("Apply API Response:", applyResponse.data);
+          console.log("Cart Total:", cartTotal);
+          
+          // Calculate discount manually if API doesn't return calculated amount
+          let actualDiscount = 0;
+          if (appliedPromo) {
+            if (appliedPromo.discountType === 'percent') {
+              actualDiscount = Math.floor((cartTotal * appliedPromo.discountValue) / 100);
+              console.log(`Calculated ${appliedPromo.discountValue}% of ${cartTotal} = ${actualDiscount}`);
+            } else {
+              actualDiscount = Math.floor(appliedPromo.discountValue);
+              console.log(`Fixed discount: ${actualDiscount}`);
+            }
+          }
+          
+          // Use calculated discount or fallback to API response
+          const discountFromAPI = applyResponse.data.data.discountAmount || applyResponse.data.data.discountValue;
+          const finalDiscount = actualDiscount > 0 ? actualDiscount : discountFromAPI;
+          
+          console.log("Final discount being applied:", finalDiscount);
+          
+          setPromocodeDiscount(finalDiscount);
           setEnteredPromocode(applyResponse.data.data.code);
-          setAppliedPromocode(applyResponse.data.data.code);
+          setAppliedPromocode(appliedPromo || { code: promocodeValue });
           setShowPromocodeList(false);
           setPromocodeSuccess(`Promocode ${promocodeValue} applied successfully!`);
           setTimeout(() => setPromocodeSuccess(""), 5000);
-          toast.success("Promo applied successfully")
+          toast.success("Promo applied successfully");
         } else {
           setPromocodeError(applyResponse.data?.message || "Failed to apply promocode");
           setTimeout(() => setPromocodeError(""), 3000);
@@ -136,7 +164,7 @@ const CheckoutPage = ({ isLogin }) => {
   const handlePayment = async (orderId) => {
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
-      amount: Math.floor(finalTotal) * 100, // Use final total after discount - CORRECTED
+      amount: Math.floor(finalTotal) * 100,
       currency: "INR",
       name: "Heed Attentive",
       order_id: orderId,
@@ -152,11 +180,11 @@ const CheckoutPage = ({ isLogin }) => {
         );
         if (paymentVerification.data.success) {
           cartContext.clearCart();
-          toast.success(paymentVerification.data.message ?? "Order placed successfully")
+          toast.success(paymentVerification.data.message ?? "Order placed successfully");
           router.push("/page/order-success");
         } else {
           alert("Payment verification failed");
-          toast.error(paymentVerification.data.message ?? "Failed to verify payment")
+          toast.error(paymentVerification.data.message ?? "Failed to verify payment");
         }
       },
       theme: {
@@ -167,18 +195,15 @@ const CheckoutPage = ({ isLogin }) => {
     rzp1.open();
   };
 
-  console.log("appliedPromocode:", appliedPromocode)
-  console.log("enteredPromocode:", enteredPromocode)
-
   const onSubmit = async (data) => {
     if (data !== "") {
       const orderData = {
         items: cartItems,
-        orderTotal: Math.floor(finalTotal), // Use final total after discount - ALREADY CORRECT
-        originalTotal: Math.floor(cartTotal), // Include original total for reference
+        orderTotal: Math.floor(finalTotal),
+        originalTotal: Math.floor(cartTotal),
         paymentMethod: payment,
-        appliedPromocode: appliedPromocode || enteredPromocode, // Include promocode in order data
-        promocodeDiscount: Math.floor(promocodeDiscount), // Include discount amount
+        appliedPromocode: appliedPromocode?.code || enteredPromocode,
+        promocodeDiscount: Math.floor(promocodeDiscount),
         customerDetails: {
           ...data,
           country: selectedCountry ? selectedCountry.name : "",
@@ -192,18 +217,18 @@ const CheckoutPage = ({ isLogin }) => {
         const createOrder = await Api.createOrder(orderData, token);
         if (createOrder.data.success) {
           if (payment === "cod") {
-            cartContext.clearCart();  
-            toast.success(createOrder.data.message ?? "Order placed successfully")
+            cartContext.clearCart();
+            toast.success(createOrder.data.message ?? "Order placed successfully");
             router.push("/page/order-success");
           } else {
             handlePayment(createOrder.data.orderId);
           }
         } else {
-          toast.error(createOrder.data.message ?? "Order creation failed")
+          toast.error(createOrder.data.message ?? "Order creation failed");
         }
       } catch (error) {
-        console.log(error)
-        toast.error(error.message ?? "Order creation failed")
+        console.log(error);
+        toast.error(error.message ?? "Order creation failed");
         catchErrors(error);
       } finally {
         setLoading(false);
@@ -252,6 +277,29 @@ const CheckoutPage = ({ isLogin }) => {
       ) {
         return toast.error(error.response.data.message);
       }
+    }
+  };
+
+  // Helper function to check if promocode is eligible
+  const isPromocodeEligible = (promo) => {
+    return !promo.minimumSpend || cartTotal >= promo.minimumSpend;
+  };
+
+  // Helper function to format discount display
+  const formatDiscountDisplay = (promo) => {
+    if (promo.discountType === 'percent') {
+      return `${promo.discountValue}% off`;
+    } else {
+      return `₹${promo.discountValue} off`;
+    }
+  };
+
+  // Helper function to calculate actual discount amount
+  const calculateDiscountAmount = (promo, orderTotal) => {
+    if (promo.discountType === 'percent') {
+      return Math.floor((orderTotal * promo.discountValue) / 100);
+    } else {
+      return Math.floor(promo.discountValue);
     }
   };
 
@@ -318,8 +366,7 @@ const CheckoutPage = ({ isLogin }) => {
                           <h4 className="field-label">First Name</h4>
                           <input
                             type="text"
-                            className={`${errors.first_name ? "error_border" : ""
-                              }`}
+                            className={`${errors.first_name ? "error_border" : ""}`}
                             name="first_name"
                             {...register("first_name", { required: true })}
                           />
@@ -331,8 +378,7 @@ const CheckoutPage = ({ isLogin }) => {
                           <h4 className="field-label">Last Name</h4>
                           <input
                             type="text"
-                            className={`${errors.last_name ? "error_border" : ""
-                              }`}
+                            className={`${errors.last_name ? "error_border" : ""}`}
                             name="last_name"
                             {...register("last_name", { required: true })}
                           />
@@ -384,8 +430,8 @@ const CheckoutPage = ({ isLogin }) => {
                             options={
                               selectedCountry
                                 ? State.getStatesOfCountry(
-                                  selectedCountry.isoCode
-                                )
+                                    selectedCountry.isoCode
+                                  )
                                 : []
                             }
                             getOptionLabel={(options) => options["name"]}
@@ -400,9 +446,9 @@ const CheckoutPage = ({ isLogin }) => {
                             options={
                               selectedState
                                 ? City.getCitiesOfState(
-                                  selectedState.countryCode,
-                                  selectedState.isoCode
-                                )
+                                    selectedState.countryCode,
+                                    selectedState.isoCode
+                                  )
                                 : []
                             }
                             getOptionLabel={(options) => options["name"]}
@@ -475,9 +521,8 @@ const CheckoutPage = ({ isLogin }) => {
                               const product = item.product;
                               const itemTotal = product.finalPrice * item.quantity;
                               return (
-                                <>
+                                <React.Fragment key={index}>
                                   <li
-                                    key={index}
                                     style={{
                                       display: "flex",
                                       justifyContent: "space-between",
@@ -499,7 +544,7 @@ const CheckoutPage = ({ isLogin }) => {
                                       {product.size}
                                     </span>{" "}
                                   </p>
-                                </>
+                                </React.Fragment>
                               );
                             })}
                           </ul>
@@ -545,10 +590,11 @@ const CheckoutPage = ({ isLogin }) => {
                                       border: "none",
                                       color: "#3399cc",
                                       textDecoration: "underline",
-                                      cursor: "pointer"
+                                      cursor: "pointer",
+                                      fontSize: "14px"
                                     }}
                                   >
-
+                                    {showPromocodeList ? "Hide" : "View"} Available Coupons ({availablePromocodes.length})
                                   </button>
                                 </div>
 
@@ -558,46 +604,110 @@ const CheckoutPage = ({ isLogin }) => {
                                     border: "1px solid #ddd",
                                     borderRadius: "4px",
                                     padding: "10px",
-                                    backgroundColor: "#f9f9f9"
+                                    backgroundColor: "#f9f9f9",
+                                    maxHeight: "300px",
+                                    overflowY: "auto"
                                   }}>
-                                    <h5 style={{ fontSize: "14px", marginBottom: "10px" }}>Available Coupons:</h5>
-                                    {availablePromocodes.map((promo, index) => (
-                                      <div key={index} style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        padding: "8px 0",
-                                        borderBottom: index < availablePromocodes.length - 1 ? "1px solid #eee" : "none"
-                                      }}>
-                                        <div>
-                                          <strong>{promo.code}</strong>
-                                          <div style={{ fontSize: "12px", color: "#666" }}>
-                                            {promo.description || `${promo.discountType === 'percentage' ? promo.discountValue + '%' : '₹' + promo.discountValue} off`}
-                                          </div>
-                                          {promo.minOrderAmount && (
-                                            <div style={{ fontSize: "11px", color: "#999" }}>
-                                              Min order: ₹{promo.minOrderAmount}
+                                    <h5 style={{ fontSize: "14px", marginBottom: "10px", color: "#333" }}>
+                                      Available Coupons:
+                                    </h5>
+                                    {availablePromocodes.map((promo, index) => {
+                                      const isEligible = isPromocodeEligible(promo);
+                                      const potentialDiscount = isEligible ? calculateDiscountAmount(promo, cartTotal) : 0;
+                                      return (
+                                        <div key={index} style={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          alignItems: "center",
+                                          padding: "12px 8px",
+                                          marginBottom: "8px",
+                                          backgroundColor: "white",
+                                          borderRadius: "4px",
+                                          border: isEligible ? "1px solid #e0e0e0" : "1px solid #ffcdd2",
+                                          opacity: isEligible ? 1 : 0.7
+                                        }}>
+                                          <div style={{ flex: 1 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                              <strong style={{ color: "#333", fontSize: "13px" }}>
+                                                {promo.code}
+                                              </strong>
+                                              <span style={{
+                                                backgroundColor: "#e8f5e8",
+                                                color: "#2e7d32",
+                                                padding: "2px 6px",
+                                                borderRadius: "12px",
+                                                fontSize: "11px",
+                                                fontWeight: "bold"
+                                              }}>
+                                                {formatDiscountDisplay(promo)}
+                                              </span>
+                                              {isEligible && potentialDiscount > 0 && (
+                                                <span style={{
+                                                  backgroundColor: "#fff3cd",
+                                                  color: "#856404",
+                                                  padding: "2px 6px",
+                                                  borderRadius: "12px",
+                                                  fontSize: "10px",
+                                                  fontWeight: "bold"
+                                                }}>
+                                                  Save ₹{potentialDiscount}
+                                                </span>
+                                              )}
                                             </div>
-                                          )}
+                                            
+                                            {promo.name && (
+                                              <div style={{ fontSize: "12px", color: "#555", marginBottom: "2px" }}>
+                                                {promo.name}
+                                              </div>
+                                            )}
+
+                                            <div style={{ fontSize: "11px", color: "#777" }}>
+                                              {promo.minimumSpend && (
+                                                <span>Min order: ₹{promo.minimumSpend}</span>
+                                              )}
+                                              {promo.freeShipping && (
+                                                <span style={{ marginLeft: promo.minimumSpend ? "8px" : "0" }}>
+                                                  + Free Shipping
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            {!isEligible && promo.minimumSpend && (
+                                              <div style={{ fontSize: "10px", color: "#d32f2f", marginTop: "2px" }}>
+                                                Add ₹{promo.minimumSpend - cartTotal} more to use this coupon
+                                              </div>
+                                            )}
+
+                                            <div style={{ fontSize: "10px", color: "#999", marginTop: "4px" }}>
+                                              Valid till: {new Date(promo.endDate).toLocaleDateString()}
+                                            </div>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleApplyPromocode(promo.code)}
+                                            disabled={promocodeLoading || !isEligible}
+                                            style={{
+                                              padding: "6px 12px",
+                                              fontSize: "11px",
+                                              backgroundColor: isEligible ? "#3399cc" : "#ccc",
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "3px",
+                                              cursor: isEligible ? "pointer" : "not-allowed",
+                                              minWidth: "60px"
+                                            }}
+                                          >
+                                            {promocodeLoading ? "..." : "Apply"}
+                                          </button>
                                         </div>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleApplyPromocode(promo.code)}
-                                          disabled={promocodeLoading || (promo.minOrderAmount && cartTotal < promo.minOrderAmount)}
-                                          style={{
-                                            padding: "4px 8px",
-                                            fontSize: "12px",
-                                            backgroundColor: "#3399cc",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "3px",
-                                            cursor: "pointer"
-                                          }}
-                                        >
-                                          Apply
-                                        </button>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {availablePromocodes.length === 0 && (
+                                  <div style={{ fontSize: "12px", color: "#999", marginTop: "10px" }}>
+                                    No active promocodes available at the moment.
                                   </div>
                                 )}
                               </>
@@ -606,17 +716,25 @@ const CheckoutPage = ({ isLogin }) => {
                                 display: "flex",
                                 justifyContent: "space-between",
                                 alignItems: "center",
-                                padding: "10px",
+                                padding: "12px",
                                 backgroundColor: "#e8f5e8",
                                 borderRadius: "4px",
-                                marginBottom: "10px"
+                                marginBottom: "10px",
+                                border: "1px solid #c8e6c9"
                               }}>
                                 <div>
-                                  <span style={{ color: "#2e7d32", fontWeight: "bold" }}>
-                                    {appliedPromocode.code} applied!
-                                  </span>
-                                  <div style={{ fontSize: "12px", color: "#666" }}>
-                                    Discount: ₹{Math.floor(promocodeDiscount)}
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ color: "#2e7d32", fontWeight: "bold", fontSize: "14px" }}>
+                                      {appliedPromocode.code} Applied!
+                                    </span>
+                                    {appliedPromocode.name && (
+                                      <span style={{ fontSize: "12px", color: "#555" }}>
+                                        ({appliedPromocode.name})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: "12px", color: "#2e7d32", marginTop: "2px" }}>
+                                    You saved ₹{Math.floor(promocodeDiscount)}
                                   </div>
                                 </div>
                                 <button
@@ -626,71 +744,44 @@ const CheckoutPage = ({ isLogin }) => {
                                     background: "none",
                                     border: "none",
                                     color: "#d32f2f",
-                                    cursor: "pointer"
+                                    cursor: "pointer",
+                                    fontSize: "18px",
+                                    fontWeight: "bold"
                                   }}
+                                  title="Remove coupon"
                                 >
-                                  Remove
+                                  ×
                                 </button>
                               </div>
                             )}
+
                             {promocodeSuccess && (
-                              <div style={{ color: "#2e7d32", fontSize: "12px", marginTop: "5px", fontWeight: "bold" }}>
+                              <div style={{ 
+                                color: "#2e7d32", 
+                                fontSize: "12px", 
+                                marginTop: "5px", 
+                                fontWeight: "bold",
+                                backgroundColor: "#e8f5e8",
+                                padding: "8px",
+                                borderRadius: "4px"
+                              }}>
                                 {promocodeSuccess}
                               </div>
                             )}
                             {promocodeError && (
-                              <div style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+                              <div style={{ 
+                                color: "#d32f2f", 
+                                fontSize: "12px", 
+                                marginTop: "5px",
+                                backgroundColor: "#ffebee",
+                                padding: "8px",
+                                borderRadius: "4px"
+                              }}>
                                 {promocodeError}
                               </div>
                             )}
                           </div>
 
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Subtotal{" "}
-                            </h4>
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              ₹ {Math.floor(cartTotal)}{" "}
-                            </h4>
-                          </div>
-
-                          {promocodeDiscount > 0 && (
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                marginTop: "10px"
-                              }}
-                            >
-                              <h4
-                                style={{ fontWeight: "500", color: "#2e7d32" }}
-                                className="field-label"
-                              >
-                                Discount ({enteredPromocode}) <span style={{ fontWeight: "500", color: "red", cursor: "pointer" }} onClick={handleRemovePromocode}>X</span>
-                              </h4>
-                              <h4
-                                style={{ fontWeight: "500", color: "#2e7d32" }}
-                                className="field-label"
-                              >
-                                - ₹ {Math.floor(promocodeDiscount)}
-                              </h4>
-                            </div>
-                          )}
-
-                          <br />
                           <div
                             style={{
                               display: "flex",

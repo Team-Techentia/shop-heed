@@ -339,8 +339,10 @@ const validatePromocode = async (req, res) => {
         let discountAmount = 0;
         if (promocode.discountType === 'percent') {
             discountAmount = (cartTotal * promocode.discountValue) / 100;
+            console.log(discountAmount)
         } else {
             discountAmount = promocode.discountValue;
+             console.log(discountAmount)
         }
 
         // Ensure discount does not exceed cart total

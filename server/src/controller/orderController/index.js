@@ -17,7 +17,7 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,
   key_secret: process.env.RAZORPAY_API_SECRET,
 });
-
+ 
 const createOrder = async (req, res) => {
   try {
     const { items, orderTotal, paymentMethod, customerDetails, appliedPromocode } = req.body;
@@ -133,7 +133,7 @@ const createOrder = async (req, res) => {
       return res.status(201).json({ success: true, orders: savedOrders });
     }
   } catch (error) {
-
+    console.error()
     return res.status(500).json({ success: false, message: error.message });
   }
 };
