@@ -1,3 +1,5 @@
+
+
 import React, { useState, useContext, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -51,6 +53,21 @@ const DetailsWithPrice = ({
     } else {
       setOpen(id);
     }
+  };
+
+  // Calculate if product is actually in stock based on current product and same variants
+  const isProductInStock = () => {
+    // Check current product quantity
+    if (product && product.quantity > 0) {
+      return true;
+    }
+    
+    // Check if any variant of the same product has stock
+    if (sameProductData && sameProductData.length > 0) {
+      return sameProductData.some(variant => variant.quantity > 0);
+    }
+    
+    return false;
   };
 
   const changeInc = () => {
@@ -268,12 +285,21 @@ const DetailsWithPrice = ({
           height={65}  // adjust size
         />
 
-        {stock === "Out of Stock" ? (
+        {/* Updated stock check logic */}
+        {!isProductInStock() ? (
           <div className="out-of-stock-banner">
             <strong>Out Of Stock</strong>
           </div>
         ) : (
           <>
+            {/* Show low stock warning for current product */}
+            {product.quantity > 0 && product.quantity <= 2 && (
+              <div className="low-stock-warning">
+                <i className="fa fa-exclamation-triangle me-2"></i>
+                Only {product.quantity} left in stock!
+              </div>
+            )}
+
             {sameProductData && sameProductData.length >= 1 && (
               <>
                 <hr className="section-divider" />
@@ -306,7 +332,8 @@ const DetailsWithPrice = ({
                       ))}
                   </div>
                 )}
-                 {/* Quantity Selector */}
+                 {/* Quantity Selector - only show if current product has stock */}
+                 {product.quantity > 0 && (
             <div className="quantity-section">
               <div className="selection-header">
                 <span>QUANTITY</span>
@@ -321,8 +348,9 @@ const DetailsWithPrice = ({
                 </button>
               </div>
             </div>
+                 )}
 
-            {/* Action Buttons */}
+            {/* Action Buttons - only show if current product has stock */}
                 {/* Color Selection */}
                 {uniqueColors && uniqueColors.length > 1 && (
   <>
@@ -347,6 +375,7 @@ const DetailsWithPrice = ({
   </>
 )}
 
+                {product.quantity > 0 && (
                  <div className="action-buttons mt-4">
               <button
                 className="btn btn-add-to-cart"
@@ -386,6 +415,7 @@ const DetailsWithPrice = ({
                 <i className="fa fa-bolt me-2"></i> Buy Now
               </button>
             </div>
+                )}
               </>
             )}
 
@@ -673,6 +703,18 @@ const DetailsWithPrice = ({
           font-size: 16px;
           border: 1px solid #ffcccc;
           margin: 15px 0;
+        }
+
+        .low-stock-warning {
+          background: #fff8e1;
+          color: #f57c00;
+          padding: 10px 15px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 14px;
+          border: 1px solid #ffcc02;
+          margin: 15px 0;
+          font-weight: 600;
         }
         
         .section-divider {
