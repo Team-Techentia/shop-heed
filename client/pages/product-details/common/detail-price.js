@@ -153,20 +153,42 @@ const DetailsWithPrice = ({
 
   const sizeType = getCategorySizeType(product.category);
   const allSizes = sizeOptions[sizeType];
+useEffect(() => {
+  const filterSize = sameProductData.filter((data) => {
+    return data.color === product.color;
+  });
+  setUniqueSizes(filterSize);
 
-  useEffect(() => {
-    const filterSize = sameProductData.filter((data) => {
-      return data.color === product.color;
-    });
-    console.log(filterSize);
-    setUniqueSizes(filterSize);
-
-    if (filterSize.length === 1) {
-      setSelectedSize(filterSize[0].size);
-    } else if (filterSize.length > 1 && selectedSize === null) {
-      setSelectedSize(filterSize[0].size);
+  // If current product is out of stock → redirect to first available variant
+  if (product.quantity <= 0) {
+    const firstInStock = filterSize.find((s) => s.quantity > 0);
+    if (firstInStock) {
+      router.replace(
+        `/product-details/${firstInStock.title
+          .toLowerCase()
+          .replaceAll(" ", "-")}/${firstInStock._id}`
+      );
+      return; // stop here to avoid setting wrong size
+    } else {
+      // No variants in stock → clear selection
+      setSelectedSize(null);
+      return;
     }
-  }, [product, sameProductData]);
+  }
+
+  // Normal selection logic
+  if (filterSize.length === 1 && filterSize[0].quantity > 0) {
+    setSelectedSize(filterSize[0].size);
+  } else if (filterSize.length > 1) {
+    const firstInStock = filterSize.find((s) => s.quantity > 0);
+    if (firstInStock) {
+      setSelectedSize(firstInStock.size);
+    } else {
+      setSelectedSize(null);
+    }
+  }
+}, [product, sameProductData]);
+
 
   const uniqueColors = sameProductData
     .filter(
@@ -306,30 +328,35 @@ const DetailsWithPrice = ({
 
                 {sizeType !== 'oneSize' && (
                   <div className="size-selector mt-2">
-                    {uniqueSizes
-                      .filter((matchedProduct) => matchedProduct.quantity > 0) // hide out of stock
-                      .sort((a, b) => a.size - b.size) 
-                      .map((matchedProduct) => (
-                        <div
-                          key={matchedProduct.size}
-                          className="size-option-wrapper"
-                        >
-                          <div
-                            className={`size-option 
-              ${product.size === matchedProduct.size ? 'selected' : ''}`}
-                            onClick={() => handleSizeClick(matchedProduct)}
-                          >
-                            {matchedProduct.size}
-                          </div>
+                   {uniqueSizes
+  .sort((a, b) => a.size - b.size)
+  .map((matchedProduct) => {
+    const isOutOfStock = matchedProduct.quantity <= 0;
 
-                          {/* Low stock badge */}
-                          {matchedProduct.quantity <= 2 && (
-                            <span className="qty-badge">
-                              {matchedProduct.quantity} left
-                            </span>
-                          )}
-                        </div>
-                      ))}
+    return (
+      <div
+        key={matchedProduct.size}
+        className={`size-option-wrapper ${isOutOfStock ? 'disabled' : ''}`}
+      >
+        <div
+          className={`size-option 
+            ${product.size === matchedProduct.size ? 'selected' : ''} 
+            ${isOutOfStock ? 'out-of-stock' : ''}`}
+          onClick={() => !isOutOfStock && handleSizeClick(matchedProduct)} // disable click if OOS
+        >
+          {matchedProduct.size}
+        </div>
+
+        {/* Low stock badge */}
+        {matchedProduct.quantity > 0 && matchedProduct.quantity <= 2 && (
+          <span className="qty-badge">
+            {matchedProduct.quantity} left
+          </span>
+        )}
+      </div>
+    );
+  })}
+
                   </div>
                 )}
                  {/* Quantity Selector - only show if current product has stock */}
@@ -604,6 +631,24 @@ const DetailsWithPrice = ({
   color: #000;       
   margin-bottom: 15px;   
 }
+  .size-option.out-of-stock {
+  position: relative;
+  color: #aaa; /* faded text */
+  pointer-events: none; /* disables clicking */
+  opacity: 0.6;
+}
+
+.size-option.out-of-stock::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #555;
+  transform: translateY(-50%);
+}
+
        .product-title {
   font-size: 19px;
   font-weight: 400;
