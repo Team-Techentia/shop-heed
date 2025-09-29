@@ -49,24 +49,24 @@ const CheckoutPage = ({ isLogin }) => {
   const finalTotal = Math.max(0, cartTotal - promocodeDiscount);
 
   // Fetch active promocodes on component mount
- 
-    const fetchActivePromocodes = async () => {
-      try {
-        const response = await Api.getAllPromocodes(token);
-        if (response.data && response.data.success) {
-          // Filter only active promocodes (status: true and not expired)
-          const activePromocodes = response.data.data.filter(promo => {
-            const now = new Date();
-            const endDate = new Date(promo.endDate);
-            return promo.status && promo.isDeleted === false && endDate > now;
-          });
-          setAvailablePromocodes(activePromocodes);
-        }
-      } catch (error) {
-        console.error("Error fetching promocodes:", error);
+  const fetchActivePromocodes = async () => {
+    try {
+      const response = await Api.getAllPromocodes(token);
+      if (response.data && response.data.success) {
+        // Filter only active promocodes (status: true and not expired)
+        const activePromocodes = response.data.data.filter(promo => {
+          const now = new Date();
+          const endDate = new Date(promo.endDate);
+          return promo.status && promo.isDeleted === false && endDate > now;
+        });
+        setAvailablePromocodes(activePromocodes);
       }
-    };
- useEffect(() => {
+    } catch (error) {
+      console.error("Error fetching promocodes:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchActivePromocodes();
   },[]);
 
@@ -105,27 +105,19 @@ const CheckoutPage = ({ isLogin }) => {
         if (applyResponse.data && applyResponse.data.success) {
           const appliedPromo = availablePromocodes.find(promo => promo.code === promocodeValue);
           
-          // Debug: Log the full API response to see what we're getting
-          console.log("Apply API Response:", applyResponse.data);
-          console.log("Cart Total:", cartTotal);
-          
           // Calculate discount manually if API doesn't return calculated amount
           let actualDiscount = 0;
           if (appliedPromo) {
             if (appliedPromo.discountType === 'percent') {
               actualDiscount = Math.floor((cartTotal * appliedPromo.discountValue) / 100);
-              console.log(`Calculated ${appliedPromo.discountValue}% of ${cartTotal} = ${actualDiscount}`);
             } else {
               actualDiscount = Math.floor(appliedPromo.discountValue);
-              console.log(`Fixed discount: ${actualDiscount}`);
             }
           }
           
           // Use calculated discount or fallback to API response
           const discountFromAPI = applyResponse.data.data.discountAmount || applyResponse.data.data.discountValue;
           const finalDiscount = actualDiscount > 0 ? actualDiscount : discountFromAPI;
-          
-          console.log("Final discount being applied:", finalDiscount);
           
           setPromocodeDiscount(finalDiscount);
           setEnteredPromocode(applyResponse.data.data.code);
@@ -161,7 +153,7 @@ const CheckoutPage = ({ isLogin }) => {
     setPromocodeSuccess("");
   };
 
-  const handlePayment = async (orderId) => {
+  const handlePayment = async (orderId, customOrderId) => {
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
       amount: Math.floor(finalTotal) * 100,
@@ -181,9 +173,9 @@ const CheckoutPage = ({ isLogin }) => {
         if (paymentVerification.data.success) {
           cartContext.clearCart();
           toast.success(paymentVerification.data.message ?? "Order placed successfully");
-          router.push("/page/order-success");
+          // Pass custom order ID to success page
+          router.push(`/page/order-success?orderId=${customOrderId || orderId}`);
         } else {
-          alert("Payment verification failed");
           toast.error(paymentVerification.data.message ?? "Failed to verify payment");
         }
       },
@@ -216,12 +208,17 @@ const CheckoutPage = ({ isLogin }) => {
         setLoading(true);
         const createOrder = await Api.createOrder(orderData, token);
         if (createOrder.data.success) {
+          // Get custom order ID from response (backend should return this)
+          const customOrderId = createOrder.data.customOrderId || createOrder.data.orderId;
+          
           if (payment === "cod") {
             cartContext.clearCart();
             toast.success(createOrder.data.message ?? "Order placed successfully");
-            router.push("/page/order-success");
+            // Pass custom order ID to success page
+            router.push(`/page/order-success?orderId=${customOrderId}`);
           } else {
-            handlePayment(createOrder.data.orderId);
+            // Pass both orderId (for Razorpay) and customOrderId (for display)
+            handlePayment(createOrder.data.orderId, customOrderId);
           }
         } else {
           toast.error(createOrder.data.message ?? "Order creation failed");
@@ -887,4 +884,4 @@ const CheckoutPage = ({ isLogin }) => {
   );
 };
 
-export default CheckoutPage;
+export default CheckoutPage

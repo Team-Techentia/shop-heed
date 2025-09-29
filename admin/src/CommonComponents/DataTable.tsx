@@ -220,7 +220,7 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
 
 
 
-                <div onClick={() => {
+                {/* <div onClick={() => {
                   handleDelete(row[key])
                 }} style={{ cursor: "pointer" }}>
 
@@ -234,7 +234,7 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
                       cursor: "pointer",
                     }}
                   ></i>
-                </div>
+                </div> */}
               </div>
             </>
 

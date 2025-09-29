@@ -13,15 +13,16 @@ import jsPDF from 'jspdf';
 import { useRouter } from "next/navigation";
 
 interface OrderData {
+  ["Item Id"]: string;
   ["Order Id"]: string;
-  SKU: string;
-  Image: string;
+  Products: JSX.Element | string;
   ["Payment Status"]: JSX.Element | string;
   ["Payment Method"]: JSX.Element;
-  ["Order Status"]: any;
+  ["Order Status"]: JSX.Element | string;
   Date: string;
-  ["Total"]: any;
-  Actions: any,
+  ["Total"]: JSX.Element | number;
+  ["Customer"]?: string;
+  Actions: string;
 }
 
 const SalesOrders = () => {
@@ -40,7 +41,6 @@ const SalesOrders = () => {
   const [selectedState, setSelectedState] = useState<any | null>(null);
   const [selectedCity, setSelectedCity] = useState<any | null>(null);
   const [orderStatus, setOrderStatus] = useState('null');
-  const [orderAction, setOrderAction] = useState("");
   const [selectedId, setSelectedId] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [status, setStatus] = useState<string>('null');
@@ -53,13 +53,8 @@ const SalesOrders = () => {
     fetchData('null', 'null');
   }, []);
 
-  const onOpenModal = () => {
-    setOpen(true);
-  };
-
-  const onCloseModal = () => {
-    setOpen(false);
-  };
+  const onOpenModal = () => setOpen(true);
+  const onCloseModal = () => setOpen(false);
 
   const openConfirmationModal = (id: string) => {
     setSelectedId(id);
@@ -82,36 +77,36 @@ const SalesOrders = () => {
     fetchData(status, selectedOrderStatus);
   };
 
-  const handleDeleteOrder = async (id: any) => {
-    try {
-      await Api.deleteOrder(id, token);
-      toast.success("Order successfully deleted");
-      fetchData(status, orderStatus);
-      return;
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      toast.error("Failed to delete order.");
-    }
-  }
+  // const handleDeleteOrder = async (id: any) => {
+  //   try {
+  //     await Api.deleteOrder(id, token);
+  //     toast.success("Order successfully deleted");
+  //     fetchData(status, orderStatus);
+  //   } catch (error) {
+  //     console.error("Error deleting order:", error);
+  //     toast.error("Failed to delete order.");
+  //   }
+  // }
 
-  const handleConfirmDelete = () => {
-    if (selectedId) {
-      handleDeleteOrder(selectedId);
-      onCloseConfirmationModal();
-    }
-  };
+  // const handleConfirmDelete = () => {
+  //   if (selectedId) {
+  //     handleDeleteOrder(selectedId);
+  //     onCloseConfirmationModal();
+  //   }
+  // };
 
   const formatDate = (dateString: string): string => {
-    const [year, month, day] = dateString.split('-');
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
-  // Invoice Generation Logic
   const generateInvoice = async (orderId: string) => {
     try {
       setInvoiceGenerating(orderId);
       
-      // Fetch order details for the invoice
       const res = await Api.getOrderByIdAdmin(orderId, token);
       const orderData = res.data.data;
       
@@ -120,189 +115,260 @@ const SalesOrders = () => {
         return;
       }
 
-      // Create new PDF document
       const doc = new jsPDF();
       
-      // Add some styling
-      doc.setFont("helvetica");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Tax Invoice', 20, 20);
       
-      // Company/Store Information Header
-      doc.setFontSize(24);
-      doc.setTextColor(51, 51, 51);
-      doc.text('INVOICE', 20, 25);
+      doc.setLineWidth(0.3);
+      doc.line(20, 24, 190, 24);
       
-      // Add a line under the title
-      doc.setLineWidth(0.5);
-      doc.line(20, 30, 190, 30);
+      const invoiceNumber = `INVOICE${orderData.orderId}`;
+      const packetId = `PACID${orderData.orderId.slice(-6)}`;
+      const orderNumber = orderData.orderId;
+      const invoiceDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const orderDate = formatDate(orderData.createdAt);
       
-      // Company Details
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Your Company Name', 20, 45);
-      doc.text('123 Business Street', 20, 55);
-      doc.text('Business City, State 12345', 20, 65);
-      doc.text('Phone: +91 9876543210', 20, 75);
-      doc.text('Email: sales@yourcompany.com', 20, 85);
-      doc.text('GST: 07AAACH7409R1Z5', 20, 95);
-      
-      // Invoice Details (Right side)
-      const invoiceNumber = orderData.paymentDetails?.orderId || orderData._id.slice(-8);
-      const invoiceDate = new Date().toLocaleDateString('en-IN');
-      const orderDate = formatDate(orderData.orderDate.slice(0, 10));
-      
-      doc.setTextColor(51, 51, 51);
-      doc.setFontSize(12);
-      doc.text(`Invoice No: #${invoiceNumber}`, 140, 45);
-      doc.text(`Invoice Date: ${invoiceDate}`, 140, 55);
-      doc.text(`Order Date: ${orderDate}`, 140, 65);
-      doc.text(`Payment Status: ${orderData.status}`, 140, 75);
-      doc.text(`Order Status: ${orderData.orderStatus}`, 140, 85);
-      
-      // Customer Information
-      doc.setFontSize(14);
-      doc.setTextColor(51, 51, 51);
-      doc.text('Bill To:', 20, 115);
-      
-      doc.setFontSize(11);
-      doc.setTextColor(80, 80, 80);
       const customer = orderData.customerDetails;
-      doc.text(`${customer.first_name} ${customer.last_name}`, 20, 127);
-      doc.text(`${customer.address}`, 20, 137);
-      doc.text(`${customer.city}, ${customer.state}`, 20, 147);
-      doc.text(`${customer.country} - ${customer.pincode}`, 20, 157);
-      doc.text(`Phone: ${customer.phone}`, 20, 167);
-      doc.text(`Email: ${customer.email}`, 20, 177);
+      const isDelhi = customer.state.toLowerCase() === 'delhi';
       
-      // Table Headers Background
-      doc.setFillColor(245, 245, 245);
-      doc.rect(20, 190, 170, 12, 'F');
-      
-      // Table Headers
-      doc.setFontSize(10);
-      doc.setTextColor(51, 51, 51);
+      doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
-      doc.text('Product', 25, 198);
-      doc.text('SKU', 80, 198);
-      doc.text('Size', 110, 198);
-      doc.text('Qty', 130, 198);
-      doc.text('Price (₹)', 145, 198);
-      doc.text('Total (₹)', 170, 198);
-      
-      // Product Details
-      let yPosition = 210;
-      const product = orderData.product;
-      
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
+      doc.text(`Invoice Number: ${invoiceNumber}`, 110, 35);
+      doc.text(`PacketID: ${packetId}`, 110, 41);
+      doc.text(`Order Number: ${orderNumber}`, 110, 47);
+      doc.text(`Invoice Date: ${invoiceDate}`, 110, 53);
+      doc.text(`Order Date: ${orderDate}`, 110, 59);
+      doc.text(`Nature of Transaction: ${isDelhi ? 'Intra-State' : 'Inter-State'}`, 110, 65);
       
-      // Truncate product title if too long
-      const productTitle = product?.title || 'N/A';
-      const truncatedTitle = productTitle.length > 20 ? productTitle.substring(0, 20) + '...' : productTitle;
+      doc.text(`Place of Supply: ${customer.state}`, 110, 71);
+      doc.text(`Nature of Supply: Goods`, 110, 77);
       
-      doc.text(truncatedTitle, 25, yPosition);
-      doc.text(product?.sku || 'No SKU', 80, yPosition);
-      doc.text((product?.size || 'N/A').toString().toUpperCase(), 110, yPosition);
-      doc.text(orderData.totalQuantity.toString(), 135, yPosition);
-      doc.text((product?.finalPrice || 0).toString(), 150, yPosition);
-      doc.text(orderData.totalAmount.toString(), 175, yPosition);
-      
-      // Add line after product
-      yPosition += 10;
-      doc.setLineWidth(0.2);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, yPosition, 190, yPosition);
-      
-      // Summary Section
-      yPosition += 20;
       doc.setFontSize(10);
-      doc.setTextColor(80, 80, 80);
-      
-      // Calculate values (you can modify these based on your business logic)
-      const subtotal = orderData.totalAmount;
-      const taxRate = 0; // Set tax rate as needed
-      const taxAmount = Math.round(subtotal * taxRate);
-      const shippingCharges = 0; // Set shipping charges as needed
-      const totalAmount = subtotal + taxAmount + shippingCharges;
-      
-      doc.text('Subtotal:', 130, yPosition);
-      doc.text(`₹ ${subtotal}`, 170, yPosition);
-      
-      yPosition += 12;
-      doc.text(`Tax (${taxRate * 100}%):`, 130, yPosition);
-      doc.text(`₹ ${taxAmount}`, 170, yPosition);
-      
-      yPosition += 12;
-      doc.text('Shipping:', 130, yPosition);
-      doc.text(`₹ ${shippingCharges}`, 170, yPosition);
-      
-      // Total Amount with background
-      yPosition += 15;
-      doc.setFillColor(51, 51, 51);
-      doc.rect(125, yPosition - 8, 65, 15, 'F');
-      
-      doc.setFontSize(12);
-      doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.text('Total Amount:', 130, yPosition);
-      doc.text(`₹ ${totalAmount}`, 170, yPosition);
+      doc.text('Bill From:', 20, 35);
       
-      // Payment Information
-      yPosition += 25;
-      doc.setFontSize(12);
-      doc.setTextColor(51, 51, 51);
       doc.setFont("helvetica", "bold");
-      doc.text('Payment Information:', 20, yPosition);
-      
-      yPosition += 12;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Payment Method: ${orderData.paymentMethod || 'N/A'}`, 20, yPosition);
-      
-      if (orderData.paymentDetails?.paymentId) {
-        yPosition += 10;
-        doc.text(`Payment ID: ${orderData.paymentDetails.paymentId}`, 20, yPosition);
-      }
-      
-      if (orderData.paymentDetails?.razorpayOrderId) {
-        yPosition += 10;
-        doc.text(`Razorpay Order ID: ${orderData.paymentDetails.razorpayOrderId}`, 20, yPosition);
-      }
-      
-      // Notes section
-      yPosition += 20;
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Notes:', 20, yPosition);
-      yPosition += 8;
-      doc.text('• This is a computer-generated invoice and does not require a signature.', 20, yPosition);
-      yPosition += 6;
-      doc.text('• Please retain this invoice for your records.', 20, yPosition);
-      yPosition += 6;
-      doc.text('• For any queries regarding this invoice, please contact our support team.', 20, yPosition);
-      
-      // Footer
-      yPosition += 20;
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(51, 51, 51);
-      doc.line(20, yPosition, 190, yPosition);
-      
-      yPosition += 12;
       doc.setFontSize(11);
-      doc.setTextColor(51, 51, 51);
-      doc.setFont("helvetica", "bold");
-      doc.text('Thank you for your business!', 20, yPosition);
+      doc.text('BRANDS.IN', 20, 42);
       
-      yPosition += 8;
-      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(100, 100, 100);
-      doc.text('For support: support@yourcompany.com | +91 9876543210', 20, yPosition);
+      doc.setFontSize(9);
+      doc.text('A-39, West Patel Nagar, New Delhi-110008', 20, 48);
+      doc.text('New delhi, delhi-110008', 20, 54);
       
-      // Save the PDF with a meaningful filename
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text('Ship From:', 20, 65);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text('BRANDS.IN', 20, 72);
+      doc.text('A-39, West Patel Nagar, New Delhi-110008', 20, 78);
+      doc.text('New delhi, delhi-110008', 20, 84);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text('Bill To / Ship To:', 20, 95);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`${customer.first_name} ${customer.last_name}`, 20, 102);
+      
+      const addressText = `${customer.address}`;
+      const addressLines = doc.splitTextToSize(addressText, 80);
+      let addressY = 108;
+      addressLines.forEach((line: string) => {
+        doc.text(line, 20, addressY);
+        addressY += 5;
+      });
+      
+      doc.text(`${customer.city}, ${customer.state}`, 20, addressY);
+      addressY += 6;
+      doc.text(`${customer.country} - ${customer.pincode}`, 20, addressY);
+      addressY += 6;
+      doc.setFontSize(9);
+      doc.text('GSTIN Number: 07BGUPB9136M1ZR', 20, 130);
+      
+      let yPos = 142;
+      doc.setFillColor(245, 245, 245);
+      doc.rect(10, yPos - 6, 190, 9, 'F');
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.text('Qty', 12, yPos);
+      doc.text('Gross', 23, yPos);
+      doc.text('Discount', 45, yPos);
+      doc.text('Other', 67, yPos);
+      doc.text('Taxable', 87, yPos);
+      doc.text('CGST', 110, yPos);
+      doc.text('SGST/', 130, yPos);
+      doc.text('IGST', 150, yPos);
+      // doc.text('Cess', 165, yPos);
+      doc.text('Total Amount', 175, yPos);
+      
+      doc.setFontSize(6.5);
+      doc.text('Amount', 23, yPos + 3);
+      doc.text('Charges', 67, yPos + 3);
+      doc.text('Amount', 87, yPos + 3);
+      doc.text('UGST', 130, yPos + 3);
+      
+      yPos += 12;
+      
+      let totalGross = 0;
+      let totalDiscount = 0;
+      let totalOtherCharges = 0;
+      let totalTaxable = 0;
+      let totalCGST = 0;
+      let totalSGST = 0;
+      let totalIGST = 0;
+      let totalCess = 0;
+      let grandTotal = 0;
+      
+      
+      
+      if (orderData.items && orderData.items.length > 0) {
+        orderData.items.forEach((item: any, index: number) => {
+          const productTitle = item.title || 'Product';
+          const truncatedTitle = productTitle.length > 65 ? productTitle.substring(0, 65) + '...' : productTitle;
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.text(truncatedTitle, 12, yPos);
+          
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.text(`(${(item.size || 'N/A').toString().toUpperCase()}) - SKU: ${item.sku || 'N/A'}`, 12, yPos + 4);
+          
+          yPos += 9;
+          
+          const grossAmount = item.totalPrice || item.finalPrice || 0;
+          const discount = 0;
+          const otherCharges = 0;
+          
+          let taxableAmount = 0;
+          let cgst = 0;
+          let sgst = 0;
+          let igst = 0;
+          // const cess = 0;
+          
+         if (isDelhi) {
+  if (grossAmount <= 2500) {
+    taxableAmount = Number(((grossAmount * 100) / 105).toFixed(2));
+    const totalGst = Number((grossAmount - taxableAmount).toFixed(2));
+    cgst = Number((totalGst / 2).toFixed(2));
+    sgst = Number((totalGst / 2).toFixed(2));
+    igst = 0;
+  } else {
+    taxableAmount = Number(((grossAmount * 100) / 112).toFixed(2));
+    const totalGst = Number((grossAmount - taxableAmount).toFixed(2));
+    cgst = Number((totalGst / 2).toFixed(2));
+    sgst = Number((totalGst / 2).toFixed(2));
+    igst = 0;
+  }
+} else {
+  if (grossAmount <= 2500) {
+    taxableAmount = Number(((grossAmount * 100) / 105).toFixed(2));
+    igst = Number((grossAmount - taxableAmount).toFixed(2));
+    cgst = 0;
+    sgst = 0;
+  } else {
+    taxableAmount = Number(((grossAmount * 100) / 112).toFixed(2));
+    igst = Number((grossAmount - taxableAmount).toFixed(2));
+    cgst = 0;
+    sgst = 0;
+  }
+}
+
+          
+          totalGross += grossAmount;
+          totalDiscount += discount;
+          totalOtherCharges += otherCharges;
+          totalTaxable += taxableAmount;
+          totalCGST += cgst;
+          totalSGST += sgst;
+          totalIGST += igst;
+          
+          grandTotal += grossAmount;
+          
+          doc.setFontSize(8);
+          doc.text(item.quantity.toString(), 13, yPos);
+          doc.text(`Rs ${grossAmount}`, 23, yPos);
+          doc.text(`Rs ${discount}`, 45, yPos);
+          doc.text(`Rs ${otherCharges}`, 67, yPos);
+          doc.text(`Rs ${taxableAmount}`, 87, yPos);
+          doc.text(cgst > 0 ? `Rs ${cgst}` : '', 113, yPos);
+          doc.text(sgst > 0 ? `Rs ${sgst}` : '', 133, yPos);
+          doc.text(igst > 0 ? `Rs ${igst}` : '', 150, yPos);
+          // doc.text(`Rs ${cess}`, 167, yPos);
+          doc.text(`Rs ${grossAmount}`, 177, yPos);
+          
+          yPos += 8;
+        });
+      }
+      
+      doc.setLineWidth(0.3);
+      doc.line(10, yPos, 200, yPos);
+      
+      yPos += 6;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text('TOTAL', 12, yPos);
+      doc.text(`Rs ${totalGross}`, 23, yPos);
+      doc.text(`Rs ${totalDiscount}`, 45, yPos);
+      doc.text(`Rs ${totalOtherCharges}`, 67, yPos);
+      doc.text(`Rs ${totalTaxable}`, 87, yPos);
+      if (totalCGST > 0) doc.text(`Rs ${totalCGST}`, 113, yPos);
+      if (totalSGST > 0) doc.text(`Rs ${totalSGST}`, 133, yPos);
+      if (totalIGST > 0) doc.text(`Rs ${totalIGST}`, 150, yPos);
+      doc.text(`Rs ${grandTotal}`, 177, yPos);
+      
+      yPos += 4;
+      doc.line(10, yPos, 200, yPos);
+      
+      yPos += 15;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text('BRANDS.IN', 20, yPos);
+      
+      yPos += 25;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+
+      yPos += 15;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text('DECLARATION', 20, yPos);
+      
+      yPos += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text('The goods sold as part of this shipment are intended for end-user consumption and are not for retail sale', 20, yPos);
+      
+      yPos += 10;
+      doc.setFontSize(7);
+      doc.text('Reg Address: BRANDS.IN, A-39, WEST PATEL NAGAR, New delhi, DELHI-110008', 20, yPos);
+      
+      const currentDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      doc.text(`Purchase made on ${currentDate}`, 150, yPos);
+      
+      yPos += 12;
+      doc.setFontSize(6.5);
+      doc.text('If you have any questions, feel free to call customer care at +91 99997 36675 or use Contact Us section in our Website,', 20, yPos);
+      yPos += 3;
+      doc.text('or log on to www.shopheed.com/contactus', 20, yPos);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text('HEED', 188, yPos);
+      
       const customerName = `${customer.first_name}_${customer.last_name}`.replace(/\s+/g, '_');
-      const fileName = `Invoice_${invoiceNumber}_${customerName}_${new Date().getTime()}.pdf`;
+      const fileName = `Tax_Invoice_${invoiceNumber}_${customerName}.pdf`;
       
       doc.save(fileName);
       
@@ -318,65 +384,66 @@ const SalesOrders = () => {
 
   const fetchData = async (selectedStatus: string, selectedOrderStatus: string) => {
     setLoading(true);
-    const storeData: OrderData[] = [];
     try {
-      console.log('Calling API with:', { selectedStatus, selectedOrderStatus, token: !!token });
-      
+      console.log("Calling API with:", { selectedStatus, selectedOrderStatus, token: !!token });
+
       const res = await Api.getOrdersByAdmin(token, selectedStatus, selectedOrderStatus);
-      console.log('API Response:', res.data);
-      
+      console.log("API Response:", res.data);
+
       if (!res.data || !res.data.data || !Array.isArray(res.data.data)) {
-        console.log('No data found in response:', res.data);
+        console.log("No data found in response:", res.data);
         setData([]);
         return;
       }
 
-      const createPromise = res.data.data.map(async (item: any) => {
-        if (!item.product) {
-          console.log('Skipping item with null product:', item._id);
+      const createPromise = res.data.data.map(async (order: any) => {
+        if (!order.items || order.items.length === 0) {
+          console.log("Skipping order with no items:", order._id);
           return null;
         }
 
-        const orderId:string = "shopheed_001";
+        const productList = order.items.map((item: any) => 
+          `${item.title || 'N/A'} (${item.size || 'N/A'}) x${item.quantity}`
+        ).join(", ");
 
         const newObject: OrderData = {
-          Image: item.product.image && item.product.image.length > 0 ? item.product.image[0] : '',
-          ["Order Id"]: orderId,
-          SKU: item.product.sku || "No",
-          ["Payment Status"]: item.status === "pending" ? (
-            <Badge className="capitalized" color="secondary">{item.status}</Badge>
-          ) : item.status === "paid" ? (
+          ["Item Id"]: order._id,
+          ["Order Id"]: order.orderId,
+          Products: <div className="break-words">{productList}</div>,
+          ["Payment Status"]: order.status === "pending" ? (
+            <Badge className="capitalized" color="warning">Pending</Badge>
+          ) : order.status === "paid" ? (
             <Badge color="success">Paid</Badge>
+          ) : order.status === "failed" ? (
+            <Badge color="danger">Failed</Badge>
           ) : (
-            <div className="capitalized">{item.status}</div>
+            <Badge color="secondary" className="capitalized">{order.status}</Badge>
           ),
-          ["Payment Method"]: item.paymentMethod?.replaceAll(" ", "") === "cod" ? (
+          ["Payment Method"]: order.paymentMethod?.toLowerCase() === "cod" ? (
             <Badge color="secondary">Cash On Delivery</Badge>
           ) : (
-            <Badge className="capitalized" color="success">{item.paymentMethod || 'N/A'}</Badge>
+            <Badge className="capitalized" color="success">{order.paymentMethod || "N/A"}</Badge>
           ),
-          ["Order Status"]: <div className="capitalized">{item.orderStatus}</div>,
-          Date: formatDate(item.orderDate.slice(0, 10)),
-          ["Total"]: <div>₹ {item.totalAmount}</div>,
-          Actions: item._id,
+          ["Order Status"]: <div className="capitalized">{order.orderStatus}</div>,
+          Date: formatDate(order.createdAt),
+          ["Total"]: <div>₹ {order.totalAmount}</div>,
+          ["Customer"]: `${order.customerDetails?.first_name || ""} ${order.customerDetails?.last_name || ""}`,
+          Actions: order._id,
         };
 
         return newObject;
       });
 
       const results = await Promise.all(createPromise);
-      const filteredResults = results.filter(item => item !== null);
-      
-      console.log('Processed data:', filteredResults);
+      const filteredResults = results.filter((item) => item !== null);
+
+      console.log("Processed data:", filteredResults);
       setData(filteredResults);
-      
-    } catch (error) {
-      console.error('API Error:', error);
-      if (error && error.response && error.response.data && error.response.data.message) {
-        if (error.response.data.message === "Order not found") {
-          setData([]);
-          return;
-        }
+    } catch (error: any) {
+      console.error("API Error:", error);
+      if (error?.response?.data?.message === "Order not found") {
+        setData([]);
+        return;
       }
       setData([]);
     } finally {
@@ -432,12 +499,6 @@ const SalesOrders = () => {
       country: selectedCountry?.name,
       state: selectedState?.name,
       city: selectedCity?.name,
-      title: orderDataById.product.title, 
-      finalPrice: orderDataById.product.finalPrice,
-      totalQuantity: orderDataById.totalQuantity, 
-      totalAmount: orderDataById.totalAmount,
-      paymentMethod: orderDataById.paymentMethod, 
-      orderId: orderDataById.paymentDetails && orderDataById.paymentDetails.orderId || orderDataById._id
     };
     console.log(updatedData)
 
@@ -445,9 +506,10 @@ const SalesOrders = () => {
       await Api.updateOrder(orderDataById._id, updatedData, token);
       onCloseModal();
       fetchData(status, orderStatus);
-      setOrderStatus('null')
+      toast.success("Order updated successfully!");
     } catch (error) {
       console.error("Failed to update order data", error);
+      toast.error("Failed to update order");
     }
   };
 
@@ -482,7 +544,7 @@ const SalesOrders = () => {
         pageSize={30}
         pagination={true}
         openPopUp={openPopUp}
-        handleDelete={openConfirmationModal}
+        // handleDelete={openConfirmationModal}
         generateInvoice={generateInvoice}
         invoiceGenerating={invoiceGenerating}
         class="-striped -highlight"
@@ -498,9 +560,9 @@ const SalesOrders = () => {
         <Row>
           <Col sm="12">
             <Card>
-              {
-                orderDataById !== null ? <ButtonGroup className=" pull-right order-model">
-                  <Modal isOpen={open} toggle={onCloseModal} className="model-model">
+              {orderDataById !== null && (
+                <ButtonGroup className="pull-right order-model">
+                  <Modal isOpen={open} toggle={onCloseModal} className="model-model" size="lg">
                     <ModalHeader toggle={onCloseModal}>
                       <h5 className="modal-title f-w-600" id="exampleModalLabel2">Order Details</h5>
                     </ModalHeader>
@@ -510,70 +572,61 @@ const SalesOrders = () => {
                           <Col lg="6" sm="12" xs="12">
                             <h3>Product Details</h3>
                             <div className="form-group col-md-12 col-sm-12 col-xs-12">
-                              <h5> <strong>Title</strong> </h5>
-                              <div className="field-label"> {orderDataById.product?.title || 'N/A'} </div>
-                              <h5> <strong>Size</strong> </h5>
-                              <div style={{textTransform:"uppercase"}}  className="field-label"> {orderDataById.product?.size || 'N/A'} </div>
-                              <h5> <strong>SKU</strong> </h5>
-                              <div className="field-label"> {orderDataById.product?.sku || "No"} </div>
-                              <h5> <strong> Product Id </strong></h5>
-                              <div className="field-label"> {orderDataById.product?.productId || 'N/A'} </div>
-                              <h5>  <strong>Variants Id</strong> </h5>
-                              <div className="field-label"> {orderDataById.product?._id || 'N/A'} </div>
-
-                              {orderDataById.product?.image && orderDataById.product.image.length > 0 && (
-                                <div className="field-label"> 
-                                  <img style={{ height: "150px" }} src={orderDataById.product.image[0]} alt="" />
+                              {orderDataById.items && orderDataById.items.map((item: any, idx: number) => (
+                                <div key={idx} className="mb-3 pb-3 border-bottom">
+                                  <h5><strong>Product {idx + 1}</strong></h5>
+                                  <div className="field-label"><strong>Title:</strong> {item.title || 'N/A'}</div>
+                                  <div className="field-label"><strong>Size:</strong> <span style={{textTransform:"uppercase"}}>{item.size || 'N/A'}</span></div>
+                                  <div className="field-label"><strong>SKU:</strong> {item.sku || 'N/A'}</div>
+                                  <div className="field-label"><strong>Price:</strong> ₹{item.finalPrice || 0}</div>
+                                  <div className="field-label"><strong>Quantity:</strong> {item.quantity}</div>
+                                  <div className="field-label"><strong>Total:</strong> ₹{item.totalPrice || 0}</div>
                                 </div>
-                              )}
+                              ))}
 
                               <Row style={{ gap: " 13px 0px" }}>
                                 <Col lg="4" md="4" sm="2">
-                                  <h5>Price </h5>
-                                  <div className="field-label"> ₹ {orderDataById.product?.finalPrice || 0} </div>
+                                  <h5>Total Quantity </h5>
+                                  <div className="field-label">{orderDataById.totalQuantity}</div>
                                 </Col>
 
                                 <Col lg="4" md="4" sm="6">
-                                  <h5>Quantity </h5>
-                                  <div className="field-label">  {orderDataById.totalQuantity} </div>
-                                </Col>
-                                <Col lg="4" md="4" sm="6">
                                   <h5>Total Amount </h5>
-                                  <div className="field-label"> ₹ {orderDataById.totalAmount} </div>
+                                  <div className="field-label">₹ {orderDataById.totalAmount}</div>
                                 </Col>
                                 <Col lg="4" md="4" sm="6">
                                   <h5>Payment Method </h5>
-                                  <div className="field-label  text-capital ">{orderDataById.paymentMethod || 'N/A'}</div>
+                                  <div className="field-label text-capital">{orderDataById.paymentMethod || 'N/A'}</div>
                                 </Col>
 
                                 <Col lg="4" md="4" sm="6">
                                   <h5>Order Status </h5>
-                                  <div className="field-label text-capital  ">  {orderDataById.orderStatus} </div>
+                                  <div className="field-label text-capital">{orderDataById.orderStatus}</div>
                                 </Col>
                                 <Col lg="4" md="4" sm="6">
                                   <h5>Order Date </h5>
-                                  <div className="field-label" >   {formatDate(orderDataById.orderDate.slice(0, 10))} </div>
+                                  <div className="field-label">{formatDate(orderDataById.createdAt)}</div>
                                 </Col>
-                                {
-                                  orderDataById.paymentDetails && orderDataById.paymentDetails.orderId && <Col lg="4" md="4" sm="6">
+                                {orderDataById.orderId && (
+                                  <Col lg="4" md="4" sm="6">
                                     <h5>Order Id </h5>
-                                    <div className="field-label">  {orderDataById.paymentDetails.orderId} </div>
+                                    <div className="field-label">{orderDataById.orderId}</div>
                                   </Col>
-                                }
+                                )}
 
-                                {
-                                  orderDataById.paymentDetails && orderDataById.paymentDetails.paymentStatus && <Col lg="4" md="4" sm="6">
+                                {orderDataById.paymentDetails && orderDataById.paymentDetails.paymentStatus && (
+                                  <Col lg="4" md="4" sm="6">
                                     <h5>Payment Status </h5>
-                                    <div className="field-label">  {orderDataById.paymentDetails.paymentStatus} </div>
+                                    <div className="field-label">{orderDataById.paymentDetails.paymentStatus}</div>
                                   </Col>
-                                }
+                                )}
 
-                                {
-                                  orderDataById.paymentDetails && orderDataById.paymentDetails.paymentId && <Col lg="4" md="4" sm="6">
+                                {orderDataById.paymentDetails && orderDataById.paymentDetails.paymentId && (
+                                  <Col lg="4" md="4" sm="6">
                                     <h5>Payment Id </h5>
-                                    <div className="field-label">  {orderDataById.paymentDetails.paymentId} </div>
+                                    <div className="field-label">{orderDataById.paymentDetails.paymentId}</div>
                                   </Col>
-                                }
+                                )}
                               </Row>
                             </div>
                           </Col>
@@ -582,12 +635,12 @@ const SalesOrders = () => {
                             <div className="row check-out">
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
                                 <div className="field-label">First Name</div>
-                                <input disabled type="text" className={`${errors.first_name ? "error_border" : ""} input-input`}  {...register("first_name", { required: true })} />
+                                <input disabled type="text" className={`${errors.first_name ? "error_border" : ""} input-input`} {...register("first_name", { required: true })} />
                                 <span className="error-message">{errors.first_name && "First name is required"}</span>
                               </div>
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
                                 <div className="field-label">Last Name</div>
-                                <input disabled type="text" className={`${errors.last_name ? "error_border" : ""} input-input`}  {...register("last_name", { required: true })} />
+                                <input disabled type="text" className={`${errors.last_name ? "error_border" : ""} input-input`} {...register("last_name", { required: true })} />
                                 <span className="error-message">{errors.last_name && "Last name is required"}</span>
                               </div>
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
@@ -597,7 +650,7 @@ const SalesOrders = () => {
                               </div>
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
                                 <div className="field-label">Email Address</div>
-                                <input disabled className={`${errors.email ? "error_border" : ""} input-input`} type="text"  {...register("email", { required: true, pattern: /^\S+@\S+$/i })} />
+                                <input disabled className={`${errors.email ? "error_border" : ""} input-input`} type="text" {...register("email", { required: true, pattern: /^\S+@\S+$/i })} />
                                 <span className="error-message">{errors.email && "Please enter a proper email address."}</span>
                               </div>
                               <div className="form-group col-md-12 col-sm-12 col-xs-12">
@@ -637,81 +690,30 @@ const SalesOrders = () => {
                               </div>
                               <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                 <div className="field-label">Address</div>
-                                <input disabled className={`${errors.address ? "error_border" : ""} input-input`} type="text"  {...register("address", { required: true, })} placeholder="Street address" />
+                                <input disabled className={`${errors.address ? "error_border" : ""} input-input`} type="text" {...register("address", { required: true, })} placeholder="Street address" />
                                 <span className="error-message">{errors.address && "Please write your address."}</span>
                               </div>
                               <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                 <div className="field-label">Order Status</div>
-                                <select className="input-input"   {...register("orderStatus", { required: true })} value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>
-                                  <option value="new-order">New Order</option>
-                                  <option value="pending-payment">Pending Payment</option>
-                                  <option value="processing">Processing</option>
+                                <select className="input-input" {...register("orderStatus", { required: true })} value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>
+                                  <option value="Processed">Processed</option>
                                   <option value="shipping">Shipping</option>
-                                  <option value="on-hold">On Hold</option>
-                                  <option value="completed">Completed</option>
-                                  <option value="cancelled">Cancelled</option>
+                                  <option value="Delivered">Delivered</option>
+                                  <option value="Returned">Returned</option>
+                                  <option value="Return Initiative">Return Initiative</option>
+                                   <option value="Cancelled">Cancelled</option>
+                              
                                   <option value="refunded">Refunded</option>
-                                  <option value="failed">Failed</option>
-                                  <option value="draft">Draft</option>
+                                 
                                 </select>
                                 <span className="error-message">{errors.orderStatus && "Order status is required"}</span>
 
-                                {orderStatus === 'shipping' && (
-                                  <>
-                                    <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                      <div className="field-label">Weight in gram</div>
-                                      <input
-                                        type="number"
-                                        className={`${errors.weight ? "error_border" : ""} input-input`}
-                                        {...register("weight", { required: true })}
-                                      />
-                                      <span className="error-message">
-                                        {errors.weight && "Weight is required"}
-                                      </span>
-                                    </div>
-                                    <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                      <div className="field-label">Length in cm</div>
-                                      <input
-                                        type="number"
-                                        className={`${errors.length ? "error_border" : ""} input-input`}
-                                        {...register("length", { required: true })}
-                                      />
-                                      <span className="error-message">
-                                        {errors.length && "Length is required"}
-                                      </span>
-                                    </div>
-
-                                    <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                      <div className="field-label">Height in cm</div>
-                                      <input
-                                        type="number"
-                                        className={`${errors.height ? "error_border" : ""} input-input`}
-                                        {...register("height", { required: true })}
-                                      />
-                                      <span className="error-message">
-                                        {errors.height && "Height is required"}
-                                      </span>
-                                    </div>
-                                    <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                      <div className="field-label">Breadth in cm</div>
-                                      <input
-                                        type="number"
-                                        className={`${errors.breadth ? "error_border" : ""} input-input`}
-                                        {...register("breadth", { required: true })}
-                                      />
-                                      <span className="error-message">
-                                        {errors.breadth && "Breadth is required"}
-                                      </span>
-                                    </div>
-                                  </>
-                                )}
                               </div>
                             </div>
                           </Col>
                         </Row>
                         <ModalFooter>
                           <Button color="secondary" type="submit">Save</Button>
-                          {/* Generate Invoice Button in Modal */}
                           <Button 
                             color="info" 
                             type="button" 
@@ -736,11 +738,10 @@ const SalesOrders = () => {
                       </Form>
                     </ModalBody>
                   </Modal>
-                </ButtonGroup> : ""
-              }
+                </ButtonGroup>
+              )}
               
-              {/* Delete Confirmation Modal */}
-              <Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
+              {/* <Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
                 <ModalHeader toggle={onCloseConfirmationModal}>
                   <h5 className="modal-title f-w-600">Confirm Deletion</h5>
                 </ModalHeader>
@@ -751,7 +752,7 @@ const SalesOrders = () => {
                   <Button color="danger" onClick={handleConfirmDelete}>Yes, Delete</Button>
                   <Button color="secondary" onClick={onCloseConfirmationModal}>Cancel</Button>
                 </ModalFooter>
-              </Modal>
+              </Modal> */}
 
               <CommonCardHeader title="Manage Order" />
 
@@ -827,7 +828,6 @@ const SalesOrders = () => {
                   </Col>
                 </Row>
 
-                {/* Order Data Table */}
                 {renderContent()}
                 
               </CardBody>

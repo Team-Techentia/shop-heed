@@ -3,7 +3,8 @@ const crypto = require("crypto");
 const Product = require("../../Model/productModel");
 const Order = require("../../Model/orderModel");
 const paymentModel = require("../../Model/paymentModel");
-require('dotenv').config()
+const Counter = require("../../Model/Counter");
+require("dotenv").config();
 
 const cron = require("node-cron");
 const {
@@ -17,170 +18,181 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,
   key_secret: process.env.RAZORPAY_API_SECRET,
 });
- 
+
+// Helper function to generate custom order ID
+const getNextOrderId = async () => {
+  const orders = await Order.find();
+  console.log(orders.length);
+  return `SH_${String(orders.length + 1).padStart(6, "0")}`;
+};
+
 const createOrder = async (req, res) => {
   try {
     const { items, orderTotal, paymentMethod, customerDetails, appliedPromocode } = req.body;
 
-    const orderPromises = items.map(async (item) => {
-      const product = await Product.findById(item.product._id).sort({ createdAt: -1 });
+    // Validate all products first
+    for (const item of items) {
+      const product = await Product.findById(item.product._id);
+      if (!product) throw new Error(`Product ${item.product._id} not found`);
+      if (product.quantity < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.title}`);
+      }
+    }
 
-      if (!product) {
-        throw new Error("Product not found");
+    // Handle promocode (only once for the entire order)
+    if (appliedPromocode) {
+      const promo = await Promocode.findOne({ code: appliedPromocode });
+      if (!promo) throw new Error("Promocode not found");
+
+      if (!(await promo.canBeUsedByUser(req._id))) {
+        throw new Error("Usage limit exceeded for this promocode");
       }
 
-      if (appliedPromocode) {
-        const promo = await Promocode.findOne({ code: appliedPromocode })
+      await promo.applyUsage(req._id);
+    }
 
-        if (!promo) {
-          throw new Error("Promocode not found");
-        }
+    // Generate a single custom order ID for this transaction
+    const customOrderId = await getNextOrderId();
 
-        if (!promo.canBeUsedByUser(req._id)) {
-          throw new Error("Usage limit exceeded for this promocode");
-        }
+    // Prepare order items array
+    const orderItems = items.map((item) => ({
+      product: item.product._id,
+      image: item.product.image,
+      title: item.product.title,
+      sku: item.product.sku,
+      size: item.product.size,
+      price: item.product.price,           // original price
+      finalPrice: item.product.finalPrice, // discounted or final price
+      quantity: item.quantity,
+      totalPrice: item.product.finalPrice * item.quantity
+    }));
 
-        await promo.applyUsage(req._id);
-      }
 
-      const newOrder = new Order({
-        userId: req._id,
-        product: item.product._id,
-        totalAmount: product.finalPrice * item.quantity,
-        totalQuantity: item.quantity,
-        paymentMethod,
-        customerDetails,
-        status: "pending",
-        appliedPromocode: appliedPromocode ?? undefined
-      });
-
-      await newOrder.save();
-      return newOrder;
+    // Create ONE order document for the entire cart
+    const newOrder = new Order({
+      userId: req._id,
+      orderId: customOrderId,
+      items: orderItems, // Array of items in the order
+      totalAmount: orderTotal,
+      totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      paymentMethod,
+      customerDetails,
+      status: "pending",
+      orderStatus: "processing",
     });
 
-    const savedOrders = await Promise.all(orderPromises);
-
-
-
     if (paymentMethod === "online") {
+      // Create Razorpay order for the entire transaction
       const options = {
         amount: orderTotal * 100,
         currency: "INR",
-        receipt: savedOrders[0]._id.toString(),
+        receipt: customOrderId,
       };
 
       const razorpayOrder = await razorpay.orders.create(options);
 
-      const updatedOrders = await Promise.all(
-        savedOrders.map(async (order) => {
-          order.paymentDetails = {
-            orderId: razorpayOrder.id,
-          };
-          await order.save();
-          return order;
-        })
-      );
+      // Update order with Razorpay details
+      newOrder.paymentDetails = {
+        orderId: razorpayOrder.id,
+        paymentStatus: "pending"
+      };
+
+      // Save the order
+      await newOrder.save();
+
+      // Create ONE payment record for the transaction
       const payment = new paymentModel({
         transactionId: razorpayOrder.id,
-        orderId: updatedOrders[0]._id,
+        orderId: newOrder._id,
         userId: req._id,
         productIds: items.map((item) => item.product._id),
         amount: orderTotal,
         paymentStatus: "pending",
       });
-
       await payment.save();
-      // EmailSendComponent(
-      //   customerDetails.email,
-      //   "Order Confirmation success",
-      //   htmlContentForMailTemplate(
-      //     customerDetails.first_name,
-      //     " Purchase confirmation",
-      //     " Thanks for your purchase. We will send tracking info when your order ships. Your payment has been successfully"
-      //   )
-      // );
 
-      return res.status(201).json({ success: true, orderId: razorpayOrder.id });
-    } else {
-      items.map(async (item) => {
-        const product = await Product.findById(item.product._id);
-        if (product) {
-          if (product.quantity >= item.quantity) {
-            product.quantity -= item.quantity;
-            await product.save();
-          } else {
-            return res
-              .status(400)
-              .json({ success: false, message: "Insufficient stock" });
-          }
-        } else {
-          return res
-            .status(400)
-            .json({ success: false, message: "Product not found" });
-        }
+      return res.status(201).json({
+        success: true,
+        orderId: razorpayOrder.id, // Razorpay order ID
+        customOrderId, // Your custom order ID (SH_000001)
+        itemCount: items.length
       });
+    } else {
+      // COD Flow - Save order and reduce inventory
+      await newOrder.save();
 
+      // Reduce inventory for all items
+      await Promise.all(
+        items.map(async (item) => {
+          const product = await Product.findById(item.product._id);
+          product.quantity -= item.quantity;
+          await product.save();
+        })
+      );
+
+      // Send confirmation email
       EmailSendComponent(
         customerDetails.email,
         "Order Confirmation",
         htmlContentForMailTemplate(
           customerDetails.first_name,
-          " Purchase confirmation",
-          " Thanks for your purchase. We willsend tracking info when your order ships."
+          "Purchase confirmation",
+          "Thanks for your purchase. We will send tracking info when your order ships."
         )
       );
 
-      return res.status(201).json({ success: true, orders: savedOrders });
+      return res.status(201).json({
+        success: true,
+        order: newOrder,
+        customOrderId,
+      });
     }
   } catch (error) {
-    console.error()
+    console.error(error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
 const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    const orders = await Order.find({
+    // Find the single order with this Razorpay order ID
+    const order = await Order.findOne({
       "paymentDetails.orderId": razorpay_order_id,
-    });
+    }).populate("items.product");
 
-    if (!orders || orders.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Order not found" });
-    }
+    if (!order)
+      return res.status(400).json({ success: false, message: "Order not found" });
 
-    const hmac = crypto.createHmac(process.env.HMAC_KEY, process.env.RAZORPAY_API_SECRET);
+    // Verify signature
+    const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_API_SECRET);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const generated_signature = hmac.digest("hex");
 
     if (generated_signature === razorpay_signature) {
-      for (let order of orders) {
-        order.status = "paid";
-        order.paymentDetails.paymentId = razorpay_payment_id;
-        order.paymentDetails.paymentStatus = "paid";
-        await order.save();
+      // Update order payment status
+      order.status = "paid";
+      order.paymentDetails.paymentId = razorpay_payment_id;
+      order.paymentDetails.paymentStatus = "paid";
 
-        const product = await Product.findById(order.product);
-        if (product) {
-          if (product.quantity >= order.totalQuantity) {
-            product.quantity -= order.totalQuantity;
-            await product.save();
-          } else {
-            return res
-              .status(400)
-              .json({ success: false, message: "Insufficient stock" });
-          }
+      // Reduce inventory for all items in the order
+      for (const item of order.items) {
+        const product = await Product.findById(item.product._id || item.product);
+        if (product && product.quantity >= item.quantity) {
+          product.quantity -= item.quantity;
+          await product.save();
         } else {
-          return res
-            .status(400)
-            .json({ success: false, message: "Product not found" });
+          return res.status(400).json({
+            success: false,
+            message: `Insufficient stock for ${product?.title || 'product'}`
+          });
         }
       }
 
+      await order.save();
+
+      // Update payment record
       const payment = await paymentModel.findOne({
         transactionId: razorpay_order_id,
       });
@@ -190,65 +202,108 @@ const verifyPayment = async (req, res) => {
         await payment.save();
       }
 
+      // Send confirmation email
+      EmailSendComponent(
+        order.customerDetails.email,
+        "Payment Confirmation",
+        htmlContentForMailTemplate(
+          order.customerDetails.first_name,
+          "Payment Successful",
+          "Your payment has been received. We will send tracking info when your order ships."
+        )
+      );
+
       return res.json({ success: true });
     } else {
-      return res
-        .status(400)
-        .json({ success: false, message: "Payment verification failed" });
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed"
+      });
     }
   } catch (error) {
-
+    console.error(error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-const getOrderByUserId = async function (req, res) {
+const getOrderByUserId = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req._id })
-      .populate({ path: "product", select: "title image " })
-      .select("_id  totalAmount status orderStatus totalQuantity ")
-      .lean()
-      .sort({ createdAt: -1 });
+      .populate({ path: "items.product", select: "title image finalPrice" })
+      .select("_id orderId totalAmount status orderStatus totalQuantity items createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    if (!orders || orders.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
-    }
-    return res
-      .status(200)
-      .json({
-        success: true,
-        data: orders,
-        message: "Successfully retrieved orders",
+    if (!orders || orders.length === 0)
+      return res.status(404).json({
+        success: false,
+        message: "No orders found"
       });
-  } catch (error) {
 
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    // Format the response to include item details
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      itemCount: order.items.length,
+      products: order.items.map(item => ({
+        title: item.product?.title,
+        image: item.product?.image,
+        quantity: item.quantity,
+        price: item.price,
+        totalPrice: item.totalPrice
+      }))
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: formattedOrders,
+      message: "Successfully retrieved orders",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };
 
-const updateOrderStatus = async function (req, res) {
+const updateOrderStatus = async (req, res) => {
   try {
     const order = await Order.findById(req.body.id);
-    if (order) {
-      order.orderStatus = req.body.status;
-      await order.save();
-      return res
-        .status(200)
-        .json({ success: true, message: "Order status updated successfully" });
-    }
-    return res.status(404).json({ success: false, message: "Order not found" });
-  } catch (error) {
+    if (!order)
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
 
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    order.orderStatus = req.body.status;
+    await order.save();
+
+    // Send status update email
+    EmailSendComponent(
+      order.customerDetails.email,
+      "Order Status Update",
+      htmlContentForMailTemplate(
+        order.customerDetails.first_name,
+        "Order Status Updated",
+        `Your order ${order.orderId} status has been updated to: ${req.body.status}`
+      )
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };
 
+// CRON to auto-update pending payments
 cron.schedule("*/1 * * * *", async () => {
   try {
     const pendingPayments = await paymentModel.find({
@@ -270,8 +325,7 @@ cron.schedule("*/1 * * * *", async () => {
       let razorpayPayment;
       try {
         razorpayPayment = await razorpay.payments.fetch(payment.paymentId);
-      } catch (error) {
-
+      } catch {
         continue;
       }
 
@@ -297,137 +351,162 @@ cron.schedule("*/1 * * * *", async () => {
       }
     }
   } catch (error) {
-
+    console.error("Cron job error:", error);
   }
 });
 
-const getOrderById = async function (req, res) {
+const getOrderById = async (req, res) => {
   try {
-    const userId = req._id;
+    const { _id: userId } = req;
     const orderId = req.params.id;
 
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User is missing" });
-    }
-    if (!orderId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Order Id is missing" });
-    }
-
-    const getOrder = await Order.findById(orderId).populate("product");
-
-    if (!getOrder) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Failed to fetch order by id" });
-    }
-    return res
-      .status(200)
-      .json({
-        success: true,
-        data: getOrder,
-        message: "Order successfully by id",
+    if (!userId)
+      return res.status(400).json({
+        success: false,
+        message: "User is missing"
       });
-  } catch (error) {
+    if (!orderId)
+      return res.status(400).json({
+        success: false,
+        message: "Order Id is missing"
+      });
 
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    const order = await Order.findById(orderId).populate("items.product");
+    if (!order)
+      return res.status(400).json({
+        success: false,
+        message: "Failed to fetch order by id"
+      });
+
+    return res.status(200).json({
+      success: true,
+      data: order,
+      message: "Order retrieved successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };
 
-const deleteOrder = async function (req, res) {
+const deleteOrder = async (req, res) => {
   try {
-    const userId = req._id;
-    if (!userId) {
-      return res
-        .status(400)
-        .josn({ success: false, message: "User is missing" });
-    }
+    const { _id: userId } = req;
+    if (!userId)
+      return res.status(400).json({
+        success: false,
+        message: "User is missing"
+      });
 
     const deletedId = req.params.id;
-
-    if (!deletedId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Order id not provided" });
-    }
+    if (!deletedId)
+      return res.status(400).json({
+        success: false,
+        message: "Order id not provided"
+      });
 
     const deleteOrder = await Order.findByIdAndDelete(deletedId);
+    if (!deleteOrder)
+      return res.status(400).json({
+        success: false,
+        message: "Failed to delete Order"
+      });
 
-    if (!deleteOrder) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Failed to delete Order" });
-    }
-    return res
-      .status(200)
-      .json({ success: true, message: "Order deleted successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "Order deleted successfully"
+    });
   } catch (error) {
-
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };
 
-
-async function generateInvoicing(req, res) {
+const generateInvoicing = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    const order = await Order.find({ "paymentDetails.orderId": orderId }).populate("product");
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
+    // Find the single order with this Razorpay order ID
+    const order = await Order.findOne({
+      "paymentDetails.orderId": orderId,
+    }).populate("items.product");
 
-    const customerDetails = order[0].customerDetails;
-    const items = await order.map((product, index) => ({
+    if (!order)
+      return res.status(404).json({ message: "Order not found" });
+
+    const customerDetails = order.customerDetails;
+    const customOrderId = order.orderId;
+
+    // Map items from the order
+    const items = order.items.map((item, index) => ({
       sno: index + 1,
-      quantity: product.totalQuantity,
-      Product: product.product.title,
-      rate: product.product.finalPrice,
-      subTotal: product.totalAmount,
-      productId: product.product.productId,
-      variantId: product.product._id
+      quantity: item.quantity,
+      Product: item.product.title,
+      rate: item.price,
+      subTotal: item.totalPrice,
+      productId: item.product.productId,
+      variantId: item.product._id,
     }));
-    const totalSubTotal = items.reduce((sum, item) => sum + item.subTotal, 0);
+
+    const totalSubTotal = order.totalAmount;
+
     const url = await createInvoice({
-      invoiceNumber: `INV-${Math.floor(Math.random() * 10000)}`,
+      invoiceNumber: customOrderId || `INV-${Math.floor(Math.random() * 10000)}`,
       orderNumber: orderId,
-      invoiceDate: new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+      invoiceDate: new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       }),
       totalAmount: totalSubTotal,
       from: {
-        name: 'Shopheed',
-        address: 'A-39, WEST PATEL NAGAR, WEST PATEL NAGAR, NEW DELHI, Central Delhi, Delhi, 110008',
-        email: 'info@shopheed.com'
+        name: "Shopheed",
+        address:
+          "A-39, WEST PATEL NAGAR, WEST PATEL NAGAR, NEW DELHI, Central Delhi, Delhi, 110008",
+        email: "info@shopheed.com",
       },
       to: {
         name: `${customerDetails.first_name} ${customerDetails.last_name}`,
         address: `${customerDetails.address}, ${customerDetails.city}, ${customerDetails.state}, ${customerDetails.pincode}`,
         email: customerDetails.email,
-        mobile: customerDetails.phone
+        mobile: customerDetails.phone,
       },
-      items: items
+      items,
     });
-    await Order.updateMany(
-      { "paymentDetails.orderId": orderId },
-      { $set: { inVoiceLink: url } }
+
+    // Update the single order with invoice link
+    order.invoiceLink = url;
+    await order.save();
+
+    // Send invoice via email
+    EmailSendComponent(
+      customerDetails.email,
+      "Invoice for Your Order",
+      htmlContentForMailTemplate(
+        customerDetails.first_name,
+        "Invoice Ready",
+        `Your invoice for order ${customOrderId} is ready. Download it here: ${url}`
+      )
     );
-    return res.status(200).json({ message: "Invoice generated successfully", url: url });
+
+    return res.status(200).json({
+      message: "Invoice generated successfully",
+      url
+    });
   } catch (error) {
-
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
-}
-
+};
 
 module.exports = {
   createOrder,
@@ -435,5 +514,6 @@ module.exports = {
   getOrderByUserId,
   updateOrderStatus,
   getOrderById,
-  deleteOrder, generateInvoicing
+  deleteOrder,
+  generateInvoicing,
 };
