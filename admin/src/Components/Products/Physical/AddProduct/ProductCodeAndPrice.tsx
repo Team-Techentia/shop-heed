@@ -580,7 +580,7 @@ const ProductCodeAndPrice = () => {
         <FormGroup className="mb-3">
           <Row>
             <Col lg="3">
-              <Label className="fw-bold mb-0">Product Bullet Point Specification:</Label>
+              <Label className="fw-bold mb-0">Key Feature:</Label>
             </Col>
             <Col lg="9">
               <Input
@@ -647,7 +647,7 @@ const ProductCodeAndPrice = () => {
 
               <Row className="mb-3">
                 <Col xl="3" sm="4">
-                  <Label className="fw-bold mb-0">Product Description:</Label>
+                  <Label className="fw-bold mb-0">Product Details:</Label>
                 </Col>
                 <Col sm="7" xl="8">
                   <div dangerouslySetInnerHTML={{ __html: variant.description }} />
@@ -735,7 +735,7 @@ const ProductCodeAndPrice = () => {
         <FormGroup className="mb-3">
           <Row>
             <Col lg="3">
-              <Label className="fw-bold">Product Description:</Label>
+              <Label className="fw-bold">Product Details:</Label>
             </Col>
             <Col lg="9" className="description-sm">
               <MDEditor preview="edit" value={value} onChange={(e: any) => onChange(e)} />

@@ -61,12 +61,12 @@ const DetailsWithPrice = ({
     if (product && product.quantity > 0) {
       return true;
     }
-    
+
     // Check if any variant of the same product has stock
     if (sameProductData && sameProductData.length > 0) {
       return sameProductData.some(variant => variant.quantity > 0);
     }
-    
+
     return false;
   };
 
@@ -153,41 +153,41 @@ const DetailsWithPrice = ({
 
   const sizeType = getCategorySizeType(product.category);
   const allSizes = sizeOptions[sizeType];
-useEffect(() => {
-  const filterSize = sameProductData.filter((data) => {
-    return data.color === product.color;
-  });
-  setUniqueSizes(filterSize);
+  useEffect(() => {
+    const filterSize = sameProductData.filter((data) => {
+      return data.color === product.color;
+    });
+    setUniqueSizes(filterSize);
 
-  // If current product is out of stock → redirect to first available variant
-  if (product.quantity <= 0) {
-    const firstInStock = filterSize.find((s) => s.quantity > 0);
-    if (firstInStock) {
-      router.replace(
-        `/product-details/${firstInStock.title
-          .toLowerCase()
-          .replaceAll(" ", "-")}/${firstInStock._id}`
-      );
-      return; // stop here to avoid setting wrong size
-    } else {
-      // No variants in stock → clear selection
-      setSelectedSize(null);
-      return;
+    // If current product is out of stock → redirect to first available variant
+    if (product.quantity <= 0) {
+      const firstInStock = filterSize.find((s) => s.quantity > 0);
+      if (firstInStock) {
+        router.replace(
+          `/product-details/${firstInStock.title
+            .toLowerCase()
+            .replaceAll(" ", "-")}/${firstInStock._id}`
+        );
+        return; // stop here to avoid setting wrong size
+      } else {
+        // No variants in stock → clear selection
+        setSelectedSize(null);
+        return;
+      }
     }
-  }
 
-  // Normal selection logic
-  if (filterSize.length === 1 && filterSize[0].quantity > 0) {
-    setSelectedSize(filterSize[0].size);
-  } else if (filterSize.length > 1) {
-    const firstInStock = filterSize.find((s) => s.quantity > 0);
-    if (firstInStock) {
-      setSelectedSize(firstInStock.size);
-    } else {
-      setSelectedSize(null);
+    // Normal selection logic
+    if (filterSize.length === 1 && filterSize[0].quantity > 0) {
+      setSelectedSize(filterSize[0].size);
+    } else if (filterSize.length > 1) {
+      const firstInStock = filterSize.find((s) => s.quantity > 0);
+      if (firstInStock) {
+        setSelectedSize(firstInStock.size);
+      } else {
+        setSelectedSize(null);
+      }
     }
-  }
-}, [product, sameProductData]);
+  }, [product, sameProductData]);
 
 
   const uniqueColors = sameProductData
@@ -300,12 +300,13 @@ useEffect(() => {
             <span className="tax-inclusive">inclusive of all taxes</span>
           </div>
         </div>
+        <div className="free-shipping">
         <Image
           src={freedelivery} // place this image inside /public/images
           alt="Free Shipping"
-          width={150}   // adjust size
-          height={65}  // adjust size
-        />
+          width={110}   // adjust size
+          height={45}  // adjust size
+        /></div>
 
         {/* Updated stock check logic */}
         {!isProductInStock() ? (
@@ -315,133 +316,127 @@ useEffect(() => {
         ) : (
           <>
             {/* Show low stock warning for current product */}
-            {product.quantity > 0 && product.quantity <= 2 && (
-              <div className="low-stock-warning">
-                <i className="fa fa-exclamation-triangle me-2"></i>
-                Only {product.quantity} left in stock!
-              </div>
-            )}
-
+           
             {sameProductData && sameProductData.length >= 1 && (
               <>
                 <hr className="section-divider" />
 
                 {sizeType !== 'oneSize' && (
                   <div className="size-selector mt-2">
-                   {uniqueSizes
-  .sort((a, b) => a.size - b.size)
-  .map((matchedProduct) => {
-    const isOutOfStock = matchedProduct.quantity <= 0;
+                    {uniqueSizes
+                      .sort((a, b) => a.size - b.size)
+                      .map((matchedProduct) => {
+                        const isOutOfStock = matchedProduct.quantity <= 0;
 
-    return (
-      <div
-        key={matchedProduct.size}
-        className={`size-option-wrapper ${isOutOfStock ? 'disabled' : ''}`}
-      >
-        <div
-          className={`size-option 
+                        return (
+                          <div
+                            key={matchedProduct.size}
+                            className={`size-option-wrapper ${isOutOfStock ? 'disabled' : ''}`}
+                          >
+                            <div
+                              className={`size-option 
             ${product.size === matchedProduct.size ? 'selected' : ''} 
             ${isOutOfStock ? 'out-of-stock' : ''}`}
-          onClick={() => !isOutOfStock && handleSizeClick(matchedProduct)} // disable click if OOS
-        >
-          {matchedProduct.size}
-        </div>
+                              onClick={() => !isOutOfStock && handleSizeClick(matchedProduct)} // disable click if OOS
+                            >
+                              {matchedProduct.size}
+                            </div>
 
-        {/* Low stock badge */}
-        {matchedProduct.quantity > 0 && matchedProduct.quantity <= 2 && (
-          <span className="qty-badge">
-            {matchedProduct.quantity} left
-          </span>
-        )}
-      </div>
-    );
-  })}
+                            {/* Low stock badge */}
+                            {matchedProduct.quantity > 0 && matchedProduct.quantity <= 2 && (
+                              <span className="qty-badge">
+                                {matchedProduct.quantity} left
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
 
                   </div>
                 )}
-                 {/* Quantity Selector - only show if current product has stock */}
-                 {product.quantity > 0 && (
-            <div className="quantity-section">
-              <div className="selection-header">
-                <span>QUANTITY</span>
-              </div>
-              <div className="quantity-selector">
-                <button className="quantity-btn" onClick={changeless}>
-                  <RemoveIcon />
-                </button>
-                <div className="quantity-display">{quantity}</div>
-                <button className="quantity-btn" onClick={changeInc}>
-                  <AddIcon />
-                </button>
-              </div>
-            </div>
-                 )}
+                {/* Quantity Selector - only show if current product has stock */}
+                {product.quantity > 0 && (
+                  <div className="quantity-section">
+                    <div className="selection-header">
+                      <span>QUANTITY</span>
+                    </div>
+                    <div className="quantity-selector">
+                      <button className="quantity-btn" onClick={changeless}>
+                        <RemoveIcon />
+                      </button>
+                      <div className="quantity-display">{quantity}</div>
+                      <button className="quantity-btn" onClick={changeInc}>
+                        <AddIcon />
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-            {/* Action Buttons - only show if current product has stock */}
+                {/* Action Buttons - only show if current product has stock */}
                 {/* Color Selection */}
                 {uniqueColors && uniqueColors.length > 1 && (
-  <>
-    <div className="selection-header mt-3">
-      <span>MORE COLOURS</span>
-    </div>
+                  <>
+                    <div className="selection-header mt-3">
+                      <span>MORE COLOURS</span>
+                    </div>
 
-    <div className="color-selector mt-2">
-      {uniqueColors.map((data, i) => (
-        <div
-          key={i}
-          className={`color-option ${product.color === data.color ? 'selected' : ''}`}
-          onClick={() => handleColorClick(data.color)}
-          title={data.colorName}
-        >
-          <div className="color-thumbnail">
-            <img src={data.image} alt={data.colorName} />
-          </div>
-        </div>
-      ))}
-    </div>
-  </>
-)}
+                    <div className="color-selector mt-2">
+                      {uniqueColors.map((data, i) => (
+                        <div
+                          key={i}
+                          className={`color-option ${product.color === data.color ? 'selected' : ''}`}
+                          onClick={() => handleColorClick(data.color)}
+                          title={data.colorName}
+                        >
+                          <div className="color-thumbnail">
+                            <img src={data.image} alt={data.colorName} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 {product.quantity > 0 && (
-                 <div className="action-buttons mt-4">
-              <button
-                className="btn btn-add-to-cart"
-                onClick={() => {
-                  context.addToCart(product, product._id, quantity);
-                }}
-              >
-                <i className="fa fa-shopping-cart me-2"></i> Add to Cart
-              </button>
+                  <div className="action-buttons mt-4">
+                    <button
+                      className="btn btn-add-to-cart"
+                      onClick={() => {
+                        context.addToCart(product, product._id, quantity);
+                      }}
+                    >
+                      <i className="fa fa-shopping-cart me-2"></i> Add to Cart
+                    </button>
 
-              <button
-                className="btn btn-buy-now"
-                onClick={() => {
-                  // Add the current product to cart before checkout
-                  context.addToCart(product, product._id, quantity);
+                    <button
+                      className="btn btn-buy-now"
+                      onClick={() => {
+                        // Add the current product to cart before checkout
+                        context.addToCart(product, product._id, quantity);
 
-                  // Then redirect to checkout
-                  router.push("/page/account/checkout");
-                }}
-                style={{
-                  flex: 1,
-                  background: '#10ADD6', // SaddleBrown
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.background = '#10ADD1'; // Darker brown on hover (Sienna)
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.background = '#10ADD6'; // Original brown
-                }}
-              >
-                <i className="fa fa-bolt me-2"></i> Buy Now
-              </button>
-            </div>
+                        // Then redirect to checkout
+                        router.push("/page/account/checkout");
+                      }}
+                      style={{
+                        flex: 1,
+                        background: '#10ADD6', // SaddleBrown
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.background = '#10ADD1'; // Darker brown on hover (Sienna)
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = '#10ADD6'; // Original brown
+                      }}
+                    >
+                      <i className="fa fa-bolt me-2"></i> Buy Now
+                    </button>
+                  </div>
                 )}
               </>
             )}
@@ -463,165 +458,165 @@ useEffect(() => {
         </div>
 
         {/* Product Details Accordion */}
-        
-          <Accordion flush open={open} toggle={togglee}>
-            <AccordionItem>
-              <AccordionHeader targetId={2}>
-               DETAILS
-              </AccordionHeader>
-              <AccordionBody accordionId={2}>
-                <div>
-                  {product && product.description && (
-                    <MarkdownRenderer markdown={product.description} />
-                  )}
-                </div>
-                <br></br>
-                <div>
-                  <h5>Specification</h5>
-                  {product && product.specificationArray && product.specificationArray.length > 0 && product.specificationArray.map((item, index) => {
-                    return <p key={index}><span style={{ fontWeight: 500 }}>{item.question}: </span>{item.answer}</p>
-                  })
-                  }
-                </div>
-              </AccordionBody>
-            </AccordionItem>
 
-            <AccordionItem>
-              <AccordionHeader targetId={4}>
-                RETURN 
-              </AccordionHeader>
-              <AccordionBody accordionId={4}>
-                <ul className="return-policy-list">
-                  <li><i className="fa fa-check-circle text-success me-2"></i> Hassle-free return within 4 days - no questions asked.</li>
-                  <li><i className="fa fa-check-circle text-success me-2"></i> Issues with defective, incorrect and damaged product should be reported within 24 hours of delivery.</li>
-                  <li><i className="fa fa-times-circle text-danger me-2"></i> For hygiene, Inner Wear & Accessories are not eligible for Return or Exchanges.</li>
-                </ul>
-                <div className="return-links">
-                  <p>
-                    For more details on our Return and Exchange Policies,
-                    <Link href={"/return_and_exchange"}> Click here</Link>
-                  </p>
-                  <p>
-                    To place a Return / Exchange Request,
-                    <Link href={"/contact-us"}> Click here</Link>
-                  </p>
-                </div>
-              </AccordionBody>
-            </AccordionItem>
-          
+        <Accordion flush open={open} toggle={togglee}>
+          <AccordionItem>
+            <AccordionHeader targetId={2}>
+              DETAILS
+            </AccordionHeader>
+            <AccordionBody accordionId={2}>
+              <div>
+                {product && product.description && (
+                  <MarkdownRenderer markdown={product.description} />
+                )}
+              </div>
+              <br></br>
+              <div>
+                <h5>Specification</h5>
+                {product && product.specificationArray && product.specificationArray.length > 0 && product.specificationArray.map((item, index) => {
+                  return <p key={index}><span style={{ fontWeight: 500 }}>{item.question}: </span>{item.answer}</p>
+                })
+                }
+              </div>
+            </AccordionBody>
+          </AccordionItem>
 
-        <AccordionItem>
-              <AccordionHeader targetId={5}>
-                DELIVERY ESTIMATE
-              </AccordionHeader>
-              <AccordionBody accordionId={5}>
-          <div className="delivery-estimate-section mt-4">
-            <h6>
-              <i className="fa fa-truck me-2"></i> Enter Pincode
-            </h6>
-            <div className="pincode-input-group">
-              <input
-                type="number"
-                className="form-control pincode-input"
-                placeholder="Enter 6-digit pincode"
-                maxLength={6}
-                value={checkEstimateTime}
-                onChange={(e) => {
-                  const value = e.target.value.slice(0, 6);
-                  setCheckEstimateTime(value);
-                  if (expectDelivery || expectDeliveryError) {
-                    setExpectDelivery('');
-                    setExpectDeliveryError('');
-                  }
-                }}
-              />
-              <button
-                type="button" style={{
-                  color: "#fff",
-                  width: "130px",
-                  padding: "10px 16px",
-                  background: "#000",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                  transition: "all 0.3s ease",
-                }}
-                onClick={checkHandle}
-                disabled={isCheckingDelivery}
-              >
-                {isCheckingDelivery ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                    Checking...
-                  </>
-                ) : 'Check'}
-              </button>
-            </div>
+          <AccordionItem>
+            <AccordionHeader targetId={4}>
+              RETURN
+            </AccordionHeader>
+            <AccordionBody accordionId={4}>
+              <ul className="return-policy-list">
+                <li><i className="fa fa-check-circle text-success me-2"></i> Hassle-free return within 4 days - no questions asked.</li>
+                <li><i className="fa fa-check-circle text-success me-2"></i> Issues with defective, incorrect and damaged product should be reported within 24 hours of delivery.</li>
+                <li><i className="fa fa-times-circle text-danger me-2"></i> For hygiene, Inner Wear & Accessories are not eligible for Return or Exchanges.</li>
+              </ul>
+              <div className="return-links">
+                <p>
+                  For more details on our Return and Exchange Policies,
+                  <Link href={"/return_and_exchange"}> Click here</Link>
+                </p>
+                <p>
+                  To place a Return / Exchange Request,
+                  <Link href={"/contact-us"}> Click here</Link>
+                </p>
+              </div>
+            </AccordionBody>
+          </AccordionItem>
 
-            {expectDelivery && (
-              <div
-                style={{
-                  marginTop: "14px",
-                  padding: "14px 18px",
-                  borderRadius: "12px",
-                  background: "linear-gradient(135deg, #fdfdfd, #f7f9fc)",
-                  border: "1px solid #e6ebf1",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
-                  <i
-                    className="fa fa-check-circle"
-                    style={{
-                      color: "#4CAF50",
-                      fontSize: "22px",
+
+          <AccordionItem>
+            <AccordionHeader targetId={5}>
+              DELIVERY
+            </AccordionHeader>
+            <AccordionBody accordionId={5}>
+              <div className="delivery-estimate-section mt-4">
+                <h6>
+                  <i className="fa fa-truck me-2"></i> Enter Pincode
+                </h6>
+                <div className="pincode-input-group">
+                  <input
+                    type="number"
+                    className="form-control pincode-input"
+                    placeholder="Enter 6-digit pincode"
+                    maxLength={6}
+                    value={checkEstimateTime}
+                    onChange={(e) => {
+                      const value = e.target.value.slice(0, 6);
+                      setCheckEstimateTime(value);
+                      if (expectDelivery || expectDeliveryError) {
+                        setExpectDelivery('');
+                        setExpectDeliveryError('');
+                      }
                     }}
-                  ></i>
-                  <div>
+                  />
+                  <button
+                    type="button" style={{
+                      color: "#fff",
+                      width: "130px",
+                      padding: "10px 16px",
+                      background: "#000",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                      transition: "all 0.3s ease",
+                    }}
+                    onClick={checkHandle}
+                    disabled={isCheckingDelivery}
+                  >
+                    {isCheckingDelivery ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                        Checking...
+                      </>
+                    ) : 'Check'}
+                  </button>
+                </div>
+
+                {expectDelivery && (
+                  <div
+                    style={{
+                      marginTop: "14px",
+                      padding: "14px 18px",
+                      borderRadius: "12px",
+                      background: "linear-gradient(135deg, #fdfdfd, #f7f9fc)",
+                      border: "1px solid #e6ebf1",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                    }}
+                  >
                     <div
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "600",
-                        color: "#222",
-                        marginBottom: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
                       }}
                     >
-                      Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#6b7280",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {expectDelivery}
+                      <i
+                        className="fa fa-check-circle"
+                        style={{
+                          color: "#4CAF50",
+                          fontSize: "22px",
+                        }}
+                      ></i>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "15px",
+                            fontWeight: "600",
+                            color: "#222",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "#6b7280",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {expectDelivery}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-            )}
+                )}
 
-            {expectDeliveryError && (
-              <div className="delivery-error mt-2">
-                <i className="fa fa-exclamation-circle me-2"></i>
-                {expectDeliveryError}
+                {expectDeliveryError && (
+                  <div className="delivery-error mt-2">
+                    <i className="fa fa-exclamation-circle me-2"></i>
+                    {expectDeliveryError}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          </AccordionBody>
-      </AccordionItem>
-      </Accordion>
+            </AccordionBody>
+          </AccordionItem>
+        </Accordion>
       </div>
 
       <style jsx>{`
@@ -629,7 +624,7 @@ useEffect(() => {
   font-size: 24px;     
   font-weight: 700;      
   color: #000;       
-  margin-bottom: 15px;   
+  margin-bottom: 10px;   
 }
   .size-option.out-of-stock {
   position: relative;
@@ -650,17 +645,17 @@ useEffect(() => {
 }
 
        .product-title {
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 400;
   color: #6c757d;
   margin-bottom: 15px;
 }
 
 .current-price {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 720;
   color: #2d2d2d;
-  
+ 
 }
 
 .mrp-badge {
@@ -668,8 +663,9 @@ useEffect(() => {
    color: #6c757d;
   font-size: 25px;
   font-weight: 600;
-  padding: 2px 6px;
+  // padding: 2px 6px;
   border-radius: 3px;
+   margin-left:6px;
   
 }
 
@@ -677,12 +673,14 @@ useEffect(() => {
   font-size: 25px;
   color: #6c757d;
   text-decoration: line-through;
+  
 }
 
 .discount-text {
-  font-size: 20px;
-  font-weight: 600;
-  color:#10ADD6;  /* blue text */
+  font-size: 25px;
+  font-weight: 700;
+  color:#FF8C5A;  /* blue text */
+   margin-left:6px;
 }
 
 .price-main-row {
@@ -698,31 +696,9 @@ useEffect(() => {
   font-weight: 700;
 }
 
-        .free-shipping-badge {
-  background: linear-gradient(90deg, #4AA184, #5ab195);
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  box-shadow: 0 3px 8px rgba(74, 161, 132, 0.3);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-}
-
-.free-shipping-badge i {
-  font-size: 14px;
-}
-
-.free-shipping-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(74, 161, 132, 0.45);
-}
+       .free-shipping{
+       margin-top:10px;
+       }
 
         
         .rating-section {
@@ -1018,14 +994,8 @@ useEffect(() => {
         .return-links a:hover {
           text-decoration: underline;
         }
-        
-        .delivery-estimate-section {
-          padding: 15px;
-        }
-        
         .delivery-estimate-section h6 {
           font-weight: 600;
-          margin-bottom: 12px;
         }
         
         .pincode-input-group {

@@ -64,7 +64,7 @@ const ProductReviewSection = ({ productData }) => {
   return (
     <div className="product-review-section" style={sectionStyle}>
       <Paragraph
-        title="Ratings & Reviews"
+        title="Ratings"
         headingStyle={{ fontSize: "30px", marginBottom: "20px" }}
         hrClass={false}
       />

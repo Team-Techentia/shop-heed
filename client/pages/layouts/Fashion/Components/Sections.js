@@ -24,6 +24,7 @@ const Data = [
     img: cat1,
     img1: cat1,
     title: "FORMAL WEAR",
+    
     link: "/collections/formal wear",
   },
   {
@@ -44,16 +45,6 @@ const Data = [
     title: "STREET WEAR",
     link: "/collections/street wear",
   },
-];
-
-const Data2 = [
-  { img: cat1, img1: cat11, title: "Plain Shirts", link: "/collections/plain-shirts" },
-  { img: cat2, img1: cat21, title: "Check Shirts", link: "/collections/check-shirts" },
-  { img: cat3, img1: cat31, title: "Stripe Shirts", link: "/collections/stripe-shirts" },
-  { img: cat5, img1: cat41, title: "Half Sleeve Shirts", link: "/collections/half-sleeve-shirts" },
-  { img: cat5, img1: cat51, title: "Over Sized Shirts", link: "/collections/over-sized-shirts" },
-  { img: cat3, img1: cat51, title: "Cargo Shirts", link: "/collections/cargo-shirts" },
-  { img: cat3, img1: cat51, title: "Printed Shirts", link: "/collections/printed-shirts" },
 ];
 
 // ----------- Master Section Card ----------------
@@ -80,9 +71,9 @@ const MasterSection = ({ img, title, link, img1 }) => {
             style={{
               width: "100%",
               height: "100%",
-              maxHeight: "400px",
-             
-              transform: hovered ? "scale(1.03) rotate(-1deg)" : "scale(1) rotate(0deg)",
+              maxHeight: "2160px",
+
+              // transform: hovered ? "scale(1.03) rotate(-1deg)" : "scale(1) rotate(0deg)",
               transition: "transform 0.3s ease",
             }}
             src={img}
@@ -95,20 +86,22 @@ const MasterSection = ({ img, title, link, img1 }) => {
       </Link>
 
       <Link href={link}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ display: "flex", justifyContent: "start", marginLeft:"20px" }}>
           <div
             style={{
-              height: "40px",
+              height: "60px",
               position: "absolute",
-              background: "#FFFFFF",
-              bottom: "20px",
-              width: "88%",
-              boxShadow: "0 4px 8px #0003, 0 6px 20px #00000030",
+              bottom: "80px",
+              width: "27%",
               display: "flex",
               borderRadius: "5px",
               justifyContent: "start",
               alignItems: "center",
+              color: "white",             // White text
+              border: "3px solid white",  // White border
+             
             }}
+
           >
             <div
               className="everday_related_category"
@@ -123,9 +116,9 @@ const MasterSection = ({ img, title, link, img1 }) => {
               <div style={{ textAlign: "center", width: "100%" }}>
                 <p
                   style={{
-                    color: "#000",
-                    fontWeight: "500",
-                    fontSize: "16px",
+                    color: "#fff",
+                    fontWeight: "600",
+                    fontSize: "20px",
                     margin: "0",
                     wordBreak: "break-word",
                   }}
@@ -187,10 +180,10 @@ const Sections = ({ type }) => {
                 {array.map((data, i) => (
                   <Col
                     key={i}
-                    lg={3}   
-                    md={3}   
-                    sm={6}   
-                    xs={12}   
+                    lg={6}
+                    md={6}
+                    sm={6}
+                    xs={12}
                   >
                     <MasterSection
                       img={data.img}
