@@ -6,49 +6,18 @@ import Link from "next/link";
 import cat1 from "../../../../public/assets/images/fashion/Formal Wear.gif";
 import cat2 from "../../../../public/assets/images/fashion/Everyday Essentials.gif";
 import cat3 from "../../../../public/assets/images/fashion/Dress Shirt.gif";
-import cat4 from "../../../../public/assets/images/fashion/cat4.svg";
 import cat5 from "../../../../public/assets/images/fashion/Street Casuals.gif";
 
-import cat11 from "../../../../public/assets/images/fashion/cat1.png";
-import cat21 from "../../../../public/assets/images/fashion/cat2.png";
-import cat31 from "../../../../public/assets/images/fashion/cat3.png";
-import cat51 from "../../../../public/assets/images/fashion/cat5.png";
-import cat41 from "../../../../public/assets/images/fashion/cat4.png";
-
-import Api from "../../../../components/Api";
-import { MENUITEMS } from "../../../../components/constant/menu";
-
-// ----------- Data Arrays ----------------
+// Data Array
 const Data = [
-  {
-    img: cat1,
-    img1: cat1,
-    title: "FORMAL WEAR",
-    
-    link: "/collections/formal wear",
-  },
-  {
-    img: cat2,
-    img1: cat2,
-    title: "EVERYDAY WEAR",
-    link: "/collections/everyday wear",
-  },
-  {
-    img: cat3,
-    img1: cat3,
-    title: "DESIGNER WEAR",
-    link: "/collections/designer wear",
-  },
-  {
-    img: cat5,
-    img1: cat5,
-    title: "STREET WEAR",
-    link: "/collections/street wear",
-  },
+  { img: cat1, title: "FORMAL WEAR", link: "/collections/formal wear" },
+  { img: cat2, title: "EVERYDAY WEAR", link: "/collections/everyday wear" },
+  { img: cat3, title: "DESIGNER WEAR", link: "/collections/designer wear" },
+  { img: cat5, title: "STREET WEAR", link: "/collections/street wear" },
 ];
 
-// ----------- Master Section Card ----------------
-const MasterSection = ({ img, title, link, img1 }) => {
+// Master Section Card
+const MasterSection = ({ img, title, link }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -56,146 +25,86 @@ const MasterSection = ({ img, title, link, img1 }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: "100%",
         position: "relative",
-        height: "100%",
         cursor: "pointer",
-        paddingBottom: "50px",
+        width: "100%",
+        overflow: "hidden",
+        borderRadius: "10px",
       }}
-      className="detail_section"
     >
       <Link href={link}>
-        <div style={{ width: "100%" }}>
-          <Image
-            className="image"
-            style={{
-              width: "100%",
-              height: "100%",
-              maxHeight: "2160px",
-
-              // transform: hovered ? "scale(1.03) rotate(-1deg)" : "scale(1) rotate(0deg)",
-              transition: "transform 0.3s ease",
-            }}
-            src={img}
-            alt={title}
-            width={500}
-            height={200}
-            layout="responsive"
-          />
-        </div>
+        <Image
+          src={img}
+          alt={title}
+          width={500}
+          height={300}
+          layout="responsive"
+          style={{
+            borderRadius: "10px",
+            transition: "transform 0.3s ease",
+            transform: hovered ? "scale(1.05)" : "scale(1)",
+          }}
+        />
       </Link>
 
       <Link href={link}>
-        <div style={{ display: "flex", justifyContent: "start", marginLeft:"20px" }}>
-          <div
+        <div
+          style={{
+            position: "absolute",
+            bottom: "15px",
+            left: "15px",
+            // backgroundColor: "rgba(0,0,0,0.6)",
+            padding: "10px 15px",
+            borderRadius: "5px",
+            border:"2px solid #fff",
+          }}
+        >
+          <p
             style={{
-              height: "60px",
-              position: "absolute",
-              bottom: "80px",
-              width: "27%",
-              display: "flex",
-              borderRadius: "5px",
-              justifyContent: "start",
-              alignItems: "center",
-              color: "white",             // White text
-              border: "3px solid white",  // White border
-             
+              color: "#fff",
+              margin: 0,
+              fontSize: "20px",
+              fontWeight: "600",
             }}
-
           >
-            <div
-              className="everday_related_category"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                width: "100%",
-              }}
-            >
-              <div style={{ textAlign: "center", width: "100%" }}>
-                <p
-                  style={{
-                    color: "#fff",
-                    fontWeight: "600",
-                    fontSize: "20px",
-                    margin: "0",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {title}
-                </p>
-              </div>
-            </div>
-          </div>
+            {title}
+          </p>
         </div>
       </Link>
     </div>
   );
 };
 
-// ----------- Sections Component ----------------
+// Sections Component
 const Sections = ({ type }) => {
-  const array = type === "shop-by-category" ? Data2 : Data;
-  const [category, setCategory] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect Mobile
   useEffect(() => {
-    const checkScreen = () => setIsMobile(window.innerWidth <= 1000);
+    const checkScreen = () => setIsMobile(window.innerWidth <= 768);
     checkScreen();
     window.addEventListener("resize", checkScreen);
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // Fetch API data for shop-by-category
-  const fetchData = async () => {
-    if (type === "shop-by-category") {
-      try {
-        const getData = await Api.getFeaturedSection();
-        setCategory(getData.data.data.filter((_) => _.category === "T-SHIRT"));
-      } catch (error) {
-        return;
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const renderShirtMenuItems = () => {
-    const shopItem = MENUITEMS[1];
-    const shirtItem = shopItem && shopItem.children.find((item) => item.title === "Shirt");
-    return shirtItem.children.filter((item) => item.imageSrc);
-  };
+  const array = Data; // for now, you can extend for type="shop-by-category"
 
   return (
-    <section className="section-b-space detail-cannabis bg-grey category">
+    <section className="section-b-space bg-grey category">
       <Container>
-        <Row style={{ marginTop: isMobile ? "0px" : "-100px" }}>
-          <section className="section-b-space detail-cannabis bg-grey category">
-            <Container>
-              <Row style={{ gap: "25px 0px" }}>
-                {array.map((data, i) => (
-                  <Col
-                    key={i}
-                    lg={6}
-                    md={6}
-                    sm={6}
-                    xs={12}
-                  >
-                    <MasterSection
-                      img={data.img}
-                      img1={data.img1}
-                      title={data.title}
-                      link={data.link}
-                    />
-                  </Col>
-                ))}
-              </Row>
-            </Container>
-          </section>
+        <Row className="g-3">
+          {array.map((data, i) => (
+            <Col
+              key={i}
+              lg={6}
+              md={6}
+              sm={12}
+              xs={12}
+              className="mb-3"
+            >
+              <MasterSection {...data} />
+            </Col>
+          ))}
         </Row>
       </Container>
     </section>

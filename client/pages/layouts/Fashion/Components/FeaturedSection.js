@@ -2,11 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Col, Container, Row } from "reactstrap";
 import Image from "next/image";
 import Link from "next/link";
-import { Product7 } from "../../../../services/script";
-import Slider from "react-slick";
 import Api from "../../../../components/Api";
 
-// Default fallback image
 const defaultImage = "/assets/images/fashion/default-category.png";
 
 const MasterSection = ({ img, title, link }) => {
@@ -25,20 +22,17 @@ const MasterSection = ({ img, title, link }) => {
       className="detail_section"
     >
       <Link href={link}>
-        <div style={{ width: "100%", height: "100%" }}>
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
           <Image
             className="image"
             style={{
               width: "100%",
               height: "100%",
               maxHeight: "450px",
-              // objectFit: "cover",
-              transform: hovered
-                ? "scale(1.05)"
-                : "scale(1)",
-              transition: "transform 0.3s ease",
+             
+              borderRadius: "10px",
             }}
-            src={img}
+            src={img || defaultImage}
             alt={title}
             width={300}
             height={300}
@@ -47,23 +41,27 @@ const MasterSection = ({ img, title, link }) => {
 
           {/* Overlay text */}
           <div
+            className="overlay-text"
             style={{
               position: "absolute",
+              border: "2px solid #fff",
               bottom: "15px",
               left: "50%",
               transform: "translateX(-50%)",
               color: "#fff",
               fontWeight: "600",
-              fontSize: "clamp(18px, 2vw, 25px)", // min 14px, max 25px, scales with screen
+              fontSize: "18px",
               textShadow: "0px 2px 6px rgba(0,0,0,0.6)",
               textAlign: "center",
-              width: "100%",
-              padding: "0 5px", // small padding for mobile so text doesn't touch edges
+              width: "60%",
+              height: "50px",
+              lineHeight: "50px",
+              borderRadius: "5px",
+              // background: "rgba(0,0,0,0.3)",
             }}
           >
             {title}
           </div>
-
         </div>
       </Link>
     </div>
@@ -77,13 +75,10 @@ const FeaturedSections = () => {
   const fetchData = async () => {
     try {
       const getData = await Api.getFeaturedSection();
-
       if (getData?.data?.success && getData?.data?.data) {
-        // Sort by priority and filter active items
         const sortedData = getData.data.data
           .filter(item => item.isActive)
           .sort((a, b) => a.priority - b.priority);
-
         setCategory(sortedData);
       }
     } catch (error) {
@@ -98,23 +93,16 @@ const FeaturedSections = () => {
     fetchData();
   }, []);
 
-  // Function to format category name for display
   const formatCategoryName = (category, subCategory) => {
     let displayName = category.toUpperCase().replace("-", " ");
-
     if (subCategory) {
       displayName += ` - ${subCategory.toUpperCase()}`;
     }
-
     return displayName;
   };
 
-  // Function to generate link from category and subcategory
   const generateLink = (category, subCategory) => {
-    if (subCategory) {
-      return `/category/${category}/${subCategory}`; // handle subcategory case
-    }
-    return `/category/${category}`; // handle only category
+    return subCategory ? `/category/${category}/${subCategory}` : `/category/${category}`;
   };
 
   if (loading) {
@@ -150,7 +138,7 @@ const FeaturedSections = () => {
       <Container>
         <Row style={{ gap: "25px 0px" }}>
           {category.map((data, i) => (
-            <Col lg={3} md={4} sm={6} xs={6} key={data._id || i}>
+            <Col lg={3} md={4} sm={6} xs={12} key={data._id || i}>
               <MasterSection
                 img={data.image}
                 title={formatCategoryName(data.category, data.subCategory)}
@@ -160,6 +148,32 @@ const FeaturedSections = () => {
           ))}
         </Row>
       </Container>
+
+      {/* Responsive styling */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .overlay-text {
+            font-size: 14px !important;
+            width: 80% !important;
+            height: auto !important;
+            line-height: 1.4em !important;
+            padding: 5px 10px;
+            bottom: 10px !important;
+          }
+          .detail_section .image {
+            max-height: 250px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .overlay-text {
+            font-size: 12px !important;
+            width: 90% !important;
+            line-height: 1.2em !important;
+            padding: 4px 8px;
+          }
+        }
+      `}</style>
     </section>
   );
 };

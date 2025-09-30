@@ -23,7 +23,7 @@ const ProductContainer = styled.div`
   border-radius: 15px;
   background: #fff;
   position: relative;
-  padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
+  // padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
   margin-bottom: 20px;
 `;
 

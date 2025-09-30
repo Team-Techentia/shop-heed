@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Banner from "./layouts/Fashion/Components/Banner";
+import Link from "next/link";
 import TopCollection from "../components/common/Collections/TopCollection";
 import TabCollection9 from "../components/common/Collections/TabCollection9";
 import HeaderOne from "../components/headers/header-one";
@@ -35,12 +36,16 @@ const Fashion = () => {
       <Sections />
 
       {/* Top Collection */}
-      <Paragraph
-        title="title1 section-t-space"
-        inner="title-inner1"
-        hrClass={false}
-        titleData="Our Top Shelf Pick"
-      />
+      <Link href="/collections/new" passHref legacyBehavior>
+        <a style={{ textDecoration: "none" }}>
+          <Paragraph
+            title="title1 section-t-space"
+            inner="title-inner1"
+            hrClass={false}
+            titleData="Our Top Shelf Pick"
+          />
+        </a>
+      </Link>
       <TopCollection
         dataContStart={0}
         dataContEnd={50}
@@ -75,8 +80,8 @@ const Fashion = () => {
         newLatter={true}
         logoName={"logo.png"}
       />
-      
-      
+
+
     </>
   );
 };

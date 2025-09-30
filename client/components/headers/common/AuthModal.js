@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { TextField } from "@mui/material";
@@ -121,6 +121,19 @@ const AuthModal = ({
     if ((type === "number" && value.length > 10) || value.length > 50) return;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
+
+  // 👇 Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isLoginModalOpen || isRegisterModalOpen || isOTPModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isLoginModalOpen, isRegisterModalOpen, isOTPModalOpen]);
 
   return (
     <>
