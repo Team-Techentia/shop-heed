@@ -26,6 +26,7 @@ const Profile = () => {
 
   const LoaderContextData = useContext(LoaderContext);
   const { catchErrors, setLoading } = LoaderContextData;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!user.name || !user.email || !user.phoneNumber) {
@@ -44,10 +45,12 @@ const Profile = () => {
   useEffect(() => {
     fetchData1();
   }, []);
+
   const [isOpenTOTP, setIsOpenTOTP] = useState(false);
   const [user, setUser] = useState();
-  const [verification , setVerification ] = useState(false)
-  const [ChangeNumber , setChangeNumber ] = useState()
+  const [verification, setVerification] = useState(false);
+  const [ChangeNumber, setChangeNumber] = useState();
+
   const fetchData1 = async () => {
     try {
       setLoading(true);
@@ -55,7 +58,6 @@ const Profile = () => {
       setUser(response.data.data);
     } catch (error) {
       catchErrors(error);
-
       return toast.error("SomeThing went wrong");
     } finally {
       setLoading(false);
@@ -74,7 +76,6 @@ const Profile = () => {
     try {
       setLoading(true);
       const response = await Api.profileChange(user, token);
-
       return toast.success(response.data.message);
     } catch (error) {
       catchErrors(error);
@@ -86,35 +87,16 @@ const Profile = () => {
     }
   };
 
-  const [password, setPassword] = useState({
-    newPassword: "",
-    currentPassword: "",
-    cPassword: "",
-  });
-  const handleChangePassword = async () => {
+  const [modal1, setModal1] = useState(false);
+  const toggle1 = () => setModal1(!modal1);
+  const toggle2 = () => setVerification(!verification);
 
-    if(
-      password.newPassword.length < 6
-    ){
-      return  toast.error("Minimum 6 digit is required Password field");
-    }
-
-
-    if (password.newPassword !== password.cPassword) {
-      toast.error("Password not match");
-      return;
-    }
+  const handleChangeNumber = async () => {
     try {
-      setLoading(true);
-      const response = await Api.changePassword(password, token);
-
-      if (response.status === 200) {
-        toast.success(response.data.message);
-      } else {
-        toast.error(response.data.message);
-      }
-
-      setPassword({ newPassword: "", cPassword: "", currentPassword: "" });
+      await Api.ChangeNumber(ChangeNumber, token);
+      toggle2();
+      fetchData1();
+      return toast.success("Phone number successfully updated");
     } catch (error) {
       catchErrors(error);
       if (
@@ -125,46 +107,8 @@ const Profile = () => {
       ) {
         return toast.error(error.response.data.message);
       }
-
-      return toast.error("SomeThing went wrong");
-    } finally {
-      setLoading(false);
     }
   };
-  const handlePassChange = (e) => {
-    const { id, value } = e.target;
-    setPassword((prevUser) => ({
-      ...prevUser,
-      [id]: value,
-    }));
-  };
-
-  const [modal, setModal] = useState(false);
-
-  const toggle = () => setModal(!modal);
-  const [modal1, setModal1] = useState(false);
-  const toggle1 = () => setModal1(!modal1);
-  const toggle2 = () => setVerification(!verification);
-
-
-  const handleChangeNumber =async ()=>{
-    try {
-      await  Api.ChangeNumber(ChangeNumber , token)
-       toggle2()
-       fetchData1()
-       return toast.success("Phone number successfully updated")
-    } catch (error) {
-       catchErrors(error);
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        return toast.error(error.response.data.message);
-      }
-    }
-  }
 
   return (
     <CommonLayout parent="home" title="user profile">
@@ -190,7 +134,6 @@ const Profile = () => {
                         <Form onSubmit={handleSubmit}>
                           <FormGroup>
                             <Label for="name">Name</Label>
-
                             <TextField
                               multiline
                               id="name"
@@ -203,7 +146,6 @@ const Profile = () => {
                           </FormGroup>
                           <FormGroup>
                             <Label for="email">Email</Label>
-
                             <TextField
                               multiline
                               id="email"
@@ -215,7 +157,6 @@ const Profile = () => {
                           </FormGroup>
                           <FormGroup>
                             <Label for="mobile">Phone Number</Label>
-
                             <TextField
                               multiline
                               variant="standard"
@@ -230,37 +171,15 @@ const Profile = () => {
                             style={{
                               cursor: "pointer",
                               textDecoration: "underline",
-                              color:"#4c75e9"
+                              color: "#4c75e9",
                             }}
-                            onClick={()=>{
-                              setIsOpenTOTP(true)
+                            onClick={() => {
+                              setIsOpenTOTP(true);
                             }}
                           >
                             Change Phone Number
                           </p>
 
-                          <FormGroup>
-                            <Label for="mobile">Password</Label>
-
-                            <TextField
-                              multiline
-                              variant="standard"
-                              fullWidth
-                              type="password"
-                              id="mobile"
-                              value={"******"}
-                            />
-                          </FormGroup>
-                          <p
-                            style={{
-                              cursor: "pointer",
-                              textDecoration: "underline",
-                              color:"#4c75e9"
-                            }}
-                            onClick={toggle}
-                          >
-                            Change Password
-                          </p>
                           <a
                             href="#"
                             className="btn btn-sm btn-solid"
@@ -275,65 +194,7 @@ const Profile = () => {
                 </CardBody>
               </Card>
 
-              <Modal isOpen={modal} toggle={toggle} centered>
-                <ModalHeader toggle={toggle}>
-                  <h7 style={{ fontSize: "20px", fontWeight: "700" }}>
-                    Change Password
-                  </h7>
-                </ModalHeader>
-                <ModalBody className="p-4">
-                  <div>
-                    <Form>
-                      <FormGroup className="profile-section">
-                        <TextField
-                          label="Current Password"
-                          id="currentPassword"
-                          variant="standard"
-                          fullWidth
-                          type="password"
-                          value={password && password.currentPassword}
-                          onChange={handlePassChange}
-                        />
-                      </FormGroup>
-                      <FormGroup className="profile-section">
-                        <TextField
-                          label="New Password"
-                          variant="standard"
-                          fullWidth
-                          type="password"
-                          id="newPassword"
-                          value={password.newPassword}
-                          onChange={handlePassChange}
-                          required
-                        />
-                      </FormGroup>
-                      <FormGroup className="profile-section">
-                        <TextField
-                          label=" Confirm New Password"
-                          variant="standard"
-                          fullWidth
-                          type="password"
-                          id="cPassword"
-                          value={password.cPassword}
-                          onChange={handlePassChange}
-                        />
-                      </FormGroup>
-                    </Form>
-                  </div>
-
-                  <div style={{ textAlign: "end" }}>
-                    {" "}
-                    <div
-                      style={{ marginTop: "28px", color: "#2b9dff" }}
-                      className="btn btn-sm btn-solid"
-                      onClick={handleChangePassword}
-                    >
-                      change password
-                    </div>
-                  </div>
-                </ModalBody>
-              </Modal>
-
+              {/* Email verification modal */}
               <Modal isOpen={modal1} toggle={toggle1} centered>
                 <ModalHeader toggle={toggle1}>
                   <h7 style={{ fontSize: "20px", fontWeight: "700" }}>
@@ -345,27 +206,23 @@ const Profile = () => {
                     <Form>
                       <FormGroup>
                         <TextField
-                          
                           multiline
                           variant="standard"
                           fullWidth
-                          type="password"
-                          id="cPassword"
+                          type="text"
+                          id="emailVerify"
                           value={user && user.email}
                         />
                       </FormGroup>
                     </Form>
                   </div>
-
                   <div style={{ textAlign: "end" }}>
-                    {" "}
                     <div
                       style={{ marginTop: "28px", color: "#2b9dff" }}
                       className="btn btn-sm btn-solid"
-                      onClick={()=>{
-                        
-                        toggle1()
-                        setIsOpenTOTP(true)
+                      onClick={() => {
+                        toggle1();
+                        setIsOpenTOTP(true);
                       }}
                     >
                       get otp
@@ -374,7 +231,7 @@ const Profile = () => {
                 </ModalBody>
               </Modal>
 
-
+              {/* Phone number change modal */}
               <Modal isOpen={verification} toggle={toggle2} centered>
                 <ModalHeader toggle={toggle2}>
                   <h7 style={{ fontSize: "20px", fontWeight: "700" }}>
@@ -390,25 +247,23 @@ const Profile = () => {
                           multiline
                           variant="standard"
                           fullWidth
-                          type="password"
-                          id="cPassword"
+                          type="tel"
+                          id="newPhone"
                           value={ChangeNumber}
-                          onChange={(e)=>{
-                            setChangeNumber(e.target.value)
+                          onChange={(e) => {
+                            setChangeNumber(e.target.value);
                           }}
                         />
                       </FormGroup>
                     </Form>
                   </div>
-
                   <div style={{ textAlign: "end" }}>
-                    {" "}
                     <div
                       style={{ marginTop: "28px", color: "#2b9dff" }}
                       className="btn btn-sm btn-solid"
-                    onClick={handleChangeNumber}
+                      onClick={handleChangeNumber}
                     >
-                    Change Number
+                      Change Number
                     </div>
                   </div>
                 </ModalBody>
@@ -418,10 +273,11 @@ const Profile = () => {
           </Row>
         </Container>
       </section>
+
       <OpenModal
         setIsOpenTOTP={setIsOpenTOTP}
         isOpenTOTP={isOpenTOTP}
-        userData={{email: user && user.email}}
+        userData={{ email: user && user.email }}
         popUpFor={"forgetPassword"}
         useBox="login"
         setVerification={setVerification}

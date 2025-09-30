@@ -12,7 +12,7 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 350px;
+  height: ${({ isMobile }) => (isMobile ? "250px" : "350px")};
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -21,30 +21,29 @@ const ImageWrapper = styled.div`
 const ProductContainer = styled.div`
   border: 1px solid #f1f1f1;
   border-radius: 15px;
-
   background: #fff;
   position: relative;
+  padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
+  margin-bottom: 20px;
 `;
 
 const DiscountBadge = styled.div`
   position: absolute;
-  top: ${({ isMobile, isMobile1 }) =>
-    isMobile ? (isMobile1 ? "15px" : "18px") : "20px"};
-  left: ${({ isMobile }) => (isMobile ? "15px" : "20px")};
+  top: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "10px" : "12px") : "20px")};
+  left: ${({ isMobile }) => (isMobile ? "10px" : "20px")};
   background: linear-gradient(90deg, #4aa184, #5ab195);
   color: #fff;
-  padding: ${({ isMobile }) => (isMobile ? "2px 6px" : "3px 8px")};
+  padding: ${({ isMobile }) => (isMobile ? "2px 5px" : "3px 8px")};
   border-radius: 4px;
-  font-size: ${({ isMobile, isMobile1 }) =>
-    isMobile ? (isMobile1 ? "6px" : "8px") : "12px"};
+  font-size: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "6px" : "8px") : "12px")};
   font-weight: bold;
   z-index: 2;
 `;
 
 const CartIcon = styled.div`
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: ${({ isMobile }) => (isMobile ? "8px" : "10px")};
+  right: ${({ isMobile }) => (isMobile ? "8px" : "10px")};
   background: #fff;
   color: #000;
   padding: ${({ isMobile }) => (isMobile ? "3px" : "8px")};
@@ -95,15 +94,13 @@ const ProductItem = ({ product, onClick }) => {
   };
 
   return (
-    <ProductContainer className="product-box product-wrap" onClick={onClick}>
-      {/* Discount badge */}
+    <ProductContainer isMobile={isMobile} onClick={onClick}>
       {discountPercent && (
         <DiscountBadge isMobile={isMobile} isMobile1={isMobile1}>
           {discountPercent}
         </DiscountBadge>
       )}
 
-      {/* Product image */}
       <div
         className="img-wrapper"
         style={{ position: "relative", cursor: "pointer" }}
@@ -115,21 +112,19 @@ const ProductItem = ({ product, onClick }) => {
           )}/${product._id}`}
           className="front"
         >
-          <ImageWrapper>
+          <ImageWrapper isMobile={isMobile}>
             <Image
               src={product.image[0]}
               alt={product.title}
               fill
-              style={{ }}
               sizes="(max-width: 768px) 100vw, 300px"
               priority
             />
           </ImageWrapper>
         </Link>
 
-        {/* Add to Cart Icon */}
         <CartIcon isMobile={isMobile} onClick={handleAddToCart}>
-          <AiOutlineShoppingCart size={18} />
+          <AiOutlineShoppingCart size={isMobile ? 16 : 18} />
         </CartIcon>
       </div>
 
@@ -137,12 +132,12 @@ const ProductItem = ({ product, onClick }) => {
       {product.brand && (
         <p
           style={{
-            marginTop: "15px",
-            fontSize: isMobile ? "15px" : "20px",
+            marginTop: "12px",
+            fontSize: isMobile ? "14px" : "18px",
             fontWeight: "600",
             color: "#000",
             marginBottom: "4px",
-            marginLeft: "7px",
+            marginLeft: "5px",
             letterSpacing: "1px",
             textTransform: "uppercase",
           }}
@@ -154,11 +149,11 @@ const ProductItem = ({ product, onClick }) => {
       {/* Title */}
       <h4
         style={{
-          marginTop: "6px",
+          marginTop: "4px",
           color: "gray",
-          fontSize: isMobile ? "13px" : "16px",
-          marginLeft: "7px",
-          letterSpacing: "1.5px",
+          fontSize: isMobile ? "12px" : "16px",
+          marginLeft: "5px",
+          letterSpacing: "1.2px",
           fontFamily: "'Roboto', sans-serif",
           fontWeight: "500",
           textTransform: "capitalize",
@@ -168,15 +163,15 @@ const ProductItem = ({ product, onClick }) => {
       </h4>
 
       {/* Price */}
-      <div style={{ marginLeft: "8px", marginTop: "0px" }}>
+      <div style={{ marginLeft: "5px", marginTop: "4px" }}>
         {product.discount ? (
           <>
             <span
               style={{
                 textDecoration: "line-through",
                 color: "#888",
-                marginRight: "8px",
-                fontSize: "14px",
+                marginRight: "6px",
+                fontSize: isMobile ? "12px" : "14px",
                 fontWeight: "bold",
                 letterSpacing: "1px",
               }}
@@ -186,7 +181,7 @@ const ProductItem = ({ product, onClick }) => {
             <span
               style={{
                 fontWeight: "bold",
-                fontSize: "16px",
+                fontSize: isMobile ? "14px" : "16px",
                 background: "linear-gradient(90deg, #4AA184, #5ab195)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -202,7 +197,7 @@ const ProductItem = ({ product, onClick }) => {
           <span
             style={{
               fontWeight: "bold",
-              fontSize: "16px",
+              fontSize: isMobile ? "14px" : "16px",
               background: "linear-gradient(90deg, #4AA184, #5ab195)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -218,7 +213,14 @@ const ProductItem = ({ product, onClick }) => {
 
       {/* Colors */}
       {product.colors && (
-        <p style={{ fontSize: "12px", color: "#555", textAlign: "center" }}>
+        <p
+          style={{
+            fontSize: isMobile ? "11px" : "12px",
+            color: "#555",
+            textAlign: "center",
+            marginTop: "6px",
+          }}
+        >
           {product.colors.length} colors available
         </p>
       )}

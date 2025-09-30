@@ -190,15 +190,21 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
                 <style>{`
     .section-title {
       margin-top: 3rem;
+
       text-align: center;
     }
     .section-title .title {
       font-size: 2rem;
       font-weight: 600;
-      color: #000;
-
+      color: #333;
+      margin-bottom: 0.5rem;
     }
-    
+    .section-title .separator {
+      border: 0;
+      height: 1px;
+      background-color: #ddd;
+      margin-top: 0.5rem;
+    }
   `}</style>
             </div>
 

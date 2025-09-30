@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useMemo, useState } from "react";
+import React, { Fragment, useContext, useMemo, useState, useEffect } from "react";
 import { Row, Col } from "reactstrap";
 import Link from "next/link";
 import UserContext from "../../../helpers/user/UserContext";
@@ -10,42 +10,52 @@ const SideBar = () => {
   const isLogin = userContext.isLogin;
   const logOut = userContext.logOut;
 
-  // State to track which categories are expanded
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const { data: navCategoriesData, isLoading } = useQuery({
     queryKey: ["navCategories"],
     queryFn: async () => {
       const res = await Api.getNavbarCategories();
-      return res.data; // Return the data object from the API response
+      return res.data; // API data
     }
   });
 
-  // Transform API data to match sidebar structure
+  // Transform API data
   const dynamicCategories = useMemo(() => {
     if (!navCategoriesData?.data) return [];
-
     return navCategoriesData.data
-      // Filter out categories with no subcategories (non-empty only)
-      .filter(category => category.subcategories && category.subcategories.length > 0)
-      // Sort by number of subcategories (descending - most subcategories first)
+      .filter(c => c.subcategories && c.subcategories.length > 0)
       .sort((a, b) => b.subcategories.length - a.subcategories.length)
-      // Take only top 5 categories
       .slice(0, 5)
-      // Transform to sidebar structure
-      .map(category => ({
-        name: category.name,
-        slug: category.slug,
-        subcategories: category.subcategories.map(subcategory => ({
-          name: subcategory.name,
-          path: `/category/${category.slug}/${subcategory.slug}`,
-          slug: subcategory.slug
+      .map(c => ({
+        name: c.name,
+        slug: c.slug,
+        subcategories: c.subcategories.map(sub => ({
+          name: sub.name,
+          path: `/category/${c.slug}/${sub.slug}`,
+          slug: sub.slug
         }))
       }));
   }, [navCategoriesData]);
 
+  // Initialize all categories as expanded by default
+  useEffect(() => {
+    const initExpanded = {};
+    dynamicCategories.forEach(cat => {
+      initExpanded[cat.slug] = true;
+    });
+    setExpandedCategories(initExpanded);
+  }, [dynamicCategories]);
+
+  const toggleCategory = (categorySlug) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categorySlug]: !prev[categorySlug]
+    }));
+  };
+
   const closeNav = () => {
-    var closemyslide = document.getElementById("mySidenav");
+    const closemyslide = document.getElementById("mySidenav");
     if (closemyslide) {
       closemyslide.classList.remove("open-side");
       document.body.style.overflow = 'auto';
@@ -54,20 +64,9 @@ const SideBar = () => {
 
   const handleMegaSubmenu = (event) => {
     if (event.target.classList.contains("sub-arrow")) return;
-
-    if (event.target.nextElementSibling.classList.contains("opensidesubmenu"))
-      event.target.nextElementSibling.classList.remove("opensidesubmenu");
-    else {
-      event.target.nextElementSibling.classList.add("opensidesubmenu");
-    }
-  };
-
-  // Toggle category expansion
-  const toggleCategory = (categorySlug) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categorySlug]: !prev[categorySlug]
-    }));
+    const menu = event.target.nextElementSibling;
+    if (menu?.classList.contains("opensidesubmenu")) menu.classList.remove("opensidesubmenu");
+    else menu?.classList.add("opensidesubmenu");
   };
 
   const renderDynamicCategories = () => {
@@ -82,45 +81,19 @@ const SideBar = () => {
     }
 
     if (!dynamicCategories.length) {
-      // Fallback to static content if no dynamic data
       return (
         <Col xl="4">
           <div className="link-section">
             <h5>Shirt</h5>
             <ul>
-              <li>
-                <Link href="/collections/plain-shirts">{"Plain Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/check-shirts">{"Check Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/stripe-shirts">{"Stripe Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/half-sleeve-shirts">{"Half Sleeve Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/over-sized-shirts">{"Over Sized Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/cargo-shirts">{"Cargo Shirts"}</Link>
-              </li>
-              <li>
-                <Link href="/collections/printed-shirts">{"Printed Shirts"}</Link>
-              </li>
+              <li><Link href="/collections/plain-shirts">Plain Shirts</Link></li>
+              <li><Link href="/collections/check-shirts">Check Shirts</Link></li>
             </ul>
-            <h5>{"Bottom"}</h5>
-            <ul></ul>
-            <h5>{"T-shirts"}</h5>
-            <h5>{"Jackets"}</h5>
-            <h5>{"Hoodies"}</h5>
           </div>
         </Col>
       );
     }
 
-    // Render dynamic categories in columns
     const categoriesPerColumn = Math.ceil(dynamicCategories.length / 3);
     const columns = [];
 
@@ -133,18 +106,44 @@ const SideBar = () => {
         columns.push(
           <Col xl="4" key={i}>
             <div className="link-section">
-              {columnCategories.map((category, categoryIndex) => (
+              {columnCategories.map(category => (
                 <Fragment key={category.slug}>
-                  <h5>{category.name}</h5>
-                  <ul>
-                    {category.subcategories.map((subcategory, subIndex) => (
-                      <li key={subcategory.slug}>
-                        <Link href={subcategory.path}>{subcategory.name}</Link>
-                      </li>
-                    ))}
-                  </ul>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    {/* Category name links to category page */}
+                    <Link href={`/category/${category.slug}`}>
+                      <h5 style={{ cursor: "pointer", margin: 0 }}>{category.name}</h5>
+                    </Link>
+
+                    {/* Arrow toggles subcategories */}
+                    {category.subcategories.length > 0 && (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          transform: expandedCategories[category.slug] ? "rotate(90deg)" : "rotate(0deg)",
+                          transition: "0.3s",
+                          cursor: "pointer",
+                          marginLeft: "5px"
+                        }}
+                        onClick={() => toggleCategory(category.slug)}
+                      >
+                        ►
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Subcategories list */}
+                  {expandedCategories[category.slug] && (
+                    <ul>
+                      {category.subcategories.map(sub => (
+                        <li key={sub.slug}>
+                          <Link href={sub.path}>{sub.name}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </Fragment>
               ))}
+
             </div>
           </Col>
         );
@@ -161,83 +160,57 @@ const SideBar = () => {
         <nav>
           <a href={null} onClick={closeNav}>
             <div className="sidebar-back text-start">
-              <i style={{ marginTop: "-2px" }} className="fa fa-angle-left pe-2" aria-hidden="true"></i> Back
+              <i className="fa fa-angle-left pe-2" style={{ marginTop: "-2px" }}></i> Back
             </div>
           </a>
           <ul id="sub-menu" className="sidebar-menu">
-
-            {
-              isLogin ? <>
-                <li>
-                  <Link href={`/page/user/profile`}>profile</Link>
-                </li>
-
-                <li>
-                  <Link href="/page/user/orders">Orders</Link>
-                </li></> : <>
-                {/* <li>
-                  <Link href={`/page/account/login`}>Account</Link>
-                </li> */}
-                {/* <li>
-                  <Link href={`/page/account/register`}>Register</Link>
-                </li> */}
+            {isLogin ? (
+              <>
+                <li><Link href={`/page/user/profile`}>Profile</Link></li>
+                <li><Link href="/page/user/orders">Orders</Link></li>
               </>
-            }
-
+            ) : (
+              <li><Link href={`/page/account/login`}>Account</Link></li>
+            )}
+            <li><Link href="/">Home</Link></li>
             <li>
-              <Link href="/">Home</Link>
-            </li>
-            <li>
-              <a onClick={(e) => handleMegaSubmenu(e)}>
-                {"Shop"}
-                <span className="sub-arrow" onClick={(e) => {
-                  // e.stopPropagation(); // Prevents the event from bubbling up to <a>
-                  // Get the first element with the class 'mega-menu clothing-menu'
-                  const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
-                  // Check if the element contains a specific class
-                  if (element && element.classList.contains('opensidesubmenu')) {
-                    element.classList.remove("opensidesubmenu");
-                  } else {
-                    element.classList.add("opensidesubmenu");
-                  }
-                }}></span>
+              <a onClick={handleMegaSubmenu}>
+                Shop
+                <span
+                  className="sub-arrow"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
+                    if (element) element.classList.toggle('opensidesubmenu');
+                  }}
+                ></span>
               </a>
-
               <ul className="mega-menu clothing-menu">
                 <li>
-                  <Row m="0">
-                    {renderDynamicCategories()}
-                  </Row>
+                  <Row m="0">{renderDynamicCategories()}</Row>
                 </li>
               </ul>
             </li>
+            <li><Link href="/collections/trending">Trending Now</Link></li>
+            <li><Link href="/bulk-enquiry">Bulk Enquiry</Link></li>
+            <li><Link href="/contact-us">Contact us</Link></li>
             <li>
-              <Link href="/collections/trending"> Trending Now</Link>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  closeNav();
+                  const searchSidebar = document.getElementById("search_side_bar");
+                  if (searchSidebar) searchSidebar.classList.add("open-side");
+                }}
+              >
+                Search
+              </a>
             </li>
-
-            <li>
-              <Link href="/bulk-enquiry">Bulk Enquiry </Link>
-            </li>
-            <li>
-              <Link href="/contact-us">Contact us</Link>
-            </li>
-
-            <li>
-              <a style={{ cursor: "pointer" }} onClick={() => {
-                closeNav()
-                var closemyslide = document.getElementById("search_side_bar");
-                if (closemyslide) closemyslide.classList.add("open-side");
-              }}>Search</a>
-            </li>
-            {
-              isLogin ?
-                <>
-                  <li style={{ cursor: "pointer" }} onClick={() => logOut()}>
-                    <a>Logout</a>
-                  </li>
-                </> : ""
-            }
-
+            {isLogin && (
+              <li style={{ cursor: "pointer" }} onClick={() => logOut()}>
+                <a>Logout</a>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

@@ -130,9 +130,14 @@ const get_NEW_Product = async function (req, res) {
         .json({ success: false, message: "product not found" });
     }
     const arr = [];
-    await allProduct.map((data, index) => {
-      arr.push(data.products[0]);
-    });
+allProduct.forEach((data) => {
+  // Find the first product with quantity > 0
+  const availableProduct = data.products.find((p) => p.quantity > 0);
+  if (availableProduct) {
+    arr.push(availableProduct);
+  }
+});
+
 
     return res
       .status(200)
