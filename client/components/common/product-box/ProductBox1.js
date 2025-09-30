@@ -12,7 +12,7 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: ${({ isMobile }) => (isMobile ? "250px" : "350px")};
+  height: ${({ isMobile }) => (isMobile ? "250px" : "400px")};
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -24,7 +24,7 @@ const ProductContainer = styled.div`
   background: #fff;
   position: relative;
   // padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
 `;
 
 const DiscountBadge = styled.div`

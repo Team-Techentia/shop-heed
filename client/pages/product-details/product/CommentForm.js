@@ -53,9 +53,9 @@ const RatingForm = ({ productId }) => {
         </button>
       </div>
 
-      <Modal isOpen={modal} toggle={toggle} centered>
-        <ModalHeader toggle={toggle}>Add Rating</ModalHeader>
-        <ModalBody>
+      {/* <Modal isOpen={modal} toggle={toggle} centered> */}
+        {/* <ModalHeader toggle={toggle}>Add Rating</ModalHeader> */}
+        {/* <ModalBody>
           <form onSubmit={handleSubmit} className="rating-form" style={{ textAlign: "center" }}>
             <div className="form-group mb-3">
               <label><strong>Rating:</strong></label>
@@ -79,8 +79,8 @@ const RatingForm = ({ productId }) => {
               Submit Rating
             </button>
           </form>
-        </ModalBody>
-      </Modal>
+        </ModalBody> */}
+      {/* </Modal> */}
     </>
   );
 };

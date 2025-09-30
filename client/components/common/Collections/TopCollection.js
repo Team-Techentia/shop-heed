@@ -22,8 +22,6 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
   });
 
   const showLoader = loading || isLoading;
-
-  // Show only 8 products initially
   const productsToShow = data?.slice(0, 8);
 
   return (
@@ -50,15 +48,41 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
           )}
         </Row>
 
-        {/* Link to full product page */}
-        {data && data.length > 8 && (
-          <div className="text-center mt-4">
-            <Link href="/collections/new" passHref>
-              <Button color="primary">View More</Button>
-            </Link>
-          </div>
-        )}
+        {/* View More Button */}
+        <div className="text-center mt-4">
+          <Link href="/collections/new" passHref>
+            <Button className="discount-btn">View More</Button>
+          </Link>
+        </div>
       </Container>
+
+      {/* Stylish Black Button CSS */}
+      <style jsx>{`
+        .discount-btn {
+          background: #000;
+          color: #fff;
+          font-weight: 600;
+          font-size: 16px;
+          padding: 12px 32px;
+          border: none;
+          border-radius: 40px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .discount-btn:hover {
+          background: linear-gradient(135deg, #000, #333);
+          transform: translateY(-3px);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+        .discount-btn:active {
+          transform: scale(0.97);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+      `}</style>
     </div>
   );
 }

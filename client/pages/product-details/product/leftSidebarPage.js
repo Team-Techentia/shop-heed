@@ -208,23 +208,8 @@ const LeftSidebarPage = ({ pathId, setTopTitle }) => {
             </Col>
           </Row>
 
-          {productData && productData.productId && (
-            <>
-              <CommentList
-                reviewIdUser={reviewIdUser}
-                id={productData.productId}
-                comments={comments}
-                setComments={setComments}
-              />{" "}
-              {showReviewSection && (
-                <RatingForm
-                  productId={productData.productId}
-                  comments={comments}
-                  setComments={setComments}
-                />
-              )}
-            </>
-          )}
+         
+      
         </Container>
       </div>
     
