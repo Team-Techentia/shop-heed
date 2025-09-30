@@ -75,25 +75,8 @@ const Fashion = () => {
         newLatter={true}
         logoName={"logo.png"}
       />
-
-      {/* Button to trigger login modal */}
-      <div className="text-center my-4">
-        <button
-          onClick={() => setIsLoginOpen(true)}
-          className="btn btn-solid"
-        >
-          Login / Sign Up
-        </button>
-      </div>
-
-      {/* Login Modal */}
-      <OpenModal
-        isOpenTOTP={isLoginOpen}
-        setIsOpenTOTP={setIsLoginOpen}
-        userData={{ phoneNumber: "" }}
-        popUpFor={"homepage"}
-        useBox="login"
-      />
+      
+      
     </>
   );
 };
