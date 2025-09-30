@@ -105,20 +105,12 @@ const Login = () => {
   return isLogin ? (
     ""
   ) : (
+   
     <CommonLayout parent="home" title="login">
       <section className="login-page section-b-space page-login">
         <Container>
           <Row>
-            <Col lg="6">
-              <h7 style={{ fontSize: "30px", fontWeight: "700" }}>
-                Welcome to the world of Heed!
-              </h7>
-              <img
-                src={loginphoto1.src}
-                style={{ width: "100%" }}
-                className="mt-4"
-              />
-            </Col>
+          
 
             <Col lg="6">
               <div style={{ textAlign: "center" }}>
@@ -131,15 +123,8 @@ const Login = () => {
               <div style={{ paddingTop: "5px" }} className="theme-card">
                 <div style={{ textAlign: "center" }}>
                   {" "}
-                  <h7
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "500",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    for Latest trends, exciting offers and everything Heed!
-                  </h7>
+                 
+                   
                 </div>
                 <Form className="theme-form  paddingOfRegister mt-3">
                   {loginWithMobile ? (
@@ -163,7 +148,7 @@ const Login = () => {
                           {error}
                         </div>
                       </div>
-                      <h6 style={{ textAlign: "center" }}>
+                      {/* <h6 style={{ textAlign: "center" }}>
                         Continue With Email and Password
                         <span
                           style={{
@@ -177,7 +162,7 @@ const Login = () => {
                           {" "}
                           click here
                         </span>
-                      </h6>
+                      </h6> */}
                       <div style={{ textAlign: "center" }}>
                         {" "}
                         <button

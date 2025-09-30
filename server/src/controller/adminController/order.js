@@ -56,50 +56,50 @@ const getOrderById = async function(req, res) {
     }
 }
 
-const updateOrder = async function(req, res) {
-    try {
-        const id = req.params.Id;
-        const payLoad = {
-            'orderStatus': req.body.orderStatus,
-            'customerDetails.first_name': req.body.first_name,
-            'customerDetails.last_name': req.body.last_name,
-            'customerDetails.phone': req.body.phone,
-            'customerDetails.pincode': req.body.pincode,
-            'customerDetails.state': req.body.state,
-            'customerDetails.address': req.body.address,
-            'customerDetails.country': req.body.country,
-            'customerDetails.city': req.body.city,
-            'customerDetails.email': req.body.email
-        };
-        // If orderStatus is changed to 'shipped', create shipping order in Shiprocket
-        if (req.body.orderStatus === "shipped") {
+const updateOrder = async function (req, res) {
+  try {
+    const { Id } = req.params;
 
-            try {
-                const token = await login();
-                await order(req.body, token);
-            } catch (error) {
-                console.error("Shiprocket error:", error);
-                return res.status(500).json({ success: false, message: "Failed to create shipping order" });
-            }
-        }
+    const payLoad = {
+      orderStatus: req.body.orderStatus,
+      'customerDetails.first_name': req.body.first_name,
+      'customerDetails.last_name': req.body.last_name,
+      'customerDetails.phone': req.body.phone,
+      'customerDetails.pincode': req.body.pincode,
+      'customerDetails.state': req.body.state,
+      'customerDetails.address': req.body.address,
+      'customerDetails.country': req.body.country,
+      'customerDetails.city': req.body.city,
+      'customerDetails.email': req.body.email,
 
-        const updatedOrder = await orderModel.findByIdAndUpdate(
-            id,
-            { $set: payLoad },
-            { new: true }
-        )
-        .lean();
+      // ✅ AWB numbers stored at root order level
+      forwardAwb: req.body.forwardAwb || "",
+      reverseAwb: req.body.reverseAwb || "",
+    };
 
-        if (!updatedOrder) {
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      Id,
+      { $set: payLoad },
+      { new: true }
+    ).lean();
 
-        return res.status(200).json({ success: true, data: updatedOrder, message: "Successfully updated order" });
-    } catch (error) {
-        console.error("Error in updateOrder:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedOrder,
+      message: "Successfully updated order",
+    });
+  } catch (error) {
+    console.error("Error in updateOrder:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
+
+
+
 
 const get_All_Orders = async function (req, res) {
     try {
