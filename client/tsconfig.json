@@ -24,7 +24,7 @@
     "**/*.tsx",
     "components/checkout/ProductCheckoutSection.js",
     "pages/page/account/common/checkout-page.js"
-  ],
+, "components/headers/common/AuthModal.js", "pages/page/account/common/cart-page.js", "pages/index.js"  ],
   "exclude": [
     "node_modules"
   ]

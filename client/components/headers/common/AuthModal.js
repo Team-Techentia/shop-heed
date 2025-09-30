@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { TextField } from "@mui/material";
-import { toast } from "react-hot-toast";
-import OpenModal from "../../../pages/page/account/openModal"; // keep your existing path
+import OpenModal from "../../../pages/page/account/openModal";
+import UserContext from "../../../helpers/user/UserContext";
 
 const modalStyles = `
   .auth-modal-overlay {
@@ -100,52 +100,45 @@ const modalStyles = `
   .auth-input-spacing { margin-bottom: 20px; }
 `;
 
-const AuthModal = ({
-  isLoginModalOpen,
-  isRegisterModalOpen,
-  isOTPModalOpen,
-  closeAllModals,
-  switchToRegister,
-  switchToLogin,
-  handleMobileNumberLogin,
-  handleRegister,
-  user,
-  setUser,
-  error,
-  setIsLoginModalOpen,
-  setIsRegisterModalOpen,
-  setIsOTPModalOpen,
-}) => {
+const AuthModal = () => {
+  const {
+    isLoginModalOpen,
+    isRegisterModalOpen,
+    isOTPModalOpen,
+    closeAll,
+    openLogin,
+    openRegister,
+    user,
+    setUser,
+    error,
+    handleMobileNumberLogin,
+    handleRegister,
+    setIsOTPModalOpen,
+  } = useContext(UserContext);
+
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     if ((type === "number" && value.length > 10) || value.length > 50) return;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 👇 Prevent body scroll when modal is open
+  // prevent scroll when modal open
   useEffect(() => {
-    if (isLoginModalOpen || isRegisterModalOpen || isOTPModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    document.body.style.overflow = isLoginModalOpen || isRegisterModalOpen || isOTPModalOpen ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; };
   }, [isLoginModalOpen, isRegisterModalOpen, isOTPModalOpen]);
 
   return (
     <>
       <style>{modalStyles}</style>
 
-      {/* Login Modal */}
+      {/* Login */}
       {isLoginModalOpen && (
-        <div className="auth-modal-overlay" onClick={() => setIsLoginModalOpen(false)}>
+        <div className="auth-modal-overlay" onClick={closeAll}>
           <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="auth-modal-header">
               <h4>Log In / Sign Up</h4>
-              <button className="auth-close-btn" onClick={() => setIsLoginModalOpen(false)}>
+              <button className="auth-close-btn" onClick={closeAll}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
@@ -160,81 +153,41 @@ const AuthModal = ({
                 name="emailOrPhone"
               />
               {error && <div className="auth-error-message">{error}</div>}
-              <button className="auth-continue-btn" onClick={handleMobileNumberLogin}>
-                Continue
-              </button>
+              <button className="auth-continue-btn" onClick={handleMobileNumberLogin}>Continue</button>
               <div className="auth-switch-link">
-                New user? <span onClick={switchToRegister}>Register</span>
+                New user? <span onClick={openRegister}>Register</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Register Modal */}
+      {/* Register */}
       {isRegisterModalOpen && (
-        <div className="auth-modal-overlay" onClick={() => setIsRegisterModalOpen(false)}>
+        <div className="auth-modal-overlay" onClick={closeAll}>
           <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="auth-modal-header">
               <h4>Sign Up</h4>
-              <button className="auth-close-btn" onClick={() => setIsRegisterModalOpen(false)}>
+              <button className="auth-close-btn" onClick={closeAll}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
             <div className="auth-modal-body">
-              <div className="auth-input-spacing">
-                <TextField
-                  name="name"
-                  type="text"
-                  label="Name"
-                  variant="standard"
-                  fullWidth
-                  value={user.name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="auth-input-spacing">
-                <TextField
-                  name="email"
-                  type="email"
-                  label="Email"
-                  variant="standard"
-                  fullWidth
-                  value={user.email}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="auth-input-spacing">
-                <TextField
-                  name="phoneNumber"
-                  type="number"
-                  label="Phone Number"
-                  variant="standard"
-                  fullWidth
-                  value={user.phoneNumber}
-                  onChange={handleChange}
-                />
-              </div>
-              <button className="auth-continue-btn" onClick={handleRegister}>
-                Get OTP
-              </button>
+              <TextField name="name" type="text" label="Name" variant="standard" fullWidth value={user.name} onChange={handleChange} />
+              <TextField name="email" type="email" label="Email" variant="standard" fullWidth value={user.email} onChange={handleChange} />
+              <TextField name="phoneNumber" type="number" label="Phone Number" variant="standard" fullWidth value={user.phoneNumber} onChange={handleChange} />
+              <button className="auth-continue-btn" onClick={handleRegister}>Get OTP</button>
               <div className="auth-switch-link">
-                Already have an account? <span onClick={switchToLogin}>Login</span>
+                Already have an account? <span onClick={openLogin}>Login</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* OTP Modal */}
+      {/* OTP */}
       <OpenModal
-        setIsOpenTOTP={setIsOTPModalOpen}
-        isOpenTOTP={isOTPModalOpen}
-        userData={{
-          phoneNumber: user.phoneNumber || user.emailOrPhone,
-          name: user.name,
-          email: user.email,
-        }}
+        userData={{ phoneNumber: user.phoneNumber || user.emailOrPhone, name: user.name, email: user.email }}
         popUpFor="checkoutPage"
         useBox="login"
       />

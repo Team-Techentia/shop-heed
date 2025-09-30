@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Banner from "./layouts/Fashion/Components/Banner";
 import Link from "next/link";
 import TopCollection from "../components/common/Collections/TopCollection";
@@ -10,11 +10,57 @@ import MasterFooter from "../components/footers/common/MasterFooter";
 import Sections from "./layouts/Fashion/Components/Sections";
 import { useRouter } from "next/router";
 import FeaturedSections from "./layouts/Fashion/Components/FeaturedSection";
-import OpenModal from "../pages/page/account/login-auth"; // Make sure path is correct
+import AuthModal from "../components/headers/common/AuthModal";
+import toast from "react-hot-toast";
+import Api from "../components/Api";
+import UserContext from "../helpers/user/UserContext";
 
 const Fashion = () => {
   const router = useRouter();
-  const [isLoginOpen, setIsLoginOpen] = useState(false); // modal state
+
+  // user & error states
+  const [user, setUser] = useState({ emailOrPhone: "", name: "", email: "", phoneNumber: "" });
+  const [error, setError] = useState("");
+
+  const { openLogin, openRegister, openOTP } = useContext(UserContext);
+
+  // Auth handlers
+  const handleMobileNumberLogin = async () => {
+    if (!user.emailOrPhone || user.emailOrPhone.length < 10) {
+      setError("Enter a valid number");
+      setTimeout(() => setError(""), 2000);
+      return;
+    }
+    try {
+      const res = await Api.checkMobile({ phoneNumber: user.emailOrPhone });
+      if (res.data.message === "Phone number already exist") {
+        // ✅ use context function instead of local state
+        openOTP();
+      } else {
+        localStorage.setItem("phoneNumber", user.emailOrPhone);
+        openRegister();
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!user.name || !user.email || !user.phoneNumber) {
+      return toast.error("Please fill all required fields");
+    }
+    try {
+      const response = await Api.checkUser({
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+      });
+      if (response.data.message === "Successfully") {
+        openOTP();
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong");
+    }
+  };
 
   return (
     <>
@@ -30,6 +76,15 @@ const Fashion = () => {
         inner="title-inner1"
         hrClass={false}
         titleData="HEED YOUR LOOKs"
+      />
+
+      {/* 🔑 Auth Modal (global control via context) */}
+      <AuthModal
+        handleMobileNumberLogin={handleMobileNumberLogin}
+        handleRegister={handleRegister}
+        user={user}
+        setUser={setUser}
+        error={error}
       />
 
       {/* Sections */}
@@ -80,8 +135,6 @@ const Fashion = () => {
         newLatter={true}
         logoName={"logo.png"}
       />
-
-
     </>
   );
 };
