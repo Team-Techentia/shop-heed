@@ -104,7 +104,6 @@ const CartProvider = (props) => {
     >
       {props.children}
 
-      <Toaster position="top-center" />
     </Context.Provider>
   );
 };

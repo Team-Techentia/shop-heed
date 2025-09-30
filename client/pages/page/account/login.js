@@ -123,7 +123,7 @@ const Login = () => {
         popUpFor={"checkoutPage"}
         useBox="login"
       />
-      <Toaster />
+      {/* <Toaster /> */}
     </section>
   );
 };

@@ -16,6 +16,7 @@ const { scheduleCron } = require("./src/scheduler/token")
 const announcementRoute = require('./src/Route/announcement');
 const featuredSectionRouter = require('./src/Route/feature');
 const imageRoutes = require("./src/Route/routes");
+const addressRouter = require("./src/Route/addressRoute.js");
 
 const cors = require("cors");
 app.use(cors());
@@ -50,6 +51,7 @@ app.use("/api/promocode", promocodeRoutes);
 app.use("/api/announcement", announcementRoute);
 app.use("/api/featured-section", featuredSectionRouter);
 app.use("/api", imageRoutes);
+app.use("/api/user", addressRouter);
 
 //scheduler
 scheduleCron()

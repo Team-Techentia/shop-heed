@@ -84,5 +84,8 @@
     "sass": "^1.62.0",
     "sharp": "^0.33.4",
     "styled-components": "^6.1.19"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
   }
 }

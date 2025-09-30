@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import "../public/assets/scss/app.scss";
-import { ToastContainer } from "react-toastify";
+// import { ToastContainer } from "react-toastify";
 import TapTop from "../components/common/widgets/Tap-Top";
 import CartContextProvider from "../helpers/cart/CartContext";
 import { WishlistContextProvider } from "../helpers/wishlist/WishlistContext";
@@ -20,6 +20,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import HomeMetaTag from "./MetaTag/homeMetaTag";
+import { Toaster } from "react-hot-toast";
 
 export default function MyApp({ Component, pageProps }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +94,7 @@ export default function MyApp({ Component, pageProps }) {
                           <CartContextProvider>
                             <WishlistContextProvider>
                               <FilterProvider>
+                                      <Toaster position="top-center" />
                                 <Component {...pageProps} />
                               </FilterProvider>
                             </WishlistContextProvider>
@@ -101,7 +103,6 @@ export default function MyApp({ Component, pageProps }) {
                       </CompareContextProvider>
                     </SettingProvider>
                   </UserProvider>
-                  <ToastContainer />
                   <TapTop />
                 </LoaderProvider>
               </HydrationBoundary>

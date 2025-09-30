@@ -133,7 +133,7 @@ const Register = () => {
                     </button>
                   </div>
 
-                  <Toaster />
+                  {/* <Toaster /> */}
                 </Form>
               </div>
             </Col>

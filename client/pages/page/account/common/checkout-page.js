@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Container, Form, Row, Col } from "reactstrap";
 import CartContext from "../../../../helpers/cart";
-import { Country, State, City } from "country-state-city";
+import { State, City } from "country-state-city";
 import Select from "react-select";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
@@ -10,150 +10,163 @@ import { getCookie } from "../../../../components/cookies";
 import OpenModal from "../openModal";
 import { LoaderContext } from "../../../../helpers/loaderContext";
 import toast from "react-hot-toast";
+import ProductCheckoutSection from "../../../../components/checkout/ProductCheckoutSection";
+import { Edit2 } from "lucide-react";
 
 const CheckoutPage = ({ isLogin }) => {
   const cartContext = useContext(CartContext);
   const cartItems = cartContext.state;
   const cartTotal = cartContext.cartTotal;
-  const [payment, setPayment] = useState("online");
   const [mobileNumber, setMobileNumber] = useState();
-  const token = getCookie("ectoken");
   const [isOpenTOTP, setIsOpenTOTP] = useState(false);
   const [error, setError] = useState("");
+  const token = getCookie("ectoken");
 
-  // Coupon/Promocode related states
-  const [availablePromocodes, setAvailablePromocodes] = useState([]);
-  const [enteredPromocode, setEnteredPromocode] = useState("");
-  const [appliedPromocode, setAppliedPromocode] = useState(null);
-  const [promocodeDiscount, setPromocodeDiscount] = useState(0);
-  const [promocodeError, setPromocodeError] = useState("");
-  const [promocodeLoading, setPromocodeLoading] = useState(false);
-  const [showPromocodeList, setShowPromocodeList] = useState(false);
-  const [promocodeSuccess, setPromocodeSuccess] = useState("");
+  const [payment, setPayment] = useState("online");
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, formState: { errors }, getValues, reset } = useForm();
 
   const LoaderContextData = useContext(LoaderContext);
   const { catchErrors, setLoading } = LoaderContextData;
   const router = useRouter();
 
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  // ----------------- Saved addresses -----------------
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
 
-  // Calculate final total after promocode discount
-  const finalTotal = Math.max(0, cartTotal - promocodeDiscount);
+  useEffect(() => {
+    if (isLogin) fetchAddresses();
+  }, [isLogin]);
 
-  // Fetch active promocodes on component mount
-  const fetchActivePromocodes = async () => {
+  const handleSaveAddress = async () => {
+    const values = getValues();
+
+    const newAddress = {
+      firstName: values.first_name,
+      lastName: values.last_name,
+      phone: values.phone,
+      email: values.email,
+      country: "India",
+      state: selectedState ? selectedState.name : "",
+      city: selectedCity ? selectedCity.name : "",
+      addressLine: values.address,
+      pincode: values.pincode,
+      label: values.label || "Other",
+      isDefault: values.isDefault || false,
+    };
+
     try {
-      const response = await Api.getAllPromocodes(token);
-      if (response.data && response.data.success) {
-        // Filter only active promocodes (status: true and not expired)
-        const activePromocodes = response.data.data.filter(promo => {
-          const now = new Date();
-          const endDate = new Date(promo.endDate);
-          return promo.status && promo.isDeleted === false && endDate > now;
-        });
-        setAvailablePromocodes(activePromocodes);
+      setLoading(true);
+      const res = editingAddress
+        ? await Api.updateAddress(editingAddress._id, newAddress, token)
+        : await Api.addAddress(newAddress, token);
+      
+      if (res.data.success) {
+        toast.success(editingAddress ? "Address updated successfully" : "Address saved successfully");
+        await fetchAddresses();
+        setSelectedAddress(res.data.data);
+        setShowNewAddressForm(false);
+        setEditingAddress(null);
+        // Clear form
+        reset();
+        setSelectedState(null);
+        setSelectedCity(null);
+      } else {
+        toast.error(res.data.message || "Failed to save address");
       }
-    } catch (error) {
-      console.error("Error fetching promocodes:", error);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving address");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const fetchAddresses = async () => {
+    try {
+      const res = await Api.getAddresses(token);
+      if (res.data.success) {
+        setAddresses(res.data.data);
+        const defaultAddr = res.data.data.find((addr) => addr.isDefault);
+        if (defaultAddr) setSelectedAddress(defaultAddr);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEditAddress = (addr) => {
+    setEditingAddress(addr);
+    setShowNewAddressForm(true);
+    
+    // Pre-fill form
+    reset({
+      first_name: addr.firstName,
+      last_name: addr.lastName,
+      phone: addr.phone,
+      email: addr.email,
+      address: addr.addressLine,
+      pincode: addr.pincode,
+      label: addr.label,
+      isDefault: addr.isDefault,
+    });
+
+    // Pre-select state and city
+    const indiaCode = "IN";
+    const states = State.getStatesOfCountry(indiaCode);
+    const foundState = states.find(s => s.name === addr.state);
+    if (foundState) {
+      setSelectedState(foundState);
+      const cities = City.getCitiesOfState(indiaCode, foundState.isoCode);
+      const foundCity = cities.find(c => c.name === addr.city);
+      if (foundCity) setSelectedCity(foundCity);
+    }
+  };
+
+  const handleCancelForm = () => {
+    setShowNewAddressForm(false);
+    setEditingAddress(null);
+    reset();
+    setSelectedState(null);
+    setSelectedCity(null);
   };
 
   useEffect(() => {
-    fetchActivePromocodes();
-  },[]);
+    if (selectedState) {
+      setSelectedCity(null);
+    }
+  }, [selectedState]);
 
-  const checkhandle = (value) => {
-    setPayment(value);
-  };
-
-  // Apply promocode functionality
-  const handleApplyPromocode = async (codeFromList = null) => {
-    const promocodeValue = codeFromList || enteredPromocode.trim();
-
-    if (!promocodeValue) {
-      setPromocodeError("Please enter a promocode");
-      setTimeout(() => setPromocodeError(""), 3000);
+  // ----------------- Login via Mobile -----------------
+  const handleMobileNumberLogin = async () => {
+    if (!mobileNumber || mobileNumber.length < 10) {
+      setError("Enter a valid Number");
+      setTimeout(() => setError(""), 2000);
       return;
     }
-
-    setPromocodeLoading(true);
-    setPromocodeError("");
-    setPromocodeSuccess("");
-
     try {
-      // Validate promocode first
-      const validateResponse = await Api.validatePromocode({
-        code: promocodeValue,
-        orderTotal: cartTotal
-      }, token);
-
-      if (validateResponse.data && validateResponse.data.success) {
-        // Apply promocode
-        const applyResponse = await Api.applyPromocode({
-          code: promocodeValue,
-          orderTotal: cartTotal
-        }, token);
-
-        if (applyResponse.data && applyResponse.data.success) {
-          const appliedPromo = availablePromocodes.find(promo => promo.code === promocodeValue);
-          
-          // Calculate discount manually if API doesn't return calculated amount
-          let actualDiscount = 0;
-          if (appliedPromo) {
-            if (appliedPromo.discountType === 'percent') {
-              actualDiscount = Math.floor((cartTotal * appliedPromo.discountValue) / 100);
-            } else {
-              actualDiscount = Math.floor(appliedPromo.discountValue);
-            }
-          }
-          
-          // Use calculated discount or fallback to API response
-          const discountFromAPI = applyResponse.data.data.discountAmount || applyResponse.data.data.discountValue;
-          const finalDiscount = actualDiscount > 0 ? actualDiscount : discountFromAPI;
-          
-          setPromocodeDiscount(finalDiscount);
-          setEnteredPromocode(applyResponse.data.data.code);
-          setAppliedPromocode(appliedPromo || { code: promocodeValue });
-          setShowPromocodeList(false);
-          setPromocodeSuccess(`Promocode ${promocodeValue} applied successfully!`);
-          setTimeout(() => setPromocodeSuccess(""), 5000);
-          toast.success("Promo applied successfully");
-        } else {
-          setPromocodeError(applyResponse.data?.message || "Failed to apply promocode");
-          setTimeout(() => setPromocodeError(""), 3000);
-        }
-      } else {
-        setPromocodeError(validateResponse.data?.message || "Invalid promocode");
-        setTimeout(() => setPromocodeError(""), 3000);
+      const res = await Api.checkMobile({ phoneNumber: mobileNumber });
+      if (res.data.message === "Phone number already exist") {
+        return setIsOpenTOTP(true);
       }
+      localStorage.setItem("phoneNumber", mobileNumber);
+      router.push("/page/account/register");
+      return;
     } catch (error) {
-      setPromocodeError(
-        error.response?.data?.message || "Error applying promocode"
-      );
-      setTimeout(() => setPromocodeError(""), 3000);
-    } finally {
-      setPromocodeLoading(false);
+      catchErrors(error);
+      if (error?.response?.data?.message) {
+        return toast.error(error.response.data.message);
+      }
     }
   };
 
-  // Remove applied promocode
-  const handleRemovePromocode = () => {
-    setAppliedPromocode(null);
-    setPromocodeDiscount(0);
-    setEnteredPromocode("");
-    setPromocodeError("");
-    setPromocodeSuccess("");
-  };
-
-  const handlePayment = async (orderId, customOrderId) => {
+  // ----------------- Payment -----------------
+  const handlePayment = async (orderId, customOrderId, finalTotal) => {
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
       amount: Math.floor(finalTotal) * 100,
@@ -173,705 +186,435 @@ const CheckoutPage = ({ isLogin }) => {
         if (paymentVerification.data.success) {
           cartContext.clearCart();
           toast.success(paymentVerification.data.message ?? "Order placed successfully");
-          // Pass custom order ID to success page
           router.push(`/page/order-success?orderId=${customOrderId || orderId}`);
         } else {
           toast.error(paymentVerification.data.message ?? "Failed to verify payment");
         }
       },
-      theme: {
-        color: "#3399cc",
-      },
+      theme: { color: "#222222" },
     };
     const rzp1 = new window.Razorpay(options);
     rzp1.open();
   };
 
+  // ----------------- Submit Order -----------------
   const onSubmit = async (data) => {
-    if (data !== "") {
-      const orderData = {
-        items: cartItems,
-        orderTotal: Math.floor(finalTotal),
-        originalTotal: Math.floor(cartTotal),
-        paymentMethod: payment,
-        appliedPromocode: appliedPromocode?.code || enteredPromocode,
-        promocodeDiscount: Math.floor(promocodeDiscount),
-        customerDetails: {
-          ...data,
-          country: selectedCountry ? selectedCountry.name : "",
-          state: selectedState ? selectedState.name : "",
-          city: selectedCity ? selectedCity.name : "",
-        },
+    let customerDetails;
+    if (selectedAddress && !showNewAddressForm) {
+      // Using saved address - map fields properly
+      customerDetails = {
+        first_name: selectedAddress.firstName,
+        last_name: selectedAddress.lastName,
+        phone: selectedAddress.phone,
+        email: selectedAddress.email,
+        country: selectedAddress.country,
+        state: selectedAddress.state,
+        city: selectedAddress.city,
+        address: selectedAddress.addressLine,
+        pincode: selectedAddress.pincode,
+        label: selectedAddress.label,
+        isDefault: selectedAddress.isDefault,
       };
-
-      try {
-        setLoading(true);
-        const createOrder = await Api.createOrder(orderData, token);
-        if (createOrder.data.success) {
-          // Get custom order ID from response (backend should return this)
-          const customOrderId = createOrder.data.customOrderId || createOrder.data.orderId;
-          
-          if (payment === "cod") {
-            cartContext.clearCart();
-            toast.success(createOrder.data.message ?? "Order placed successfully");
-            // Pass custom order ID to success page
-            router.push(`/page/order-success?orderId=${customOrderId}`);
-          } else {
-            // Pass both orderId (for Razorpay) and customOrderId (for display)
-            handlePayment(createOrder.data.orderId, customOrderId);
-          }
-        } else {
-          toast.error(createOrder.data.message ?? "Order creation failed");
-        }
-      } catch (error) {
-        console.log(error);
-        toast.error(error.message ?? "Order creation failed");
-        catchErrors(error);
-      } finally {
-        setLoading(false);
-      }
     } else {
-      errors.showMessages();
+      // Using form data
+      customerDetails = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone,
+        email: data.email,
+        country: "India",
+        state: selectedState ? selectedState.name : "",
+        city: selectedCity ? selectedCity.name : "",
+        address: data.address,
+        pincode: data.pincode,
+        label: data.label || "Other",
+        isDefault: data.isDefault || false,
+      };
     }
-  };
 
-  useEffect(() => {
-    if (selectedCountry) {
-      setSelectedState(null);
-      setSelectedCity(null);
-    }
-  }, [selectedCountry]);
+    const orderData = {
+      items: cartItems,
+      orderTotal: Math.floor(cartTotal),
+      originalTotal: Math.floor(cartTotal),
+      paymentMethod: payment,
+      customerDetails,
+    };
 
-  useEffect(() => {
-    if (selectedState) {
-      setSelectedCity(null);
-    }
-  }, [selectedState]);
-
-  const handleMobileNumberLogin = async () => {
-    if (!mobileNumber || mobileNumber.length < 10) {
-      setError("Enter a valid Number");
-      setTimeout(() => {
-        setError("");
-      }, 2000);
-      return;
-    }
     try {
-      const res = await Api.checkMobile({ phoneNumber: mobileNumber });
-      if (res.data.message === "Phone number already exist") {
-        return setIsOpenTOTP(true);
+      setLoading(true);
+      const createOrder = await Api.createOrder(orderData, token);
+      if (createOrder.data.success) {
+        const customOrderId = createOrder.data.customOrderId || createOrder.data.orderId;
+        if (payment === "cod") {
+          cartContext.clearCart();
+          toast.success(createOrder.data.message ?? "Order placed successfully");
+          router.push(`/page/order-success?orderId=${customOrderId}`);
+        } else {
+          handlePayment(createOrder.data.orderId, customOrderId, cartTotal);
+        }
+      } else {
+        toast.error(createOrder.data.message ?? "Order creation failed");
       }
-      localStorage.setItem("phoneNumber", mobileNumber);
-      router.push("/page/account/register");
-      return;
     } catch (error) {
+      console.log(error);
+      toast.error(error.message ?? "Order creation failed");
       catchErrors(error);
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        return toast.error(error.response.data.message);
-      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Helper function to check if promocode is eligible
-  const isPromocodeEligible = (promo) => {
-    return !promo.minimumSpend || cartTotal >= promo.minimumSpend;
-  };
-
-  // Helper function to format discount display
-  const formatDiscountDisplay = (promo) => {
-    if (promo.discountType === 'percent') {
-      return `${promo.discountValue}% off`;
-    } else {
-      return `₹${promo.discountValue} off`;
-    }
-  };
-
-  // Helper function to calculate actual discount amount
-  const calculateDiscountAmount = (promo, orderTotal) => {
-    if (promo.discountType === 'percent') {
-      return Math.floor((orderTotal * promo.discountValue) / 100);
-    } else {
-      return Math.floor(promo.discountValue);
-    }
+  const checkhandle = (value) => {
+    setPayment(value);
   };
 
   return (
-    <>
-      <section className="section-b-space checkout-sec">
-        <Container>
-          <div className="checkout-page">
-            <div className="checkout-form">
-              <Form onSubmit={handleSubmit(onSubmit)}>
-                <Row>
-                  <Col lg="6" sm="12" xs="12">
-                    {isLogin ? (
-                      ""
-                    ) : (
-                      <>
-                        <div>
-                          <div className="checkout-title">
-                            <h3>Login</h3>
-                          </div>
-                        </div>
-                        <br />
-                        <div className="row check-out">
-                          <div className="form-group col-md-7 col-sm-7 col-xs-12 mb-2">
-                            <h4 className="field-label">Phone</h4>
-                            <input
-                              type="number"
-                              name="phone"
-                              value={mobileNumber}
-                              onChange={(e) => {
-                                const { value } = e.target;
-                                if (value.length > 10) {
-                                  return;
-                                } else {
-                                  setMobileNumber(value);
-                                }
-                              }}
-                            />
-                            <div className="mt-2" style={{ color: "red" }}>
-                              {" "}
-                              {error}
-                            </div>
-                          </div>
-                          <div className="form-group col-md-5 col-sm-5 col-xs-12 mt-4 pt-2">
-                            <div className="text-end">
-                              <button
-                                onClick={handleMobileNumberLogin}
-                                type="button"
-                                className="btn-solid btn"
-                              >
-                                Send OTP
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    <div className="checkout-title">
-                      <h3>Address Details</h3>
-                    </div>
-                    {
-                      <div className="row check-out mb-5">
-                        <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                          <h4 className="field-label">First Name</h4>
-                          <input
-                            type="text"
-                            className={`${errors.first_name ? "error_border" : ""}`}
-                            name="first_name"
-                            {...register("first_name", { required: true })}
-                          />
-                          <span className="error-message">
-                            {errors.first_name && "First name is required"}
-                          </span>
-                        </div>
-                        <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                          <h4 className="field-label">Last Name</h4>
-                          <input
-                            type="text"
-                            className={`${errors.last_name ? "error_border" : ""}`}
-                            name="last_name"
-                            {...register("last_name", { required: true })}
-                          />
-                          <span className="error-message">
-                            {errors.last_name && "Last name is required"}
-                          </span>
-                        </div>
-                        <div className="form-group col-md-6 col-sm-6 col-xs-12">
+    <section className="section-b-space checkout-sec">
+      <Container>
+        <div className="checkout-page">
+          <div className="checkout-form">
+            <Form onSubmit={handleSubmit(onSubmit)}>
+              <Row>
+                {/* ----------------- Left: Login + Address ----------------- */}
+                <Col lg="6" sm="12" xs="12">
+                  {/* Login section */}
+                  {!isLogin && (
+                    <>
+                      <div className="checkout-title"><h3>Login</h3></div>
+                      <br />
+                      <div className="row check-out">
+                        <div className="form-group col-md-7 col-sm-7 col-xs-12 mb-2">
                           <h4 className="field-label">Phone</h4>
                           <input
-                            type="text"
+                            type="number"
                             name="phone"
-                            className={`${errors.phone ? "error_border" : ""}`}
-                            {...register("phone", { pattern: /\d+/ })}
+                            value={mobileNumber}
+                            onChange={(e) => {
+                              const { value } = e.target;
+                              if (value.length <= 10) setMobileNumber(value);
+                            }}
                           />
-                          <span className="error-message">
-                            {errors.phone && "Please enter number for phone."}
-                          </span>
+                          <div className="mt-2" style={{ color: "red" }}>{error}</div>
                         </div>
-                        <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                          <h4 className="field-label">Email Address</h4>
-                          <input
-                            className={`${errors.email ? "error_border" : ""}`}
-                            type="text"
-                            name="email"
-                            {...register("email", {
-                              required: true,
-                              pattern: /^\S+@\S+$/i,
-                            })}
-                          />
-                          <span className="error-message">
-                            {errors.email &&
-                              "Please enter a valid email address ."}
-                          </span>
-                        </div>
-                        <div className="form-group col-md-12 col-sm-12 col-xs-12">
-                          <h4 className="field-label">Country</h4>
-                          <Select
-                            options={Country.getAllCountries()}
-                            getOptionLabel={(options) => options["name"]}
-                            getOptionValue={(options) => options["name"]}
-                            value={selectedCountry}
-                            onChange={(item) => setSelectedCountry(item)}
-                          />
-                        </div>
-                        <div className="form-group col-md-12 col-sm-12 col-xs-12">
-                          <h4 className="field-label">State</h4>
-                          <Select
-                            options={
-                              selectedCountry
-                                ? State.getStatesOfCountry(
-                                    selectedCountry.isoCode
-                                  )
-                                : []
-                            }
-                            getOptionLabel={(options) => options["name"]}
-                            getOptionValue={(options) => options["name"]}
-                            value={selectedState}
-                            onChange={(item) => setSelectedState(item)}
-                          />
-                        </div>
-                        <div className="form-group col-md-12 col-sm-12 col-xs-12">
-                          <h4 className="field-label">City</h4>
-                          <Select
-                            options={
-                              selectedState
-                                ? City.getCitiesOfState(
-                                    selectedState.countryCode,
-                                    selectedState.isoCode
-                                  )
-                                : []
-                            }
-                            getOptionLabel={(options) => options["name"]}
-                            getOptionValue={(options) => options["name"]}
-                            value={selectedCity}
-                            onChange={(item) => setSelectedCity(item)}
-                          />
-                        </div>
-                        <div className="form-group col-md-12 col-sm-12 col-xs-12">
-                          <h4 className="field-label">Address</h4>
-                          <input
-                            className={`${errors.address ? "error_border" : ""}`}
-                            type="text"
-                            name="address"
-                            {...register("address", {
-                              required: true,
-                              min: 20,
-                              max: 120,
-                            })}
-                            placeholder="Street address"
-                          />
-                          <span className="error-message">
-                            {errors.address && "Please write your address."}
-                          </span>
-                        </div>
-                        <div className="form-group col-md-12 col-sm-6 col-xs-12">
-                          <h4 className="field-label">Postal Code</h4>
-                          <input
-                            type="text"
-                            name="pincode"
-                            className={`${errors.pincode ? "error_border" : ""}`}
-                            {...register("pincode", { pattern: /\d+/ })}
-                          />
-                          <span className="error-message">
-                            {errors.pincode && "Required integer"}
-                          </span>
+                        <div className="form-group col-md-5 col-sm-5 col-xs-12 mt-4 pt-2">
+                          <div className="text-end">
+                            <button onClick={handleMobileNumberLogin} type="button" className="btn-solid btn">
+                              Send OTP
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    }
-                  </Col>
-                  <Col lg="6" sm="12" xs="12">
-                    {cartItems && cartItems.length > 0 ? (
-                      <div className="checkout-details">
-                        <div>
+                    </>
+                  )}
+
+                  {/* Address section */}
+                  <div className="checkout-title"><h3>Address Details</h3></div>
+
+                  {addresses.length === 0 && !showNewAddressForm ? (
+                    <div style={{
+                      textAlign: "center",
+                      padding: "40px 20px",
+                      backgroundColor: "#fafafa",
+                      borderRadius: "4px",
+                      border: "2px dashed #ddd"
+                    }}>
+                      <p style={{ color: "#666", marginBottom: "20px", fontSize: "14px" }}>No saved addresses found.</p>
+                      <button
+                        className="btn btn-solid"
+                        type="button"
+                        onClick={() => setShowNewAddressForm(true)}
+                      >
+                        + Add New Address
+                      </button>
+                    </div>
+                  ) : addresses.length > 0 && !showNewAddressForm ? (
+                    <>
+                      <div style={{ marginBottom: "20px" }}>
+                        {addresses.map((addr) => (
                           <div
-                            className="title-box"
+                            key={addr._id}
                             style={{
-                              display: "flex",
-                              justifyContent: "space-between",
+                              border: selectedAddress?._id === addr._id ? "2px solid #222" : "1px solid #e5e5e5",
+                              padding: "16px",
+                              marginBottom: "12px",
+                              borderRadius: "4px",
+                              backgroundColor: selectedAddress?._id === addr._id ? "#f5f5f5" : "white",
+                              position: "relative",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease"
                             }}
+                            onClick={() => setSelectedAddress(addr)}
                           >
-                            <h4
-                              style={{ fontWeight: "700" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Product{" "}
-                            </h4>
-                            <h4
-                              style={{ fontWeight: "700" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Total{" "}
-                            </h4>
-                          </div>
-                          <hr />
-                          <ul className="qty">
-                            {cartItems.map((item, index) => {
-                              const product = item.product;
-                              const itemTotal = product.finalPrice * item.quantity;
-                              return (
-                                <React.Fragment key={index}>
-                                  <li
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                    }}
-                                  >
-                                    <div style={{ display: "flex", gap: "5px" }}>
-                                      {" "}
-                                      <p>{product.title}</p> ×{" "}
-                                      <p>{item.quantity}</p>{" "}
-                                    </div>
-                                    <span>
-                                      <p>₹ {Math.floor(itemTotal)}</p>
-                                    </span>
-                                  </li>
-                                  <p>
-                                    {" "}
-                                    Size:
-                                    <span style={{ textTransform: "uppercase" }}>
-                                      {product.size}
-                                    </span>{" "}
-                                  </p>
-                                </React.Fragment>
-                              );
-                            })}
-                          </ul>
-                          <hr />
-
-                          {/* Coupon Code Section */}
-                          <div className="coupon-section mb-3">
-                            <h4 className="field-label mb-2">Coupon Code</h4>
-
-                            {!appliedPromocode ? (
-                              <>
-                                <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
                                   <input
-                                    type="text"
-                                    placeholder="Enter coupon code"
-                                    value={enteredPromocode}
-                                    onChange={(e) => setEnteredPromocode(e.target.value)}
-                                    style={{
-                                      flex: 1,
-                                      padding: "8px 12px",
-                                      border: "1px solid #ddd",
-                                      borderRadius: "4px"
-                                    }}
+                                    type="radio"
+                                    checked={selectedAddress?._id === addr._id}
+                                    onChange={() => setSelectedAddress(addr)}
+                                    style={{ cursor: "pointer", accentColor: "#222" }}
                                   />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyPromocode()}
-                                    disabled={promocodeLoading}
-                                    className="btn-solid btn"
-                                    style={{ padding: "8px 16px" }}
-                                  >
-                                    {promocodeLoading ? "Applying..." : "Apply"}
-                                  </button>
-                                </div>
-
-                                {/* Show available promocodes */}
-                                <div>
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowPromocodeList(!showPromocodeList)}
-                                    style={{
-                                      background: "none",
-                                      border: "none",
-                                      color: "#3399cc",
-                                      textDecoration: "underline",
-                                      cursor: "pointer",
-                                      fontSize: "14px"
-                                    }}
-                                  >
-                                    {showPromocodeList ? "Hide" : "View"} Available Coupons ({availablePromocodes.length})
-                                  </button>
-                                </div>
-
-                                {showPromocodeList && availablePromocodes.length > 0 && (
-                                  <div style={{
-                                    marginTop: "10px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px",
-                                    padding: "10px",
-                                    backgroundColor: "#f9f9f9",
-                                    maxHeight: "300px",
-                                    overflowY: "auto"
+                                  <span style={{
+                                    backgroundColor: "#222",
+                                    color: "white",
+                                    padding: "4px 12px",
+                                    borderRadius: "3px",
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px"
                                   }}>
-                                    <h5 style={{ fontSize: "14px", marginBottom: "10px", color: "#333" }}>
-                                      Available Coupons:
-                                    </h5>
-                                    {availablePromocodes.map((promo, index) => {
-                                      const isEligible = isPromocodeEligible(promo);
-                                      const potentialDiscount = isEligible ? calculateDiscountAmount(promo, cartTotal) : 0;
-                                      return (
-                                        <div key={index} style={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                          padding: "12px 8px",
-                                          marginBottom: "8px",
-                                          backgroundColor: "white",
-                                          borderRadius: "4px",
-                                          border: isEligible ? "1px solid #e0e0e0" : "1px solid #ffcdd2",
-                                          opacity: isEligible ? 1 : 0.7
-                                        }}>
-                                          <div style={{ flex: 1 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                              <strong style={{ color: "#333", fontSize: "13px" }}>
-                                                {promo.code}
-                                              </strong>
-                                              <span style={{
-                                                backgroundColor: "#e8f5e8",
-                                                color: "#2e7d32",
-                                                padding: "2px 6px",
-                                                borderRadius: "12px",
-                                                fontSize: "11px",
-                                                fontWeight: "bold"
-                                              }}>
-                                                {formatDiscountDisplay(promo)}
-                                              </span>
-                                              {isEligible && potentialDiscount > 0 && (
-                                                <span style={{
-                                                  backgroundColor: "#fff3cd",
-                                                  color: "#856404",
-                                                  padding: "2px 6px",
-                                                  borderRadius: "12px",
-                                                  fontSize: "10px",
-                                                  fontWeight: "bold"
-                                                }}>
-                                                  Save ₹{potentialDiscount}
-                                                </span>
-                                              )}
-                                            </div>
-                                            
-                                            {promo.name && (
-                                              <div style={{ fontSize: "12px", color: "#555", marginBottom: "2px" }}>
-                                                {promo.name}
-                                              </div>
-                                            )}
-
-                                            <div style={{ fontSize: "11px", color: "#777" }}>
-                                              {promo.minimumSpend && (
-                                                <span>Min order: ₹{promo.minimumSpend}</span>
-                                              )}
-                                              {promo.freeShipping && (
-                                                <span style={{ marginLeft: promo.minimumSpend ? "8px" : "0" }}>
-                                                  + Free Shipping
-                                                </span>
-                                              )}
-                                            </div>
-
-                                            {!isEligible && promo.minimumSpend && (
-                                              <div style={{ fontSize: "10px", color: "#d32f2f", marginTop: "2px" }}>
-                                                Add ₹{promo.minimumSpend - cartTotal} more to use this coupon
-                                              </div>
-                                            )}
-
-                                            <div style={{ fontSize: "10px", color: "#999", marginTop: "4px" }}>
-                                              Valid till: {new Date(promo.endDate).toLocaleDateString()}
-                                            </div>
-                                          </div>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleApplyPromocode(promo.code)}
-                                            disabled={promocodeLoading || !isEligible}
-                                            style={{
-                                              padding: "6px 12px",
-                                              fontSize: "11px",
-                                              backgroundColor: isEligible ? "#3399cc" : "#ccc",
-                                              color: "white",
-                                              border: "none",
-                                              borderRadius: "3px",
-                                              cursor: isEligible ? "pointer" : "not-allowed",
-                                              minWidth: "60px"
-                                            }}
-                                          >
-                                            {promocodeLoading ? "..." : "Apply"}
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {availablePromocodes.length === 0 && (
-                                  <div style={{ fontSize: "12px", color: "#999", marginTop: "10px" }}>
-                                    No active promocodes available at the moment.
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <div style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                padding: "12px",
-                                backgroundColor: "#e8f5e8",
-                                borderRadius: "4px",
-                                marginBottom: "10px",
-                                border: "1px solid #c8e6c9"
-                              }}>
-                                <div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <span style={{ color: "#2e7d32", fontWeight: "bold", fontSize: "14px" }}>
-                                      {appliedPromocode.code} Applied!
+                                    {addr.label}
+                                  </span>
+                                  {addr.isDefault && (
+                                    <span style={{
+                                      backgroundColor: "#f0f0f0",
+                                      color: "#666",
+                                      padding: "4px 12px",
+                                      borderRadius: "3px",
+                                      fontSize: "11px",
+                                      fontWeight: "600",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.5px"
+                                    }}>
+                                      Default
                                     </span>
-                                    {appliedPromocode.name && (
-                                      <span style={{ fontSize: "12px", color: "#555" }}>
-                                        ({appliedPromocode.name})
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div style={{ fontSize: "12px", color: "#2e7d32", marginTop: "2px" }}>
-                                    You saved ₹{Math.floor(promocodeDiscount)}
-                                  </div>
+                                  )}
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={handleRemovePromocode}
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    color: "#d32f2f",
-                                    cursor: "pointer",
-                                    fontSize: "18px",
-                                    fontWeight: "bold"
-                                  }}
-                                  title="Remove coupon"
-                                >
-                                  ×
-                                </button>
+                                <div style={{ marginLeft: "28px" }}>
+                                  <p style={{ fontWeight: "600", marginBottom: "6px", fontSize: "15px", color: "#222" }}>
+                                    {addr.firstName} {addr.lastName}
+                                  </p>
+                                  <p style={{ color: "#666", fontSize: "13px", marginBottom: "4px", lineHeight: "1.5" }}>
+                                    {addr.addressLine}
+                                  </p>
+                                  <p style={{ color: "#666", fontSize: "13px", marginBottom: "4px" }}>
+                                    {addr.city}, {addr.state} - {addr.pincode}
+                                  </p>
+                                  <p style={{ color: "#666", fontSize: "13px" }}>
+                                    Phone: {addr.phone}
+                                  </p>
+                                </div>
                               </div>
-                            )}
-
-                            {promocodeSuccess && (
-                              <div style={{ 
-                                color: "#2e7d32", 
-                                fontSize: "12px", 
-                                marginTop: "5px", 
-                                fontWeight: "bold",
-                                backgroundColor: "#e8f5e8",
-                                padding: "8px",
-                                borderRadius: "4px"
-                              }}>
-                                {promocodeSuccess}
-                              </div>
-                            )}
-                            {promocodeError && (
-                              <div style={{ 
-                                color: "#d32f2f", 
-                                fontSize: "12px", 
-                                marginTop: "5px",
-                                backgroundColor: "#ffebee",
-                                padding: "8px",
-                                borderRadius: "4px"
-                              }}>
-                                {promocodeError}
-                              </div>
-                            )}
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Shipping{" "}
-                            </h4>
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Free Shipping{" "}
-                            </h4>
-                          </div>
-                          <hr />
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              Total{" "}
-                            </h4>
-                            <h4
-                              style={{ fontWeight: "500" }}
-                              className="field-label"
-                            >
-                              {" "}
-                              ₹ {Math.floor(finalTotal)}{" "}
-                            </h4>
-                          </div>
-                        </div>
-                        <div className="payment-box">
-                          <div className="upper-box">
-                            <div className="payment-options">
-                              <ul>
-                                <li>
-                                  <div className="radio-option paypal">
-                                    <input
-                                      type="radio"
-                                      name="payment-group"
-                                      id="payment-1"
-                                      defaultChecked={true}
-                                      onClick={() => checkhandle("online")}
-                                    />
-                                    <label htmlFor="payment-1">
-                                      {" "}
-                                      Online Payment{" "}
-                                    </label>
-                                  </div>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                          {finalTotal !== 0 ? (
-                            <div className="text-end">
                               <button
-                                disabled={!isLogin}
-                                type="submit"
-                                className="btn-solid btn"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAddress(addr);
+                                }}
+                                style={{
+                                  background: "white",
+                                  border: "1px solid #222",
+                                  borderRadius: "50%",
+                                  width: "36px",
+                                  height: "36px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  color: "#222",
+                                  transition: "all 0.2s ease"
+                                }}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#222";
+                                  e.currentTarget.style.color = "white";
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.backgroundColor = "white";
+                                  e.currentTarget.style.color = "#222";
+                                }}
+                                title="Edit address"
                               >
-                                Place Order
+                                <Edit2 size={16} />
                               </button>
                             </div>
-                          ) : (
-                            ""
-                          )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        className="btn btn-solid"
+                        type="button"
+                        onClick={() => setShowNewAddressForm(true)}
+                      >
+                        + Add New Address
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{
+                        backgroundColor: "#fafafa",
+                        padding: "24px",
+                        borderRadius: "4px",
+                        marginBottom: "20px",
+                        border: "1px solid #e5e5e5"
+                      }}>
+                        <h4 style={{ fontSize: "16px", marginBottom: "20px", fontWeight: "600", color: "#222" }}>
+                          {editingAddress ? "Edit Address" : "Add New Address"}
+                        </h4>
+                        <div className="row check-out">
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12">
+                            <h4 className="field-label">First Name</h4>
+                            <input
+                              type="text"
+                              className={`${errors.first_name ? "error_border" : ""}`}
+                              {...register("first_name", { required: true })}
+                            />
+                            <span className="error-message">{errors.first_name && "First name is required"}</span>
+                          </div>
+
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12">
+                            <h4 className="field-label">Last Name</h4>
+                            <input
+                              type="text"
+                              className={`${errors.last_name ? "error_border" : ""}`}
+                              {...register("last_name", { required: true })}
+                            />
+                            <span className="error-message">{errors.last_name && "Last name is required"}</span>
+                          </div>
+
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12">
+                            <h4 className="field-label">Phone</h4>
+                            <input
+                              type="text"
+                              className={`${errors.phone ? "error_border" : ""}`}
+                              {...register("phone", { pattern: /\d+/ })}
+                            />
+                            <span className="error-message">{errors.phone && "Please enter number for phone."}</span>
+                          </div>
+
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12">
+                            <h4 className="field-label">Email Address</h4>
+                            <input
+                              type="text"
+                              className={`${errors.email ? "error_border" : ""}`}
+                              {...register("email", {
+                                required: true,
+                                pattern: /^\S+@\S+$/i,
+                              })}
+                            />
+                            <span className="error-message">
+                              {errors.email && "Please enter a valid email address."}
+                            </span>
+                          </div>
+
+                          <div className="form-group col-md-12">
+                            <h4 className="field-label">State</h4>
+                            <Select
+                              options={State.getStatesOfCountry("IN")}
+                              getOptionLabel={(o) => o.name}
+                              getOptionValue={(o) => o.name}
+                              value={selectedState}
+                              onChange={setSelectedState}
+                              placeholder="Select State"
+                              styles={{
+                                control: (base) => ({
+                                  ...base,
+                                  borderColor: '#e5e5e5',
+                                  '&:hover': { borderColor: '#222' }
+                                })
+                              }}
+                            />
+                          </div>
+
+                          <div className="form-group col-md-12">
+                            <h4 className="field-label">City</h4>
+                            <Select
+                              options={
+                                selectedState ? City.getCitiesOfState("IN", selectedState.isoCode) : []
+                              }
+                              getOptionLabel={(o) => o.name}
+                              getOptionValue={(o) => o.name}
+                              value={selectedCity}
+                              onChange={setSelectedCity}
+                              placeholder="Select City"
+                              isDisabled={!selectedState}
+                              styles={{
+                                control: (base) => ({
+                                  ...base,
+                                  borderColor: '#e5e5e5',
+                                  '&:hover': { borderColor: '#222' }
+                                })
+                              }}
+                            />
+                          </div>
+
+                          <div className="form-group col-md-12">
+                            <h4 className="field-label">Address</h4>
+                            <input
+                              type="text"
+                              className={`${errors.address ? "error_border" : ""}`}
+                              {...register("address", { required: true, minLength: 20, maxLength: 120 })}
+                              placeholder="Street address"
+                            />
+                            <span className="error-message">{errors.address && "Please write your address."}</span>
+                          </div>
+
+                          <div className="form-group col-md-12">
+                            <h4 className="field-label">Postal Code</h4>
+                            <input
+                              type="text"
+                              className={`${errors.pincode ? "error_border" : ""}`}
+                              {...register("pincode", { pattern: /\d+/ })}
+                            />
+                            <span className="error-message">{errors.pincode && "Required integer"}</span>
+                          </div>
+
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12">
+                            <h4 className="field-label">Label</h4>
+                            <select className="form-control" {...register("label")} defaultValue="Home">
+                              <option value="Home">Home</option>
+                              <option value="Work">Work</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+
+                          <div className="form-group col-md-6 col-sm-6 col-xs-12 d-flex align-items-center" style={{ paddingTop: "30px" }}>
+                            <input type="checkbox" {...register("isDefault")} style={{ accentColor: "#222" }} /> &nbsp; Make this my default address
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "12px", marginTop: "15px" }}>
+                          <button
+                            className="btn btn-solid"
+                            type="button"
+                            onClick={handleSaveAddress}
+                            style={{ flex: 1 }}
+                          >
+                            {editingAddress ? "Update Address" : "Save Address"}
+                          </button>
+                          <button
+                            className="btn btn-outline"
+                            type="button"
+                            onClick={handleCancelForm}
+                            style={{ 
+                              flex: 1,
+                              backgroundColor: "white",
+                              color: "#222",
+                              border: "1px solid #222"
+                            }}
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </div>
-                    ) : (
-                      " "
-                    )}
-                  </Col>
-                </Row>
-              </Form>
-            </div>
+                    </>
+                  )}
+                </Col>
+
+                {/* ----------------- Right: Product & Payment ----------------- */}
+                <ProductCheckoutSection
+                  isLogin={isLogin}
+                  payment={payment}
+                  checkhandle={checkhandle}
+                  cartItems={cartItems}
+                  cartTotal={cartTotal}
+                />
+              </Row>
+            </Form>
           </div>
-          <br />
-          <br />
-          <br />
-        </Container>
+        </div>
+
         <OpenModal
           setIsOpenTOTP={setIsOpenTOTP}
           isOpenTOTP={isOpenTOTP}
@@ -879,9 +622,9 @@ const CheckoutPage = ({ isLogin }) => {
           popUpFor={"checkoutPage"}
           useBox="login"
         />
-      </section>
-    </>
+      </Container>
+    </section>
   );
 };
 
-export default CheckoutPage
+export default CheckoutPage;
