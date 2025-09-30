@@ -28,7 +28,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
 
     // Filter states
     const [filters, setFilters] = useState({
-        priceRange: [0, 3500],
+        priceRange: [0, 100000],
         selectedSizes: [],
         selectedColors: [],
         sortBy: 'default'

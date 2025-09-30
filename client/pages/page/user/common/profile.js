@@ -3,7 +3,7 @@ import Profile from "../../../../public/assets/images/vendor/profile.jpg";
 import { Media, Container, Row, Col } from "reactstrap";
 import seventeen from "../../../../public/assets/images/logos/17.png";
 import FilterPage from "../../../shop/common/filter";
-import ProductList from "../../../shop/common/productList";
+// import ProductList from "../../../shop/common/productList";
 
 const ProfilePage = () => {
   const [sidebarView, setSidebarView] = useState(false);
@@ -122,10 +122,10 @@ const ProfilePage = () => {
                 sidebarView={sidebarView}
                 closeSidebar={() => openCloseSidebar(sidebarView)}
               />
-              <ProductList
+              {/* <ProductList
                 colClass="col-xl-3 col-md-6 col-grid-box"
                 openSidebar={() => openCloseSidebar(sidebarView)}
-              />
+              /> */}
             </Row>
           </Container>
         </div>

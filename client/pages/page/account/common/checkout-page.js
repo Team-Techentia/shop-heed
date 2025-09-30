@@ -12,6 +12,7 @@ import { LoaderContext } from "../../../../helpers/loaderContext";
 import toast from "react-hot-toast";
 import ProductCheckoutSection from "../../../../components/checkout/ProductCheckoutSection";
 import { Edit2 } from "lucide-react";
+import { AxiosError } from "axios";
 
 const CheckoutPage = ({ isLogin }) => {
   const cartContext = useContext(CartContext);
@@ -65,7 +66,7 @@ const CheckoutPage = ({ isLogin }) => {
       const res = editingAddress
         ? await Api.updateAddress(editingAddress._id, newAddress, token)
         : await Api.addAddress(newAddress, token);
-      
+
       if (res.data.success) {
         toast.success(editingAddress ? "Address updated successfully" : "Address saved successfully");
         await fetchAddresses();
@@ -103,7 +104,7 @@ const CheckoutPage = ({ isLogin }) => {
   const handleEditAddress = (addr) => {
     setEditingAddress(addr);
     setShowNewAddressForm(true);
-    
+
     // Pre-fill form
     reset({
       first_name: addr.firstName,
@@ -257,7 +258,7 @@ const CheckoutPage = ({ isLogin }) => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message ?? "Order creation failed");
+      toast.error(error instanceof AxiosError ? error.response.data.message : error.message ?? "Order creation failed");
       catchErrors(error);
     } finally {
       setLoading(false);
@@ -587,7 +588,7 @@ const CheckoutPage = ({ isLogin }) => {
                             className="btn btn-outline"
                             type="button"
                             onClick={handleCancelForm}
-                            style={{ 
+                            style={{
                               flex: 1,
                               backgroundColor: "white",
                               color: "#222",

@@ -60,12 +60,12 @@ const getNavbarCategories = async function (req, res) {
         const navbarCategories = categories.map(category => {
             // Find subcategories that belong to this category
             const categorySubcategories = subcategories.filter(
-                subcategory => subcategory.category === category.category
+                subcategory => subcategory.category === category.value
             );
             
             return {
                 id: category._id,
-                name: category.category,
+                name: category.value,
                 slug: category.value || category.category.toLowerCase().replace(/\s+/g, '-'),
                 image: category.image,
                 subcategories: categorySubcategories.map(sub => ({

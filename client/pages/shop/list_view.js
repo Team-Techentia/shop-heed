@@ -1,7 +1,7 @@
 import React from 'react';
 import CommonLayout from '../../components/shop/common-layout';
 import { Row, Container } from 'reactstrap';
-import ProductList from './common/productList';
+// import ProductList from './common/productList';
 
 const ListView = () => {
 
@@ -10,7 +10,7 @@ const ListView = () => {
               <section className="section-b-space">
                 <Container>
                     <Row>
-                        <ProductList colClass="col-12" layoutList="list-view"  noSidebar={true}/>
+                        {/* <ProductList colClass="col-12" layoutList="list-view"  noSidebar={true}/> */}
                     </Row>
                 </Container>
              </section>

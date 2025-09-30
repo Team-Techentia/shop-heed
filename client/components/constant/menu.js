@@ -17,7 +17,7 @@ MENUITEMS = [
   {
     title: "Trending Now",
     type: "link",
-    path: "/collections/trending",
+    path: "/collections/trending%20now",
   },
 
   {

@@ -62,6 +62,7 @@ export default function SubCategoryPage() {
   return (
     <CategorySidebar_popup
       subcategory={subcategory}
+      title={subcategory}
       banner={banner}
       product={products}
     />

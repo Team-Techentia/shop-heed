@@ -1,13 +1,13 @@
 import React from 'react';
 import CommonLayout from '../../components/shop/common-layout';
 import ProductSection from './common/product_section';
-import RightSidebarPage from './product/rightSidebarPage';
+// import RightSidebarPage from './product/rightSidebarPage';
 
 const LeftSidebar = () => {
 
   return (
     <CommonLayout parent="home" title="product">
-        <RightSidebarPage />
+        {/* <RightSidebarPage /> */}
       <ProductSection />
     </CommonLayout>
   );

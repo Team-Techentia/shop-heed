@@ -1,5 +1,3 @@
-
-
 import React, { useState, useContext, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -91,7 +89,7 @@ const DetailsWithPrice = ({
     );
   }
 
-  // Size options based on product category - matching ProductCodeAndPrice exactly
+  // Size options based on product category
   const sizeOptions = {
     shirts: [
       { value: "xs", label: "XS" },
@@ -127,60 +125,104 @@ const DetailsWithPrice = ({
     ]
   };
 
-  // Category mapping to determine which size type to use - matching ProductCodeAndPrice
-  const getCategorySizeType = (category) => {
-    const lowerCategory = category?.toLowerCase();
+  // Dynamically detect size type based on actual size data
+  const getSizeType = () => {
+    if (!sameProductData || sameProductData.length === 0) {
+      return 'oneSize';
+    }
 
-    if (lowerCategory?.includes('shirt') || lowerCategory?.includes('t-shirt') ||
-      lowerCategory?.includes('top') || lowerCategory?.includes('jacket') ||
-      lowerCategory?.includes('hoodie') || lowerCategory?.includes('sweater')) {
+    // Get first available size to determine type
+    const sampleSize = sameProductData[0]?.size?.toLowerCase()?.trim();
+    
+    if (!sampleSize) {
+      return 'oneSize';
+    }
+
+    // Check if it's a text size (xs, s, m, l, xl, xxl, etc.)
+    const textSizes = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', '3xl', '4xl', '5xl'];
+    if (textSizes.includes(sampleSize)) {
       return 'shirts';
     }
 
-    if (lowerCategory?.includes('pant') || lowerCategory?.includes('trouser') ||
-      lowerCategory?.includes('jean') || lowerCategory?.includes('bottom') ||
-      lowerCategory?.includes('short') || lowerCategory?.includes('track')) {
+    // Check if it's a numeric size
+    const numericSize = parseInt(sampleSize);
+    if (!isNaN(numericSize)) {
+      // Pants sizes are typically 28-50
+      // Shoe sizes are typically 6-15
+      if (numericSize >= 20) {
+        return 'pants';
+      } else if (numericSize >= 5 && numericSize <= 15) {
+        return 'shoes';
+      }
+      // Default to pants for other numbers
       return 'pants';
     }
 
-    if (lowerCategory?.includes('shoe') || lowerCategory?.includes('sneaker') ||
-      lowerCategory?.includes('boot') || lowerCategory?.includes('sandal')) {
-      return 'shoes';
+    // If it's "one-size" or similar
+    if (sampleSize.includes('one') || sampleSize.includes('free')) {
+      return 'oneSize';
     }
 
-    return 'oneSize';
+    // Default to shirts for unknown text sizes
+    return 'shirts';
   };
 
-  const sizeType = getCategorySizeType(product.category);
+  const sizeType = getSizeType();
   const allSizes = sizeOptions[sizeType];
+  
   useEffect(() => {
     const filterSize = sameProductData.filter((data) => {
       return data.color === product.color;
     });
-    setUniqueSizes(filterSize);
+    
+    // Sort by size order - handles both text sizes and numeric sizes
+    const sortedSizes = filterSize.sort((a, b) => {
+      const sizeOrder = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', '3xl', '4xl', '5xl'];
+      const aLower = a.size.toLowerCase();
+      const bLower = b.size.toLowerCase();
+      
+      // If both are in the size order array, sort by that
+      const aIndex = sizeOrder.indexOf(aLower);
+      const bIndex = sizeOrder.indexOf(bLower);
+      
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      
+      // If both are numbers, sort numerically
+      const aNum = parseInt(a.size);
+      const bNum = parseInt(b.size);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      
+      // Default alphabetical sort
+      return aLower.localeCompare(bLower);
+    });
+    
+    setUniqueSizes(sortedSizes);
 
     // If current product is out of stock → redirect to first available variant
     if (product.quantity <= 0) {
-      const firstInStock = filterSize.find((s) => s.quantity > 0);
+      const firstInStock = sortedSizes.find((s) => s.quantity > 0);
       if (firstInStock) {
         router.replace(
           `/product-details/${firstInStock.title
             .toLowerCase()
             .replaceAll(" ", "-")}/${firstInStock._id}`
         );
-        return; // stop here to avoid setting wrong size
+        return;
       } else {
-        // No variants in stock → clear selection
         setSelectedSize(null);
         return;
       }
     }
 
     // Normal selection logic
-    if (filterSize.length === 1 && filterSize[0].quantity > 0) {
-      setSelectedSize(filterSize[0].size);
-    } else if (filterSize.length > 1) {
-      const firstInStock = filterSize.find((s) => s.quantity > 0);
+    if (sortedSizes.length === 1 && sortedSizes[0].quantity > 0) {
+      setSelectedSize(sortedSizes[0].size);
+    } else if (sortedSizes.length > 1) {
+      const firstInStock = sortedSizes.find((s) => s.quantity > 0);
       if (firstInStock) {
         setSelectedSize(firstInStock.size);
       } else {
@@ -201,8 +243,6 @@ const DetailsWithPrice = ({
       colorName: colorData[data.color],
     }));
 
-  console.log(uniqueColors);
-
   const handleSizeClick = (selectedProduct) => {
     setSelectedSize(selectedProduct.size);
     if (selectedProduct) {
@@ -215,13 +255,9 @@ const DetailsWithPrice = ({
   };
 
   const handleColorClick = (color) => {
-    console.log(color);
-    console.log(product.size);
-    console.log(sameProductData);
     const selectedProduct = sameProductData.find((data) => {
       return data.color == color;
     });
-    console.log(selectedProduct);
     if (selectedProduct) {
       router.push(
         `/product-details/${selectedProduct.title
@@ -231,15 +267,11 @@ const DetailsWithPrice = ({
     }
   };
 
-  console.log("discountCount", getDiscountPercentage(product.price, product.finalPrice));
-
   // Updated static checkHandle function
   const checkHandle = async () => {
-    // Reset states
     setExpectDelivery('');
     setExpectDeliveryError('');
 
-    // Validate pincode
     if (!checkEstimateTime || checkEstimateTime.length < 6) {
       setExpectDeliveryError('Please enter a valid 6-digit pincode');
       return;
@@ -248,10 +280,8 @@ const DetailsWithPrice = ({
     setIsCheckingDelivery(true);
 
     try {
-      // Simulate API delay for better UX
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Calculate delivery date (3 days from today)
       const today = new Date();
       const deliveryDate = new Date(today);
       deliveryDate.setDate(today.getDate() + 3);
@@ -262,14 +292,9 @@ const DetailsWithPrice = ({
         day: 'numeric',
       });
 
-      // Always set successful delivery
       setExpectDelivery(formattedDate);
-
-      console.log("Static delivery date===>", formattedDate);
-
     } catch (e) {
       setExpectDeliveryError('Unable to check delivery. Please try again.');
-      console.log("error--->", e);
     } finally {
       setIsCheckingDelivery(false);
     }
@@ -278,14 +303,12 @@ const DetailsWithPrice = ({
   return (
     <>
       <div className={`product-right ${stickyClass}`}>
-        {/* Product Title */}
         <h2 className="product-Brand">{product.brand}</h2>
         <h2 className="product-title">{product.title}</h2>
 
         <div className="price-section">
           <div className="price-main-row">
             <span className="current-price">₹{product.finalPrice}</span>
-
             <span className="mrp-badge">MRP</span>
             <span className="original-price">₹{product.price}</span>
 
@@ -300,61 +323,56 @@ const DetailsWithPrice = ({
             <span className="tax-inclusive">inclusive of all taxes</span>
           </div>
         </div>
+        
         <div className="free-shipping">
-        <Image
-          src={freedelivery} // place this image inside /public/images
-          alt="Free Shipping"
-          width={110}   // adjust size
-          height={45}  // adjust size
-        /></div>
+          <Image
+            src={freedelivery}
+            alt="Free Shipping"
+            width={110}
+            height={45}
+          />
+        </div>
 
-        {/* Updated stock check logic */}
         {!isProductInStock() ? (
           <div className="out-of-stock-banner">
             <strong>Out Of Stock</strong>
           </div>
         ) : (
           <>
-            {/* Show low stock warning for current product */}
-           
             {sameProductData && sameProductData.length >= 1 && (
               <>
                 <hr className="section-divider" />
 
-                {sizeType !== 'oneSize' && (
+                {sizeType !== 'oneSize' && uniqueSizes.length > 0 && (
                   <div className="size-selector mt-2">
-                    {uniqueSizes
-                      .sort((a, b) => a.size - b.size)
-                      .map((matchedProduct) => {
-                        const isOutOfStock = matchedProduct.quantity <= 0;
+                    {uniqueSizes.map((matchedProduct) => {
+                      const isOutOfStock = matchedProduct.quantity <= 0;
 
-                        return (
+                      return (
+                        <div
+                          key={matchedProduct._id}
+                          className={`size-option-wrapper ${isOutOfStock ? 'disabled' : ''}`}
+                        >
                           <div
-                            key={matchedProduct.size}
-                            className={`size-option-wrapper ${isOutOfStock ? 'disabled' : ''}`}
+                            className={`size-option 
+                              ${product.size === matchedProduct.size ? 'selected' : ''} 
+                              ${isOutOfStock ? 'out-of-stock' : ''}`}
+                            onClick={() => !isOutOfStock && handleSizeClick(matchedProduct)}
                           >
-                            <div
-                              className={`size-option 
-            ${product.size === matchedProduct.size ? 'selected' : ''} 
-            ${isOutOfStock ? 'out-of-stock' : ''}`}
-                              onClick={() => !isOutOfStock && handleSizeClick(matchedProduct)} // disable click if OOS
-                            >
-                              {matchedProduct.size}
-                            </div>
-
-                            {/* Low stock badge */}
-                            {matchedProduct.quantity > 0 && matchedProduct.quantity <= 2 && (
-                              <span className="qty-badge">
-                                {matchedProduct.quantity} left
-                              </span>
-                            )}
+                            {matchedProduct.size.toUpperCase()}
                           </div>
-                        );
-                      })}
 
+                          {matchedProduct.quantity > 0 && matchedProduct.quantity <= 2 && (
+                            <span className="qty-badge">
+                              {matchedProduct.quantity} left
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-                {/* Quantity Selector - only show if current product has stock */}
+
                 {product.quantity > 0 && (
                   <div className="quantity-section">
                     <div className="selection-header">
@@ -372,8 +390,6 @@ const DetailsWithPrice = ({
                   </div>
                 )}
 
-                {/* Action Buttons - only show if current product has stock */}
-                {/* Color Selection */}
                 {uniqueColors && uniqueColors.length > 1 && (
                   <>
                     <div className="selection-header mt-3">
@@ -411,15 +427,12 @@ const DetailsWithPrice = ({
                     <button
                       className="btn btn-buy-now"
                       onClick={() => {
-                        // Add the current product to cart before checkout
                         context.addToCart(product, product._id, quantity);
-
-                        // Then redirect to checkout
                         router.push("/page/account/checkout");
                       }}
                       style={{
                         flex: 1,
-                        background: '#10ADD6', // SaddleBrown
+                        background: '#10ADD6',
                         color: 'white',
                         border: 'none',
                         padding: '12px',
@@ -428,10 +441,10 @@ const DetailsWithPrice = ({
                         transition: 'all 0.2s',
                       }}
                       onMouseOver={(e) => {
-                        e.target.style.background = '#10ADD1'; // Darker brown on hover (Sienna)
+                        e.target.style.background = '#10ADD1';
                       }}
                       onMouseOut={(e) => {
-                        e.target.style.background = '#10ADD6'; // Original brown
+                        e.target.style.background = '#10ADD6';
                       }}
                     >
                       <i className="fa fa-bolt me-2"></i> Buy Now
@@ -440,7 +453,6 @@ const DetailsWithPrice = ({
                 )}
               </>
             )}
-
           </>
         )}
 

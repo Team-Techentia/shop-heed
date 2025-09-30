@@ -1,6 +1,6 @@
 import React from 'react';
 import CommonLayout from '../../components/shop/common-layout';
-import ProductList from './common/productList';
+// import ProductList from './common/productList';
 import { Container, Row } from 'reactstrap';
 
 const NoSidebar = () => {
@@ -10,7 +10,7 @@ const NoSidebar = () => {
             <div className="collection-wrapper">
                 <Container>
                     <Row>
-                       <ProductList colClass="col-xl-3 col-6 col-grid-box" noSidebar={true} />
+                       {/* <ProductList colClass="col-xl-3 col-6 col-grid-box" noSidebar={true} /> */}
                     </Row>
                 </Container>
             </div>

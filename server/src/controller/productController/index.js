@@ -108,7 +108,7 @@ const get_All_Product = async function (req, res) {
     }
     const arr = [];
     await allProduct.map((data, index) => {
-      arr.push(data.products[0]);
+      arr.push(data.products.find(p => p.quantity > 0));
     });
 
     return res
@@ -130,13 +130,13 @@ const get_NEW_Product = async function (req, res) {
         .json({ success: false, message: "product not found" });
     }
     const arr = [];
-allProduct.forEach((data) => {
-  // Find the first product with quantity > 0
-  const availableProduct = data.products.find((p) => p.quantity > 0);
-  if (availableProduct) {
-    arr.push(availableProduct);
-  }
-});
+    allProduct.forEach((data) => {
+      // Find the first product with quantity > 0
+      const availableProduct = data.products.find((p) => p.quantity > 0);
+      if (availableProduct) {
+        arr.push(availableProduct);
+      }
+    });
 
 
     return res
@@ -415,7 +415,10 @@ const filterProduct = async (req, res) => {
     let filter = { isDeleted: false };
     let where = { ...filter };
     if (category) {
-      where.category = category;
+      where.$or = [
+        { category: { $in: category.split(",") } },
+        { value: { $in: category.split(",") } }
+      ];
     }
     if (subCategory) {
       where.subCategory = {

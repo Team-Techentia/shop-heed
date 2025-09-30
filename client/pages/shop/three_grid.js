@@ -1,7 +1,7 @@
 import React from "react";
 import CommonLayout from "../../components/shop/common-layout";
 import { Row, Container } from "reactstrap";
-import ProductList from "./common/productList";
+// import ProductList from "./common/productList";
 
 
 const ThreeGrid = () => {
@@ -10,11 +10,11 @@ const ThreeGrid = () => {
       <section className="section-b-space">
         <Container>
           <Row>
-            <ProductList
+            {/* <ProductList
               colClass="col-lg-4 col-sm-6 col-grid-box"
               layoutList=""
               noSidebar={true}
-            />
+            /> */}
           </Row>
         </Container>
       </section>

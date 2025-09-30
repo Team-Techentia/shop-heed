@@ -99,7 +99,7 @@ function Category() {
   return (
     <>
     
-    <CategorySidebar_popup subCategory={subCategory} banner = {banner} product={data}/>
+    <CategorySidebar_popup title={subCategory} subCategory={subCategory} banner = {banner} product={data}/>
     </>
   );
 }
