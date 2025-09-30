@@ -429,7 +429,7 @@ const Dashboard = () => {
         <br/><br/> <br/>
       </Container>
 
-      <Toaster />
+      {/* <Toaster /> */}
     </section>
   );
 };

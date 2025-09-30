@@ -131,15 +131,15 @@ const createOrder = async (req, res) => {
       );
 
       // Send confirmation email
-      EmailSendComponent(
-        customerDetails.email,
-        "Order Confirmation",
-        htmlContentForMailTemplate(
-          customerDetails.first_name,
-          "Purchase confirmation",
-          "Thanks for your purchase. We will send tracking info when your order ships."
-        )
-      );
+      // EmailSendComponent(
+      //   customerDetails.email,
+      //   "Order Confirmation",
+      //   htmlContentForMailTemplate(
+      //     customerDetails.first_name,
+      //     "Purchase confirmation",
+      //     "Thanks for your purchase. We will send tracking info when your order ships."
+      //   )
+      // );
 
       return res.status(201).json({
         success: true,
@@ -203,15 +203,15 @@ const verifyPayment = async (req, res) => {
       }
 
       // Send confirmation email
-      EmailSendComponent(
-        order.customerDetails.email,
-        "Payment Confirmation",
-        htmlContentForMailTemplate(
-          order.customerDetails.first_name,
-          "Payment Successful",
-          "Your payment has been received. We will send tracking info when your order ships."
-        )
-      );
+      // EmailSendComponent(
+      //   order.customerDetails.email,
+      //   "Payment Confirmation",
+      //   htmlContentForMailTemplate(
+      //     order.customerDetails.first_name,
+      //     "Payment Successful",
+      //     "Your payment has been received. We will send tracking info when your order ships."
+      //   )
+      // );
 
       return res.json({ success: true });
     } else {

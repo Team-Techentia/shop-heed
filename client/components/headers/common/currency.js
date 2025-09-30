@@ -154,7 +154,7 @@ const Currency = ({ icon }) => {
         setIsOTPModalOpen={setIsOTPModalOpen}
       />
 
-      <Toaster />
+      {/* <Toaster /> */}
     </li>
   );
 };

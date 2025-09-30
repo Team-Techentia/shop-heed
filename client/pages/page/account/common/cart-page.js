@@ -206,7 +206,7 @@ const CartPage = () => {
         error={error}
       />
 
-      <Toaster />
+      {/* <Toaster /> */}
     </div>
   );
 };

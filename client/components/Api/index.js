@@ -5,6 +5,11 @@ const postsApi = axios.create({
 
 
 const Api = {
+  getAddresses: (token) => postsApi.get("/user/address",token),
+  addAddress: (data, token) => postsApi.post("/user/address", data,token),
+  updateAddress: (id, data, token) => postsApi.put(`/user/address/${id}`, data,token),
+  deleteAddress: (id, token) => postsApi.delete(`/user/address/${id}`,token),
+
   checkUser: (data) => postsApi.post("/auth-api/check-email-mobile", data),
   checkMobile: (data) => postsApi.post("/auth-api/check-mobile", data),
   signUp: (data) => postsApi.post("/auth-api/signUp", data),
@@ -69,31 +74,31 @@ const Api = {
   BulkEnquiry: (data) => postsApi.post("/api/bulk-enquiry", data),
   estimateTimeDelivery: (delivery_postcode) => postsApi.get(`/api/product-api/service/availability?pickup_postcode=110008&delivery_postcode=${delivery_postcode}`),
 
-getAnnouncement: () => postsApi.get("/announcement/get-latest"),  // ✅ Add comma here
+  getAnnouncement: () => postsApi.get("/announcement/get-latest"),  // ✅ Add comma here
 
-updateAnnouncement: (data, token) =>
-  postsApi.post("/announcement/create-or-update", data, {
-    headers: { Authorization: `Bearer ${token}` },
-  }),
+  updateAnnouncement: (data, token) =>
+    postsApi.post("/announcement/create-or-update", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 
-toggleAnnouncement: (token) =>
-  postsApi.patch("/announcement/toggle", {}, {
-    headers: { Authorization: `Bearer ${token}` },
-  }),
+  toggleAnnouncement: (token) =>
+    postsApi.patch("/announcement/toggle", {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 
-  getFeaturedSection :()=> postsApi.get("/featured-section/get-all-featured-sections"),
+  getFeaturedSection: () => postsApi.get("/featured-section/get-all-featured-sections"),
 
 
-  getActiveBanners: () => postsApi.get("banner/public/active-banners"), 
+  getActiveBanners: () => postsApi.get("banner/public/active-banners"),
   getAllBanners: (token) =>
     postsApi.get("/banner/get-all-banners", token),
   createBanner: (data, token) =>
     postsApi.post("/banner/create-banner", data, token
-     ),
+    ),
   updateBanner: (id, data, token) =>
     postsApi.put(`/banner/update-banner/${id}`, data, token),
   deleteBanner: (id, token) =>
-    postsApi.delete(`/banner/delete-banner/${id}`,token
+    postsApi.delete(`/banner/delete-banner/${id}`, token
 
     ),
 
