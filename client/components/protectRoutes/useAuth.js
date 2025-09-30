@@ -14,7 +14,7 @@ const useAuth = (navigate = true) => {
     } else {
       setIsAuthenticated(false);
       if (navigate)
-        router.push('/page/account/login');
+        router.push('/');
     }
   }, [router]);
 

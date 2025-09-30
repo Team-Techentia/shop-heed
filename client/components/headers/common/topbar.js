@@ -35,12 +35,12 @@ const TopBar = ({ topClass }) => {
               <li className="onhover-dropdown mobile-account">
                 <i className="fa fa-user" aria-hidden="true"></i> {"My account"}
                 <ul className="onhover-show-div">
-                  <li>
+                  {/* <li>
                     <Link href={`/page/account/login`}>Login</Link>
-                  </li>
-                  <li>
+                  </li> */}
+                  {/* <li>
                     <Link href={`/page/account/register`}>Register</Link>
-                  </li>
+                  </li> */}
                 </ul>
               </li>
             </ul>

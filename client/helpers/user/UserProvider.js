@@ -40,7 +40,7 @@ const UserProvider = (props) => {
 
     deleteCookie(null, "ectoken")
     setIslogin(false);
-    Router.push("/page/account/login")
+    // Router.push("")
     return toast.success("LogOut successfully")
   }
 

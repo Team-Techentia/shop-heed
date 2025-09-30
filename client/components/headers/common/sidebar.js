@@ -175,9 +175,9 @@ const SideBar = () => {
                 <li>
                   <Link href="/page/user/orders">Orders</Link>
                 </li></> : <>
-                <li>
+                {/* <li>
                   <Link href={`/page/account/login`}>Account</Link>
-                </li>
+                </li> */}
                 {/* <li>
                   <Link href={`/page/account/register`}>Register</Link>
                 </li> */}

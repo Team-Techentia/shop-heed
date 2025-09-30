@@ -75,11 +75,11 @@ const IconTopbar = () => {
                     <Media src={user.src} alt="" />
                     <i className="fa fa-user" aria-hidden="true"></i>
                     <ul className="onhover-show-div">
-                      <li>
+                      {/* <li>
                         <Link href="/page/account/login" data-lng="en">
                           Login
                         </Link>
-                      </li>
+                      </li> */}
                       <li>
                         <Link href="/" data-lng="es">
                           Logout

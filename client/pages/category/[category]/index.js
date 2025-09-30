@@ -68,6 +68,7 @@ export default function CategoryPage() {
       {/* Sidebar popup */}
       <CategorySidebar_popup
         subCategory={categoryy}
+        title={categoryy}
         banner={banner}
         product={products}
         onClose={() => setShowSidebar(false)} // 👈 pass close handler

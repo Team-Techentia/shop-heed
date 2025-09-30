@@ -1,15 +1,7 @@
 import React, {  useState, useContext } from "react";
 import { Col, Media, Row, Modal, ModalBody, Form, Button, FormGroup } from "reactstrap";
 import Api from "../../../components/Api";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  Alert,
-  Typography,
-  TextField,
+import {Dialog,DialogTitle,DialogContent,DialogActions,Snackbar,Alert,Typography,TextField,
 } from "@mui/material";
 import OTPInput from "react-otp-input";
 import { toast, Toaster } from "react-hot-toast";

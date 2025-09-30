@@ -175,16 +175,37 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
     const activeFiltersCount = filters.selectedSizes.length +
         filters.selectedColors.length +
         (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 3500 ? 1 : 0);
+    console.log(title)
 
     return (
         <>
             <HeaderOne topClass="top-header" logoName="logo.png" />
 
-            {banner && banner.src && (
-                <Paragraph title={banner.title} inner={banner.title} />
-            )}
 
-            <section className="section-b-space ratio_asos">
+            <div className="section-title">
+                <h2 className="title">{title}</h2>
+                
+                
+
+                <style>{`
+    .section-title {
+      margin-top: 3rem;
+      text-align: center;
+    }
+    .section-title .title {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #000;
+
+    }
+    
+  `}</style>
+            </div>
+
+
+
+
+            <section className=" ">
                 <div className="premium-collection">
                     <Container>
                         {/* Header with Filter Toggle and Sort */}

@@ -7,17 +7,18 @@ import UserContext from '../../../helpers/user/UserContext';
 const Checkout = () => {
     const userContext = useContext(UserContext);
     const isLogin = userContext.isLogin
-    return (
+    if(isLogin !== null) return (
         <>
-            {isLogin !== null ?
+            {/* {isLogin !== null ? */}
                 <CommonLayout parent="home" title="checkout">
                     <CheckoutPage isLogin={isLogin} />
                 </CommonLayout>
-                :
-                <Login />
-            }
+                {/* : */}
+                {/* <Login /> */}
+            {/* } */}
         </>
     )
+    
 }
 
 export default Checkout;

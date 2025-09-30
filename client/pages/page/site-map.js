@@ -472,14 +472,14 @@ const Data = [
             title: "Dashboard",
             link: "/page/account/dashboard",
           },
-          {
-            title: "Login",
-            link: "/page/account/login",
-          },
-          {
-            title: "Register",
-            link: "/page/account/register",
-          },
+          // {
+          //   title: "Login",
+          //   link: "/page/account/login",
+          // },
+          // {
+          //   title: "Register",
+          //   link: "/page/account/register",
+          // },
           {
             title: "Contact",
             link: "/page/account/contact",
