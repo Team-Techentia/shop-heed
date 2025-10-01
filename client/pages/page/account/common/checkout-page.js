@@ -577,10 +577,10 @@ const CheckoutPage = ({ isLogin }) => {
 
                         <div style={{ display: "flex", gap: "12px", marginTop: "15px" }}>
                           <button
-                            className="btn btn-solid"
+                            className="btn "
                             type="button"
                             onClick={handleSaveAddress}
-                            style={{ flex: 1 }}
+                            style={{ flex: 1 , backgroundColor:"black", color:"white", border:"1px solid black",borderRadius:"10px"}}
                           >
                             {editingAddress ? "Update Address" : "Save Address"}
                           </button>
@@ -588,12 +588,7 @@ const CheckoutPage = ({ isLogin }) => {
                             className="btn btn-outline"
                             type="button"
                             onClick={handleCancelForm}
-                            style={{
-                              flex: 1,
-                              backgroundColor: "white",
-                              color: "#222",
-                              border: "1px solid #222"
-                            }}
+                            style={{ flex: 1 , backgroundColor:"white", color:"black", border:"1px solid black",borderRadius:"10px"}}
                           >
                             Cancel
                           </button>

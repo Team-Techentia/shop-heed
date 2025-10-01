@@ -16,7 +16,7 @@ const modalStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 20000; /* raised above everything */
     backdrop-filter: blur(4px);
   }
   .auth-modal-content {
@@ -98,6 +98,10 @@ const modalStyles = `
     margin-top: 8px;
   }
   .auth-input-spacing { margin-bottom: 20px; }
+  body.modal-open {
+    overflow: hidden !important;
+    height: 100vh;
+  }
 `;
 
 const AuthModal = () => {
@@ -118,7 +122,7 @@ const AuthModal = () => {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    if ((type === "number" && value.length > 10) || value.length > 50) return;
+    if (value.length > 50) return;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -144,7 +148,7 @@ const AuthModal = () => {
             </div>
             <div className="auth-modal-body">
               <TextField
-                type="number"
+                type="tel"
                 label="Phone Number"
                 variant="standard"
                 fullWidth

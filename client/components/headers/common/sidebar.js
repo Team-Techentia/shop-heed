@@ -170,7 +170,28 @@ const SideBar = () => {
                 <li><Link href="/page/user/orders">Orders</Link></li>
               </>
             ) : (
-              <li><Link href={`/page/account/login`}>Account</Link></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeNav();    // optional: close sidebar when modal opens
+                    userContext.openLogin();  // open modal from context
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    color: "inherit",
+                    fontWeight: "650",
+                    marginLeft: "25px",
+                  }}
+                >
+                  Account
+                </button>
+              </li>
+
             )}
             <li><Link href="/">Home</Link></li>
             <li>

@@ -13,13 +13,16 @@ const sliderSettings = {
 
 const HomeSlider = ({ router }) => {
   const [banners, setBanners] = useState([]);
-  const isSmallScreen = useMediaQuery("(max-width: 650px)");
+
+  // Responsive breakpoints
+  const isMobileWidth = useMediaQuery("(max-width: 768px)");
+  const isMobileHeight = useMediaQuery("(max-height: 600px)");
+  const isSmallScreen = isMobileWidth || isMobileHeight;
 
   useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3110";
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         const res = await axios.get(`${baseUrl}banner/public/active-banners`);
         if (res.data.success) {
           setBanners(res.data.data);
@@ -40,26 +43,33 @@ const HomeSlider = ({ router }) => {
           {...sliderSettings}
           className="slide-1 home-slider text-white"
         >
-          {banners.map((banner, i) => (
-            <img
-              key={i}
-              onClick={() => {
-                if (banner.targetSubCategory) {
-                  router.push(`/collections/${banner.targetSubCategory}`);
-                } else if (banner.targetCategory) {
-                  router.push(`/collections/${banner.targetCategory}`);
-                } else {
-                  router.push(banner.link || "/");
-                }
-              }}
-              src={
-                isSmallScreen && banner.mobileImage
-                  ? banner.mobileImage
-                  : banner.image
-              }
-              alt={banner.title}
-            />
-          ))}
+          {banners.map((banner, i) => {
+            const imageToShow =
+              isSmallScreen && banner.mobileImage ? banner.mobileImage : banner.image;
+
+            return (
+              <img
+                key={i}
+                src={imageToShow}
+                alt={banner.title}
+                onClick={() => {
+                  if (banner.targetSubCategory) {
+                    router.push(`/collections/${banner.targetSubCategory}`);
+                  } else if (banner.targetCategory) {
+                    router.push(`/collections/${banner.targetCategory}`);
+                  } else {
+                    router.push(banner.link || "/");
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  maxHeight: "50vh",
+                
+                }}
+              />
+            );
+          })}
         </Slider>
       </section>
     </Fragment>

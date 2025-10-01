@@ -229,7 +229,7 @@
                         overflowY: "auto"
                       }}>
                         <h5 style={{ fontSize: "14px", marginBottom: "10px", color: "#333" }}>
-                          Available Coupons:
+                          {/* Available Coupons: */}
                         </h5>
                         {availablePromocodes.map((promo, index) => {
                           const isEligible = isPromocodeEligible(promo);

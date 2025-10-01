@@ -14,18 +14,17 @@ import {
 } from "reactstrap";
 import CartContext from "../../../helpers/cart";
 import { useRouter } from "next/router";
-import sizeChart1 from "../../../public/assets/images/size1.png";
-import sizeChart2 from "../../../public/assets/images/size2.jpg";
 import freedelivery from "../../../public/assets/images/freedeliverylogo.png";
 import { colorData } from "../../../data/colorData";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import toast from "react-hot-toast";
 import MarkdownRenderer from "../../../components/MarkDown";
-import { discountCount, getDiscountPercentage } from "../../../services/script";
+import UserContext from "../../../helpers/user/UserContext";
+
 
 
 const DetailsWithPrice = ({
+  
   item,
   stickyClass,
   sameProductData,
@@ -33,6 +32,7 @@ const DetailsWithPrice = ({
   quantity,
   setQuantity,
 }) => {
+  const userContext = useContext(UserContext);
   const product = item;
   const context = useContext(CartContext);
   const router = useRouter();
@@ -133,7 +133,7 @@ const DetailsWithPrice = ({
 
     // Get first available size to determine type
     const sampleSize = sameProductData[0]?.size?.toLowerCase()?.trim();
-    
+
     if (!sampleSize) {
       return 'oneSize';
     }
@@ -169,37 +169,37 @@ const DetailsWithPrice = ({
 
   const sizeType = getSizeType();
   const allSizes = sizeOptions[sizeType];
-  
+
   useEffect(() => {
     const filterSize = sameProductData.filter((data) => {
       return data.color === product.color;
     });
-    
+
     // Sort by size order - handles both text sizes and numeric sizes
     const sortedSizes = filterSize.sort((a, b) => {
       const sizeOrder = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', '3xl', '4xl', '5xl'];
       const aLower = a.size.toLowerCase();
       const bLower = b.size.toLowerCase();
-      
+
       // If both are in the size order array, sort by that
       const aIndex = sizeOrder.indexOf(aLower);
       const bIndex = sizeOrder.indexOf(bLower);
-      
+
       if (aIndex !== -1 && bIndex !== -1) {
         return aIndex - bIndex;
       }
-      
+
       // If both are numbers, sort numerically
       const aNum = parseInt(a.size);
       const bNum = parseInt(b.size);
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return aNum - bNum;
       }
-      
+
       // Default alphabetical sort
       return aLower.localeCompare(bLower);
     });
-    
+
     setUniqueSizes(sortedSizes);
 
     // If current product is out of stock → redirect to first available variant
@@ -323,7 +323,7 @@ const DetailsWithPrice = ({
             <span className="tax-inclusive">inclusive of all taxes</span>
           </div>
         </div>
-        
+
         <div className="free-shipping">
           <Image
             src={freedelivery}
@@ -427,8 +427,12 @@ const DetailsWithPrice = ({
                     <button
                       className="btn btn-buy-now"
                       onClick={() => {
-                        context.addToCart(product, product._id, quantity);
-                        router.push("/page/account/checkout");
+                        if (userContext.isLogin) {
+                          context.addToCart(product, product._id, quantity);
+                          router.push("/page/account/checkout");
+                        } else {
+                          userContext.openLogin(); // open login modal if not logged in
+                        }
                       }}
                       style={{
                         flex: 1,
@@ -449,6 +453,7 @@ const DetailsWithPrice = ({
                     >
                       <i className="fa fa-bolt me-2"></i> Buy Now
                     </button>
+
                   </div>
                 )}
               </>
