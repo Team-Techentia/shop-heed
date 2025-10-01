@@ -1,11 +1,11 @@
 import UserContext from "./UserContext";
 import React, { useState, useEffect, useContext } from "react";
-import { toast } from "react-toastify";
 import { getCookie, deleteCookie } from "../../components/cookies";
 import Api from "../../components/Api";
 import { LoaderContext } from "../loaderContext";
 import { useRouter } from "next/router";
 import AuthModal from "../../components/headers/common/AuthModal";
+import toast from "react-hot-toast";
 
 const UserProvider = ({ children }) => {
   const Router = useRouter();
@@ -14,6 +14,7 @@ const UserProvider = ({ children }) => {
 
   // login state
   const [isLogin, setIslogin] = useState(false);
+  const [popUpFor, setPopUpFor] = useState("");
   const token = getCookie("ectoken");
 
   // modal states
@@ -52,6 +53,7 @@ const UserProvider = ({ children }) => {
     openLogin();
     setUser({ emailOrPhone: "", name: "", email: "", phoneNumber: "" });
     setError("");
+    Router.push("/")
   };
 
   // modal helpers
@@ -73,35 +75,47 @@ const UserProvider = ({ children }) => {
     }
     try {
       const res = await Api.checkMobile({ phoneNumber: user.emailOrPhone });
-      if (res.data.message === "Phone number already exist") {
+
+      if (res.data.exists) {
+        // Existing user → go to OTP login
         setIsLoginModalOpen(false);
         setIsOTPModalOpen(true);
+        setPopUpFor("login");
       } else {
+        // New user → go to Register
         setUser((prev) => ({ ...prev, phoneNumber: user.emailOrPhone }));
+        setPopUpFor("signup");
         setIsLoginModalOpen(false);
         setIsRegisterModalOpen(true);
       }
+
     } catch (err) {
       console.log(err);
       toast.error(err?.response?.data?.message || "Something went wrong");
     }
   };
-  
+
   const handleRegister = async () => {
     if (!user.name || !user.email || !user.phoneNumber) {
       return toast.error("Please fill all required fields");
     }
     try {
-      const response = await Api.checkUser({
+      const res = await Api.checkUser({
         phoneNumber: user.phoneNumber,
         email: user.email,
       });
-      if (response.data.message === "Successfully") {
+
+      if (!res.data.exists) {
+        // No user → go to OTP for signup
         setIsRegisterModalOpen(false);
         setIsOTPModalOpen(true);
+        setPopUpFor("signup");
+      } else {
+        console.log(res.data);
+        toast.error(res.data.message || "User already registered");
       }
     } catch (err) {
-      console.log(err);
+      console.log(err.response.data);
       toast.error(err?.response?.data?.message || "Something went wrong");
     }
   };
@@ -116,7 +130,7 @@ const UserProvider = ({ children }) => {
         isLoginModalOpen,
         isRegisterModalOpen,
         isOTPModalOpen,
-        
+
         setIsLoginModalOpen,
         setIsRegisterModalOpen,
         setIsOTPModalOpen,
@@ -130,6 +144,9 @@ const UserProvider = ({ children }) => {
         setUser,
         error,
         setError,
+
+        popUpFor,
+        setPopUpFor,
 
         handleMobileNumberLogin,
         handleRegister,

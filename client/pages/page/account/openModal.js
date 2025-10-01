@@ -35,59 +35,68 @@ const OpenModal = ({ userData, popUpFor, setVerification }) => {
 
   const toggle = () => setIsOTPModalOpen(!isOTPModalOpen);
 
-  const handleOTPVerify = async () => {
-    try {
-      setLoading(true);
-      const response = await Api.verifyOtp({
-        phoneNumber: userData.phoneNumber,
-        email: userData.email,
-        otpType: otpType,
-        otp: otp,
-      });
+ const handleOTPVerify = async () => {
+  try {
+    setLoading(true);
+    const response = await Api.verifyOtp({
+      phoneNumber: userData.phoneNumber,
+      email: userData.email,
+      otpType: otpType,
+      otp: otp,
+    });
 
-      if (response.data.message === "verification successfuy via phone number") {
-        setOtp("");
-        if (popUpFor === "checkoutPage") {
-          setLoading(true);
-          const response = await Api.loginRegisterForCheckOutPage(userData);
-          setLoading(false);
-          toast.success("Successfully logged in");
-          setCookie(null, "ectoken", response.data.token, 100);
-          setIslogin(true);
-        } else {
-          setLoading(true);
-          const response = await Api.signUp(userData);
-          setLoading(false);
-          toast.success("Signup successful");
-          setCookie(null, "ectoken", response.data.token, 100);
-          setIslogin(true);
-          window.location.href = "/";
-        }
-        setOtpModel(false);
-      } else if (response.data.message === "verification successfuy via email") {
-        setOtp("");
-        if (popUpFor === "forgetPassword") {
-          setVerification(true);
-        }
-        setOtp("");
+    if (response.data.success) {
+      setOtp("");
+
+      // 🟢 Case 1: Login Flow (existing user)
+      if (popUpFor === "login") {
+        const loginRes = await Api.loginRegisterForCheckOutPage({
+          phoneNumber: userData.phoneNumber,
+        });
+
+        setCookie(null, "ectoken", loginRes.data.token, 100);
+        setIslogin(true);
+        toast.success("Login successful");
         setOtpModel(false);
       }
-    } catch (error) {
-      catchErrors(error);
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        return toast.error(error.response.data.message);
+
+      // 🟢 Case 2: Signup Flow (new user)
+      else if (popUpFor === "signup") {
+        const signupRes = await Api.signUp(userData);
+
+        setCookie(null, "ectoken", signupRes.data.token, 100);
+        setIslogin(true);
+        toast.success("Signup successful");
+        setOtpModel(false);
+        window.location.href = "/";
       }
 
-      return toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
+      // 🟢 Case 3: Checkout Flow
+      else if (popUpFor === "checkoutPage") {
+        const checkoutRes = await Api.loginRegisterForCheckOutPage(userData);
+
+        setCookie(null, "ectoken", checkoutRes.data.token, 100);
+        setIslogin(true);
+        toast.success("Successfully logged in");
+        setOtpModel(false);
+      }
+
+      // 🟢 Case 4: Forgot Password
+      else if (popUpFor === "forgetPassword") {
+        setVerification(true);
+        toast.success("OTP verified");
+        setOtpModel(false);
+      }
+    } else {
+      toast.error(response.data.message || "OTP verification failed");
     }
-  };
+  } catch (error) {
+    catchErrors(error);
+    toast.error(error?.response?.data?.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleOTPChange = (otpValue) => {
     setOtp(otpValue);

@@ -167,7 +167,7 @@ const Profile = () => {
                             />
                           </FormGroup>
 
-                          <p
+                          {/* <p
                             style={{
                               cursor: "pointer",
                               textDecoration: "underline",
@@ -178,7 +178,7 @@ const Profile = () => {
                             }}
                           >
                             Change Phone Number
-                          </p>
+                          </p> */}
 
                           <a
                             href="#"

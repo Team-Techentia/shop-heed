@@ -118,6 +118,8 @@ const AuthModal = () => {
     handleMobileNumberLogin,
     handleRegister,
     setIsOTPModalOpen,
+    popUpFor,
+    setPopUpFor
   } = useContext(UserContext);
 
   const handleChange = (e) => {
@@ -192,8 +194,8 @@ const AuthModal = () => {
       {/* OTP */}
       <OpenModal
         userData={{ phoneNumber: user.phoneNumber || user.emailOrPhone, name: user.name, email: user.email }}
-        popUpFor="checkoutPage"
         useBox="login"
+        popUpFor={popUpFor}
       />
     </>
   );
