@@ -7,7 +7,7 @@ const auth = require("../auth/index");
 const { authenticateToken, userAuthorisation } = auth;
 
 // Controllers
-const ImageUploadController = require("../Controller/ImageUploadController");
+const ImageUploadController = require("../controller/imageUploadController");
 const emailController = require("../controller/emailController/index");
 const cartController = require("../controller/cartController");
 
