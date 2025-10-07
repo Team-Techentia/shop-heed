@@ -49,6 +49,13 @@ const CheckoutPage = ({ isLogin }) => {
   const handleSaveAddress = async () => {
     const values = getValues();
 
+    // Validate form fields before saving
+    if (!values.first_name || !values.last_name || !values.phone || !values.email || 
+        !selectedState || !selectedCity || !values.address || !values.pincode) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
     const newAddress = {
       firstName: values.first_name,
       lastName: values.last_name,
@@ -179,6 +186,21 @@ const CheckoutPage = ({ isLogin }) => {
 
   // ----------------- Submit Order -----------------
   const onSubmit = async (data) => {
+    // Validate address selection or form completion
+    if (!selectedAddress && !showNewAddressForm) {
+      toast.error("Please select an address or add a new address to continue");
+      return;
+    }
+
+    if (showNewAddressForm) {
+      // Validate new address form fields
+      if (!data.first_name || !data.last_name || !data.phone || !data.email || 
+          !selectedState || !selectedCity || !data.address || !data.pincode) {
+        toast.error("Please fill all address fields before placing order");
+        return;
+      }
+    }
+
     let customerDetails;
     if (selectedAddress && !showNewAddressForm) {
       // Using saved address - map fields properly
@@ -432,7 +454,7 @@ const CheckoutPage = ({ isLogin }) => {
                             </h4>
                             <div className="row check-out">
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                <h4 className="field-label">First Name</h4>
+                                <h4 className="field-label">First Name <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.first_name ? "error_border" : ""}`}
@@ -442,7 +464,7 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                <h4 className="field-label">Last Name</h4>
+                                <h4 className="field-label">Last Name <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.last_name ? "error_border" : ""}`}
@@ -452,17 +474,17 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                <h4 className="field-label">Phone</h4>
+                                <h4 className="field-label">Phone <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.phone ? "error_border" : ""}`}
-                                  {...register("phone", { pattern: /\d+/ })}
+                                  {...register("phone", { required: true, pattern: /\d+/ })}
                                 />
                                 <span className="error-message">{errors.phone && "Please enter number for phone."}</span>
                               </div>
 
                               <div className="form-group col-md-6 col-sm-6 col-xs-12">
-                                <h4 className="field-label">Email Address</h4>
+                                <h4 className="field-label">Email Address <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.email ? "error_border" : ""}`}
@@ -477,7 +499,7 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-12">
-                                <h4 className="field-label">State</h4>
+                                <h4 className="field-label">State <span style={{ color: "red" }}>*</span></h4>
                                 <Select
                                   options={State.getStatesOfCountry("IN")}
                                   getOptionLabel={(o) => o.name}
@@ -496,7 +518,7 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-12">
-                                <h4 className="field-label">City</h4>
+                                <h4 className="field-label">City <span style={{ color: "red" }}>*</span></h4>
                                 <Select
                                   options={
                                     selectedState ? City.getCitiesOfState("IN", selectedState.isoCode) : []
@@ -518,7 +540,7 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-12">
-                                <h4 className="field-label">Address</h4>
+                                <h4 className="field-label">Address <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.address ? "error_border" : ""}`}
@@ -529,11 +551,11 @@ const CheckoutPage = ({ isLogin }) => {
                               </div>
 
                               <div className="form-group col-md-12">
-                                <h4 className="field-label">Postal Code</h4>
+                                <h4 className="field-label">Postal Code <span style={{ color: "red" }}>*</span></h4>
                                 <input
                                   type="text"
                                   className={`${errors.pincode ? "error_border" : ""}`}
-                                  {...register("pincode", { pattern: /\d+/ })}
+                                  {...register("pincode", { required: true, pattern: /\d+/ })}
                                 />
                                 <span className="error-message">{errors.pincode && "Required integer"}</span>
                               </div>
@@ -554,10 +576,10 @@ const CheckoutPage = ({ isLogin }) => {
 
                             <div style={{ display: "flex", gap: "12px", marginTop: "15px" }}>
                               <button
-                                className="btn "
+                                className="btn"
                                 type="button"
                                 onClick={handleSaveAddress}
-                                style={{ flex: 1 , backgroundColor:"black", color:"white", border:"1px solid black",borderRadius:"10px"}}
+                                style={{ flex: 1, backgroundColor: "black", color: "white", border: "1px solid black", borderRadius: "10px" }}
                               >
                                 {editingAddress ? "Update Address" : "Save Address"}
                               </button>
@@ -565,7 +587,7 @@ const CheckoutPage = ({ isLogin }) => {
                                 className="btn btn-outline"
                                 type="button"
                                 onClick={handleCancelForm}
-                                style={{ flex: 1 , backgroundColor:"white", color:"black", border:"1px solid black",borderRadius:"10px"}}
+                                style={{ flex: 1, backgroundColor: "white", color: "black", border: "1px solid black", borderRadius: "10px" }}
                               >
                                 Cancel
                               </button>

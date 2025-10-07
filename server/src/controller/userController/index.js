@@ -6,7 +6,7 @@ require("dotenv").config()
 const checkIsLogin = async function (req, res) {
   try {
     return res.status(200).json({ success: true, message: "User found" });
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const checkUser = async function (req, res) {
@@ -37,20 +37,20 @@ const checkUser = async function (req, res) {
 
     if (findUserPhoneNumber) {
       return res
-        .status(404)
-        .json({ success: false, message: "Phone number already exist" });
+        .status(200)
+        .json({ success: false, exists: true, exists: true, message: "Phone number already exist" });
     }
     const findUserEmail = await userModel.findOne({ email: email });
     if (findUserEmail) {
       return res
-        .status(404)
-        .json({ success: false, message: "Email already exist" });
+        .status(200)
+        .json({ success: false, exists: true, message: "Email already exist" });
     }
 
-    return res.status(200).json({ success: true, message: "Successfully" });
+    return res.status(200).json({ success: true, exists: false, message: "User doesn't exist" });
   } catch (error) {
-  
-    res.status(500).json({ success: false, message: "Internal server error" });
+
+    res.status(500).json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -68,26 +68,23 @@ const checkMobile = async function (req, res) {
       phoneNumber: phoneNumber,
     });
 
+    // checkMobile
     if (findUserPhoneNumber) {
-      return res
-        .status(200)
-        .json({ success: false, message: "Phone number already exist" });
+      return res.status(200).json({ success: true, exists: true, message: "Phone number already exists" });
     }
+    return res.status(200).json({ success: true, exists: false, message: "Phone number not registered" });
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Phone number not exist" });
   } catch (error) {
- 
-    res.status(500).json({ success: false, message: "Internal server error" });
+
+    res.status(500).json({ success: false, message: "Internal server error",error });
   }
 };
 
 const signUp = async function (req, res) {
   try {
-    const { name, email, password, phoneNumber } = req.body;
+    const { name, email, phoneNumber } = req.body;
 
-    const data = { name, email, password, phoneNumber };
+    const data = { name, email, phoneNumber };
 
     if (!Object.keys(data)) {
       return res
@@ -112,16 +109,16 @@ const signUp = async function (req, res) {
         message: "Please provide phone Number for register",
       });
     }
-    if (!validator.isValid(password)) {
-      return res.status(404).json({
-        success: false,
-        message: "Please provide password for register",
-      });
-    }
+    // if (!validator.isValid(password)) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Please provide password for register",
+    //   });
+    // }
 
-    const hashpassword = await bcrypt.hash(password, 10);
+    // const hashpassword = await bcrypt.hash(password, 10);
 
-    req.body.password = hashpassword;
+    // req.body.password = hashpassword;
     const newUser = new userModel(req.body);
     const user = await newUser.save();
     if (user) {
@@ -147,27 +144,27 @@ const signUp = async function (req, res) {
       });
     }
   } catch (error) {
-    
+
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 
 const loginUser = async function (req, res) {
   try {
-    const { emailOrPhone, password } = req.body;
+    const { emailOrPhone } = req.body;
     if (!validator.isValid(emailOrPhone)) {
       return res.status(404).json({
         success: false,
         message: "Email or phone is require for login",
       });
     }
-    if (!validator.isValid(password)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Password is require for login" });
-    }
+    // if (!validator.isValid(password)) {
+    //   return res
+    //     .status(404)
+    //     .json({ success: false, message: "Password is require for login" });
+    // }
 
     let user;
 
@@ -181,7 +178,7 @@ const loginUser = async function (req, res) {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    const match = await bcrypt.compare(password, user.password);
+    // const match = await bcrypt.compare(password, user.password);
 
     if (match) {
       const token = jwt.sign(
@@ -209,12 +206,47 @@ const loginUser = async function (req, res) {
         .json({ success: false, message: "Password does not match" });
     }
   } catch (error) {
-  
+    console.log(error)
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
+
+const loginRegisterForCheckOutPage = async function (req, res) {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber || !validator.isValid(phoneNumber)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid mobile number" });
+    }
+    let user = await userModel.findOne({ phoneNumber: phoneNumber });
+    if (!user) {
+      return res
+        .status(200)
+        .json({ message: false, message: "user not found" });
+    }
+    await userModel.findByIdAndUpdate(
+      user._id,
+      { $set: { lastLogin: Date.now() } },
+      { new: true }
+    );
+    const token = jwt.sign(
+      { userId: user._id.toString(), role: user.role },
+      process.env.JWT_SECRET_KEY
+    );
+    return res
+      .status(200)
+      .json({ success: true, message: "Successfully logged in", token });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error",error });
+  }
+};
+
+
 
 const forgetPassword = async function (req, res) {
   try {
@@ -244,8 +276,8 @@ const forgetPassword = async function (req, res) {
       }
     }
   } catch (error) {
-   
-    res.status(500).json({ success: false, message: "Internal server error" });
+
+    res.status(500).json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -302,10 +334,10 @@ const changePassword = async function (req, res) {
       .status(400)
       .json({ success: false, message: "Something went wrong" });
   } catch (error) {
-  
+
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -395,10 +427,10 @@ const profileChange = async function (req, res) {
       message: "Profile updated successfully",
     });
   } catch (error) {
-   
+
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -416,40 +448,7 @@ const getUserById = async function (req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
-
-const loginRegisterForCheckOutPage = async function (req, res) {
-  try {
-    const { phoneNumber } = req.body;
-    if (!phoneNumber || !validator.isValid(phoneNumber)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid mobile number" });
-    }
-    let user = await userModel.findOne({ phoneNumber: phoneNumber });
-    if (!user) {
-      return res
-        .status(200)
-        .json({ message: false, message: "user not found" });
-    }
-    await userModel.findByIdAndUpdate(
-      user._id,
-      { $set: { lastLogin: Date.now() } },
-      { new: true }
-    );
-    const token = jwt.sign(
-      { userId: user._id.toString(), role: user.role },
-      process.env.JWT_SECRET_KEY
-    );
-    return res
-      .status(200)
-      .json({ success: true, message: "Successfully logged in", token });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -481,10 +480,10 @@ const deleteUser = async function (req, res) {
       .status(200)
       .json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-  
+
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 
@@ -499,11 +498,11 @@ const ChangeNumber = async function (req, res) {
         .json({ success: false, message: "User ID is missing" });
     }
 
-    const checkUser = await userModel.findOne({phoneNumber:phoneNumber});
+    const checkUser = await userModel.findOne({ phoneNumber: phoneNumber });
     if (checkUser) {
       return res
-       .status(400)
-       .json({ success: false, message: "Phone number is already registered" });
+        .status(400)
+        .json({ success: false, message: "Phone number is already registered" });
     }
 
     const updatedUser = await userModel.findOneAndUpdate(
@@ -529,7 +528,7 @@ const ChangeNumber = async function (req, res) {
 
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error" });
+      .json({ success: false, message: "Internal server error",error });
   }
 };
 

@@ -5,18 +5,19 @@ const postsApi = axios.create({
 
 
 const Api = {
-  getAddresses: (token) => postsApi.get("/user/address",token),
-  addAddress: (data, token) => postsApi.post("/user/address", data,token),
-  updateAddress: (id, data, token) => postsApi.put(`/user/address/${id}`, data,token),
-  deleteAddress: (id, token) => postsApi.delete(`/user/address/${id}`,token),
+  getAddresses: (token) => postsApi.get("/user/address", token),
+  addAddress: (data, token) => postsApi.post("/user/address", data, token),
+  updateAddress: (id, data, token) => postsApi.put(`/user/address/${id}`, data, token),
+  deleteAddress: (id, token) => postsApi.delete(`/user/address/${id}`, token),
 
   checkUser: (data) => postsApi.post("/auth-api/check-email-mobile", data),
   checkMobile: (data) => postsApi.post("/auth-api/check-mobile", data),
   signUp: (data) => postsApi.post("/auth-api/signUp", data),
   loginUser: (data) => postsApi.post("/auth-api/login", data),
-  loginRegisterForCheckOutPage: (data) =>
-    postsApi.post("/auth-api/login-register-forCheck-outPage", data),
   checkIsLogin: (token) => postsApi.get("/auth-api/is-login-check", token),
+  loginRegisterForCheckOutPage: (data) => postsApi.post("/auth-api/login-register-forCheck-outPage", data),
+
+
   getProductById: (id) => postsApi.get(`/product-api/get-product/${id}`),
   getAllSameProductById: (id) =>
     postsApi.get(`/product-api/get-all-sameProduct-by-id/${id}`),
