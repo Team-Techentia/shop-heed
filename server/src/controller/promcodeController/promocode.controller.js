@@ -254,22 +254,19 @@ const deletePromocode = async function (req, res) {
             return res.status(404).json({ success: false, message: "Promocode ID is missing" });
         }
 
-        const deletePromocode = await Promocode.findByIdAndUpdate(
-            id,
-            { $set: { isDeleted: true } },
-            { new: true }
-        );
+        const deletePromocode = await Promocode.findByIdAndDelete(id);
 
         if (!deletePromocode) {
             return res.status(404).json({ success: false, message: "Promocode not found" });
         }
 
-        return res.status(200).json({ success: true, message: "Promocode deleted successfully" });
+        return res.status(200).json({ success: true, message: "Promocode permanently deleted" });
     } catch (error) {
         console.error('Delete promocode error:', error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 const validatePromocode = async (req, res) => {
     try {
