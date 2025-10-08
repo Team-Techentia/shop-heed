@@ -90,7 +90,7 @@ const Api = {
   getFeaturedSection: () => postsApi.get("/featured-section/get-all-featured-sections"),
 
 
-  getActiveBanners: () => postsApi.get("banner/public/active-banners"),
+  getActiveBanners: () => postsApi.get("/banner/public/active-banners"),
   getAllBanners: (token) =>
     postsApi.get("/banner/get-all-banners", token),
   createBanner: (data, token) =>
