@@ -62,7 +62,7 @@ const Api = {
   // Admin APIs
   adminPannel: (token: any) => postsApi.get("/admin-api/admin-panel", token),
   getAllUser: (token: any) => postsApi.get("/admin-api/all-user", token),
-  loginUser: (data: any) => postsApi.post("/auth-api/login", data),
+  loginUser: (data: any) => postsApi.post("auth-api/login", data),
   deleteUser: (id: any, token: any) => postsApi.put(`/auth-api/delete/user/${id}`, {}, token),
 
   // Blog APIs

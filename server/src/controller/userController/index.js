@@ -153,18 +153,18 @@ const signUp = async function (req, res) {
 
 const loginUser = async function (req, res) {
   try {
-    const { emailOrPhone } = req.body;
+    const { emailOrPhone,password } = req.body;
     if (!validator.isValid(emailOrPhone)) {
       return res.status(404).json({
         success: false,
         message: "Email or phone is require for login",
       });
     }
-    // if (!validator.isValid(password)) {
-    //   return res
-    //     .status(404)
-    //     .json({ success: false, message: "Password is require for login" });
-    // }
+    if (!validator.isValid(password)) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Password is require for login" });
+    }
 
     let user;
 
@@ -178,7 +178,7 @@ const loginUser = async function (req, res) {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    // const match = await bcrypt.compare(password, user.password);
+    const match = await bcrypt.compare(password, user.password);
 
     if (match) {
       const token = jwt.sign(
