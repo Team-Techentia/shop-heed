@@ -3,6 +3,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import Slider from "react-slick";
 import { useMediaQuery } from "@mui/material";
 import axios from "axios";
+import Api from "../../../../components/Api";
 
 const sliderSettings = {
   arrows: false,
@@ -23,7 +24,7 @@ const HomeSlider = ({ router }) => {
     const fetchBanners = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-        const res = await axios.get(`${baseUrl}banner/public/active-banners`);
+        const res = await Api.getActiveBanners();
         if (res.data.success) {
           setBanners(res.data.data);
         }
