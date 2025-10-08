@@ -16,7 +16,7 @@ const modalStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 20000; /* raised above everything */
+    z-index: 20000;
     backdrop-filter: blur(4px);
   }
   .auth-modal-content {
@@ -123,22 +123,34 @@ const AuthModal = () => {
   } = useContext(UserContext);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     if (value.length > 50) return;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // prevent scroll when modal open
+  // Prevent scroll when modal open
   useEffect(() => {
     document.body.style.overflow = isLoginModalOpen || isRegisterModalOpen || isOTPModalOpen ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [isLoginModalOpen, isRegisterModalOpen, isOTPModalOpen]);
 
+  // Handle login click - set popUpFor to "login"
+  const handleLoginClick = () => {
+    setPopUpFor("login");
+    handleMobileNumberLogin();
+  };
+
+  // Handle register click - set popUpFor to "register"
+  const handleRegisterClick = () => {
+    setPopUpFor("register");
+    handleRegister();
+  };
+
   return (
     <>
       <style>{modalStyles}</style>
 
-      {/* Login */}
+      {/* Login Modal */}
       {isLoginModalOpen && (
         <div className="auth-modal-overlay" onClick={closeAll}>
           <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -154,12 +166,14 @@ const AuthModal = () => {
                 label="Phone Number"
                 variant="standard"
                 fullWidth
-                value={user.emailOrPhone}
+                value={user.emailOrPhone || ""}
                 onChange={handleChange}
                 name="emailOrPhone"
               />
               {error && <div className="auth-error-message">{error}</div>}
-              <button className="auth-continue-btn" onClick={handleMobileNumberLogin}>Continue</button>
+              <button className="auth-continue-btn" onClick={handleLoginClick}>
+                Continue
+              </button>
               <div className="auth-switch-link">
                 New user? <span onClick={openRegister}>Register</span>
               </div>
@@ -168,7 +182,7 @@ const AuthModal = () => {
         </div>
       )}
 
-      {/* Register */}
+      {/* Register Modal */}
       {isRegisterModalOpen && (
         <div className="auth-modal-overlay" onClick={closeAll}>
           <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -179,10 +193,42 @@ const AuthModal = () => {
               </button>
             </div>
             <div className="auth-modal-body">
-              <TextField name="name" type="text" label="Name" variant="standard" fullWidth value={user.name} onChange={handleChange} />
-              <TextField name="email" type="email" label="Email" variant="standard" fullWidth value={user.email} onChange={handleChange} />
-              <TextField name="phoneNumber" type="number" label="Phone Number" variant="standard" fullWidth value={user.phoneNumber} onChange={handleChange} />
-              <button className="auth-continue-btn" onClick={handleRegister}>Get OTP</button>
+              <div className="auth-input-spacing">
+                <TextField
+                  name="name"
+                  type="text"
+                  label="Name"
+                  variant="standard"
+                  fullWidth
+                  value={user.name || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="auth-input-spacing">
+                <TextField
+                  name="email"
+                  type="email"
+                  label="Email"
+                  variant="standard"
+                  fullWidth
+                  value={user.email || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="auth-input-spacing">
+                <TextField
+                  name="phoneNumber"
+                  type="tel"
+                  label="Phone Number"
+                  variant="standard"
+                  fullWidth
+                  value={user.phoneNumber || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <button className="auth-continue-btn" onClick={handleRegisterClick}>
+                Get OTP
+              </button>
               <div className="auth-switch-link">
                 Already have an account? <span onClick={openLogin}>Login</span>
               </div>
@@ -191,9 +237,13 @@ const AuthModal = () => {
         </div>
       )}
 
-      {/* OTP */}
+      {/* OTP Modal */}
       <OpenModal
-        userData={{ phoneNumber: user.phoneNumber || user.emailOrPhone, name: user.name, email: user.email }}
+        userData={{
+          phoneNumber: user.phoneNumber || user.emailOrPhone,
+          name: user.name,
+          email: user.email,
+        }}
         useBox="login"
         popUpFor={popUpFor}
       />

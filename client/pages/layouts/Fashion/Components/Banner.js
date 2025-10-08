@@ -23,7 +23,7 @@ const HomeSlider = ({ router }) => {
     const fetchBanners = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-        const res = await axios.get(`${baseUrl}/banner/public/active-banners`);
+        const res = await axios.get(`${baseUrl}banner/public/active-banners`);
         if (res.data.success) {
           setBanners(res.data.data);
         }

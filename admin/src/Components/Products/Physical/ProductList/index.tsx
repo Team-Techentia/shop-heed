@@ -3,7 +3,26 @@ import Datatable from "@/CommonComponents/DataTable";
 import { Fragment, useEffect, useState } from "react";
 import { getCookie } from "@/Components/Cookies";
 import { ImagePath } from "@/Constants";
-import { Button, ButtonGroup, Col, Container, Form, Modal, ModalBody, ModalFooter, ModalHeader, Row, FormGroup, Input, Label, InputGroup, Dropdown, DropdownToggle, DropdownItem, DropdownMenu, } from "reactstrap";
+import {
+  Button,
+  ButtonGroup,
+  Col,
+  Container,
+  Form,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row,
+  FormGroup,
+  Input,
+  Label,
+  InputGroup,
+  Dropdown,
+  DropdownToggle,
+  DropdownItem,
+  DropdownMenu,
+} from "reactstrap";
 import Api from "../../../../Components/Api/index";
 import "./index.css";
 import { toast, Toaster } from "react-hot-toast";
@@ -11,32 +30,69 @@ import MDEditor from "@uiw/react-md-editor";
 import { colorData } from "../AddProduct/ProductCodeAndPrice";
 import convertToJPEG from "@/Components/imageConvertor";
 import { XCircle } from "react-feather";
-interface Product { title: string; _id: string; price: number; discount: number; variants: { image: string }[]; }
-interface category { category: string; value: string; }
-interface subCategory { category: string; subCategory: string; value: string; }
-type Specification = { question: string; answer: string; };
-const shopTypeData = [{ value: "formal wear", item: 'Formal Wear' }, { value: "everyday wear", item: 'EveryDay Wear' }, { value: "designer wear", item: 'Designer Wear' }, { value: "street wear", item: 'Street Wear' }, { value: "trending", item: 'Trending' }]
+
+interface Product {
+  title: string;
+  _id: string;
+  price: number;
+  discount: number;
+  variants: { image: string }[];
+}
+
+interface category {
+  category: string;
+  value: string;
+}
+
+interface subCategory {
+  category: string;
+  subCategory: string;
+  value: string;
+}
+
+type Specification = {
+  question: string;
+  answer: string;
+};
+
+interface SizeOption {
+  value: string;
+  label: string;
+}
+
+type SizeOptionsType = Record<string, SizeOption[]>;
+
+interface VariantsData {
+  _id?: string;
+  image?: string[];
+  size?: string;
+  quantity?: number;
+  sizeQuantities?: Record<string, number>;
+  specificationArray?: Specification[];
+  specificationSingleLine?: string[];
+  category?: string;
+  subCategory?: string[];
+  shopType?: string[];
+  price?: number;
+  finalPrice?: number;
+  sku?: string;
+  brand?: string;
+  title?: string;
+  description?: string;
+  color?: string;
+  [key: string]: any;
+}
+
+const shopTypeData = [
+  { value: "formal wear", item: "Formal Wear" },
+  { value: "everyday wear", item: "EveryDay Wear" },
+  { value: "designer wear", item: "Designer Wear" },
+  { value: "street wear", item: "Street Wear" },
+  { value: "trending", item: "Trending" },
+   { value: "new", item: 'New' },
+];
 
 const ProductList = () => {
-  interface SizeOption {
-    value: string;
-    label: string;
-  }
-
-  type SizeOptionsType = Record<string, SizeOption[]>;
-
-  interface VariantsData {
-    _id?: string;
-    image?: string[];
-    size?: string;
-    quantity?: number;
-    sizeQuantities?: Record<string, number>;
-    specificationArray?: string[];
-    specificationSingleLine?: string[];
-    category?: string;
-    [key: string]: any; // fallback for other fields
-  }
-
   // --- Constants ---
   const sizeOptions: SizeOptionsType = {
     shirts: [
@@ -48,7 +104,7 @@ const ProductList = () => {
       { value: "xxl", label: "XXL" },
       { value: "xxxl", label: "XXXL" },
       { value: "xxxxl", label: "XXXXL" },
-      { value: "xxxxxl", label: "XXXXXL" }, 
+      { value: "xxxxxl", label: "XXXXXL" },
     ],
     pants: [
       { value: "28", label: "28" },
@@ -63,13 +119,13 @@ const ProductList = () => {
       { value: "46", label: "46" },
       { value: "48", label: "48" },
     ],
-    oneSize: [{ value: "No-Size", label: "" }],
+    oneSize: [{ value: "No-Size", label: "No Size" }],
   };
+
   const [productData, setProductData] = useState<Product[]>([]);
-// --- State ---
-const [sizeType, setSizeType] = useState<keyof SizeOptionsType>("shirts");
-const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
+  const [sizeType, setSizeType] = useState<keyof SizeOptionsType>("shirts");
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
 
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -78,10 +134,10 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
   const [subProductData, setSubProductData] = useState();
   const [categoryData, setCategoryData] = useState<category[]>([]);
   const [subCategoryData, setSubCategoryData] = useState<subCategory[]>([]);
-  const [variantsData, setVariantsData] = useState<any>({});
-  const [comment, setComment] = useState<any>("")
-  const [mainProductIdForDeleteComments, setMainProductIdForDeleteComments] = useState<any>("")
-  const [specification, setSpecification] = useState({ question: "", answer: "", });
+  const [variantsData, setVariantsData] = useState<VariantsData>({});
+  const [comment, setComment] = useState<any>("");
+  const [mainProductIdForDeleteComments, setMainProductIdForDeleteComments] = useState<any>("");
+  const [specification, setSpecification] = useState({ question: "", answer: "" });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [specificationArray, setSpecificationArray] = useState<Specification[]>([]);
@@ -89,19 +145,27 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
   const [image, setImage] = useState<string[]>([]);
   const [specificationString, setSpecificationString] = useState<string>("");
   const [saveSubId, setSaveSubId] = useState("");
-  const [shopType, setShopType] = useState<any[]>([]);
+
   useEffect(() => {
     fetchData();
   }, []);
+
   const onCloseModal = () => {
     setOpen(false);
   };
+
   const onOpenModal = () => {
     setOpen(true);
   };
+
   const onCloseModal2 = () => {
     setOpen2(false);
+    // Reset form when closing
+    setSelectedSizes([]);
+    setSizeQuantities({});
+    setSizeType("shirts");
   };
+
   const onOpenModal2 = () => {
     setOpen2(true);
   };
@@ -109,18 +173,17 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
   const onCloseModal3 = () => {
     setOpen3(false);
   };
+
   const onOpenModal3 = () => {
     setOpen3(true);
   };
 
   const openConfirmationModal = (id: string) => {
     setSelectedId(id);
-
     setConfirmDelete(true);
   };
 
   const onCloseConfirmationModal = () => setConfirmDelete(false);
-
 
   const openCommentPopUp = async (id: any) => {
     setMainProductIdForDeleteComments(id);
@@ -131,10 +194,8 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
   const toggle = () => setDropdownOpen(!dropdownOpen);
   const token = getCookie();
 
-
-
   const getComments = async (id: any) => {
-    const storeData: any = []
+    const storeData: any = [];
     try {
       const res = await Api.getCommentByProductId(id, token);
       const createPromise = res.data.data.comments.map(async (item: any) => {
@@ -143,15 +204,15 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
           Comments: item.text,
           Rating: item.rating,
           Delete: item._id,
-        }
-        storeData.push(newObject)
-      })
+        };
+        storeData.push(newObject);
+      });
       await Promise.all(createPromise);
-      setComment(storeData)
+      setComment(storeData);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   const fetchData = async () => {
     const storeData: any = [];
@@ -159,21 +220,22 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
       const res = await Api.getAllProductAdmin();
       console.log(res.data);
       const createPromise = res.data.data.map(async (item: any) => {
-
         if (item.products && item.products.length > 0) {
           const newObject = {
             Image: item.products[0].image?.[0] || "no",
-            // SKU: item.sku || "no",
             Title: item.products[0].title || "no",
             Variants: item.products.length || "no",
             Price: item.price ? <div>₹ {item.price}</div> : "no",
-            "Selling Price": item.products[0].finalPrice ? <div>₹ {item.products[0].finalPrice}</div> : "no",
+            "Selling Price": item.products[0].finalPrice ? (
+              <div>₹ {item.products[0].finalPrice}</div>
+            ) : (
+              "no"
+            ),
             Comment: item._id || "no",
             Actions: item._id || "no",
           };
           storeData.push(newObject);
         }
-
       });
       await Promise.all(createPromise);
       setProductData(storeData);
@@ -181,7 +243,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
       console.log(error);
     }
   };
-
 
   const handleDelete = async (id: any) => {
     try {
@@ -195,7 +256,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
 
   const handleConfirmDelete = () => {
     if (selectedId) {
-      handleSubProductDelete(selectedId)
+      handleSubProductDelete(selectedId);
       onCloseConfirmationModal();
     }
   };
@@ -203,7 +264,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
   const handleDeleteComment = async (commentId: any) => {
     try {
       await Api.deleteReview(mainProductIdForDeleteComments, commentId, token);
-
       getComments(mainProductIdForDeleteComments);
       return toast.success("Comment Successfully deleted");
     } catch (error) {
@@ -222,12 +282,11 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
           SKU: item.sku || "No",
           "Product Id": item._id,
           Title: item.title,
-          Actions: item._id
+          Actions: item._id,
         };
         storeData.push(newObject);
       });
       await Promise.all(createPromise);
-      console.log(subProductData)
       setSubProductData(storeData);
     } catch (error) {
       return console.log(error);
@@ -243,7 +302,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
     try {
       await Api.deleteSubProduct(id, { isDeleted: true }, token);
       fetchDataSubProduct(id);
-      onCloseModal()
+      onCloseModal();
       return toast.success("Product Successfully deleted");
     } catch (error) {
       console.log(error);
@@ -256,11 +315,36 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
     try {
       const res = await Api.get_Product_By_Id(id);
       console.log(res);
-      setVariantsData(res.data.data);
-      setSpecificationArray(res.data.data.specificationArray);
-      setSpecificationArray1(res.data.data.specificationSingleLine);
-      setImage(res.data.data.image);
-      fetchDataSubCategoryByCategory(res.data.data.category)
+      const productData = res.data.data;
+      
+      setVariantsData(productData);
+      setSpecificationArray(productData.specificationArray || []);
+      setSpecificationArray1(productData.specificationSingleLine || []);
+      setImage(productData.image || []);
+      
+      // Set up size quantities if they exist
+      if (productData.sizeQuantities) {
+        setSizeQuantities(productData.sizeQuantities);
+        setSelectedSizes(Object.keys(productData.sizeQuantities));
+      } else if (productData.size && productData.quantity) {
+        // Legacy support: single size/quantity
+        setSizeQuantities({ [productData.size]: productData.quantity });
+        setSelectedSizes([productData.size]);
+      }
+      
+      // Determine size type based on the sizes
+      if (productData.sizeQuantities) {
+        const sizes = Object.keys(productData.sizeQuantities);
+        if (sizes.some(s => ["xs", "s", "m", "l", "xl", "xxl", "xxxl", "xxxxl", "xxxxxl"].includes(s.toLowerCase()))) {
+          setSizeType("shirts");
+        } else if (sizes.some(s => !isNaN(Number(s)))) {
+          setSizeType("pants");
+        } else {
+          setSizeType("oneSize");
+        }
+      }
+      
+      fetchDataSubCategoryByCategory(productData.category);
       onOpenModal2();
     } catch (error) {
       return console.log(error);
@@ -271,7 +355,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
     try {
       const getData = await Api.getCategory();
       setCategoryData(getData.data.data);
-      console.log(getData);
     } catch (error) {
       return console.log(error);
     }
@@ -281,7 +364,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
     try {
       const getData = await Api.getSubCategoryByCategoryName(name);
       setSubCategoryData(getData.data.data);
-      console.log(getData);
     } catch (error) {
       return console.log(error);
     }
@@ -337,55 +419,66 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
         specificationArray: specificationArray,
         specificationSingleLine: specificationArray1,
         image: image,
+        sizeQuantities: sizeQuantities, // Include the new size quantities
       };
+      
       await Api.updateSubProduct(saveSubId, payLoad, token);
+      onCloseModal2();
+      fetchData();
       return toast.success("Product Successfully updated");
     } catch (error) {
       console.log(error);
+      toast.error("Failed to update product");
     }
   };
+
   const handleAddSpecification1 = () => {
     if (!specificationString) {
       toast.error("Please fill the field before adding.");
       return;
     }
 
-    // Update the existing state directly
     setSpecificationArray1((prevArray) => [...prevArray, specificationString]);
-    setSpecificationString(""); // Clear the input field
+    setSpecificationString("");
   };
+
   const handleChangeShopType = async (value: any, id: any) => {
     try {
-      await Api.updateMainProduct(id, { shopType: value }, token)
-      fetchData()
+      await Api.updateMainProduct(id, { shopType: value }, token);
+      fetchData();
       return toast.success("Shopping Type Successfully updated");
     } catch (error) {
-      return console.log(error)
+      return console.log(error);
     }
-  }
+  };
 
   const handleSizeChange = (sizeValue: string, checked: boolean) => {
-    setSelectedSizes(prev =>
-      checked ? [...prev, sizeValue] : prev.filter(s => s !== sizeValue)
+    setSelectedSizes((prev) =>
+      checked ? [...prev, sizeValue] : prev.filter((s) => s !== sizeValue)
     );
 
-    // reset qty if unchecked
     if (!checked) {
-      setSizeQuantities(prev => {
+      setSizeQuantities((prev) => {
         const newQuantities = { ...prev };
         delete newQuantities[sizeValue];
         return newQuantities;
       });
+    } else {
+      // Set default quantity of 1 when size is selected
+      setSizeQuantities((prev) => ({
+        ...prev,
+        [sizeValue]: 1,
+      }));
     }
   };
 
   const handleQuantityChange = (sizeValue: string, qty: number) => {
-    setSizeQuantities(prev => ({
+    if (qty < 0 || qty > 999) return;
+    setSizeQuantities((prev) => ({
       ...prev,
       [sizeValue]: qty,
     }));
   };
-
 
   return (
     <>
@@ -413,23 +506,24 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
         </Fragment>
       ) : null}
 
-
       <Modal isOpen={confirmDelete} toggle={onCloseConfirmationModal}>
         <ModalHeader toggle={onCloseConfirmationModal}>
           <h5 className="modal-title f-w-600">Confirm Deletion</h5>
         </ModalHeader>
-        <ModalBody>
-          Are you sure you want to delete this Product?
-        </ModalBody>
+        <ModalBody>Are you sure you want to delete this Product?</ModalBody>
         <ModalFooter>
-          <Button color="danger" onClick={handleConfirmDelete}>Yes</Button>
-          <Button color="secondary" onClick={onCloseConfirmationModal}>No</Button>
+          <Button color="danger" onClick={handleConfirmDelete}>
+            Yes
+          </Button>
+          <Button color="secondary" onClick={onCloseConfirmationModal}>
+            No
+          </Button>
         </ModalFooter>
       </Modal>
 
       <ButtonGroup className=" pull-right order-model">
         <Modal isOpen={open} toggle={onCloseModal} className="model-model">
-          <ModalHeader >
+          <ModalHeader>
             <h5 className="modal-title f-w-600" id="exampleModalLabel2">
               Varieties Details{" "}
             </h5>
@@ -447,8 +541,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
               />
             )}
             <ModalFooter>
-              {/* <Button color="primary" type="submit">Save</Button> */}
-              <Button color="primary" onClick={onCloseModal} >
+              <Button color="primary" onClick={onCloseModal}>
                 Close
               </Button>
             </ModalFooter>
@@ -457,7 +550,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
       </ButtonGroup>
 
       <ButtonGroup className=" pull-right order-model">
-        <Modal isOpen={open2} toggle={onCloseModal2} className="model-model">
+        <Modal isOpen={open2} toggle={onCloseModal2} className="model-model" size="lg">
           <ModalHeader toggle={onCloseModal2}>
             <h5 className="modal-title f-w-600" id="exampleModalLabel2">
               Edit Varieties (Product){" "}
@@ -483,25 +576,25 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                         setVariantsData((prevData: any) => ({
                           ...prevData,
                           category: e.target.value,
-                          subCategory: []
+                          subCategory: [],
                         }));
 
                         fetchDataSubCategoryByCategory(e.target.value);
                       }}
                     >
-                      <option className="text-capitalize" >
+                      <option className="text-capitalize">
                         {" "}
                         {variantsData?.category || "Select a category"}{" "}
                       </option>
                       {categoryData.map((data, index) => {
-                        console.log(data);
                         return (
-                          <option value={data.value}    >{data.category} </option>
+                          <option key={index} value={data.value}>
+                            {data.category}{" "}
+                          </option>
                         );
                       })}
                     </Input>
                   </Col>
-                  <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
 
@@ -519,14 +612,13 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                               type="checkbox"
                               name="subcategory"
                               value={data.value}
-                              checked={variantsData?.subCategory.includes(data.value)}
+                              checked={variantsData?.subCategory?.includes(data.value)}
                               onChange={(e: any) => {
                                 if (e.target.checked) {
                                   setVariantsData((prevData: any) => ({
                                     ...prevData,
                                     subCategory: [e.target.value],
                                   }));
-
                                 }
                               }}
                             />{" "}
@@ -536,17 +628,15 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                       );
                     })}
                   </Col>
-                  <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
+
               <FormGroup className="mb-3">
                 <Row>
                   <Col lg="3">
-                    <Label className="fw-bold mb-0">Classification:
-                    </Label>
+                    <Label className="fw-bold mb-0">Classification:</Label>
                   </Col>
                   <Col lg="9">
-
                     {shopTypeData.map((data, index) => {
                       return (
                         <FormGroup check inline key={index}>
@@ -555,21 +645,23 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                               type="checkbox"
                               name="shoppingType"
                               value={data.value}
-                              checked={variantsData?.shopType && variantsData?.shopType.includes(data.value)}
-
+                              checked={
+                                variantsData?.shopType &&
+                                variantsData?.shopType.includes(data.value)
+                              }
                               onChange={(e: any) => {
                                 if (e.target.checked) {
                                   setVariantsData((prevData: any) => ({
                                     ...prevData,
-                                    shopType: [...prevData.shopType, e.target.value],
+                                    shopType: [...(prevData.shopType || []), e.target.value],
                                   }));
-
                                 } else {
                                   setVariantsData((prevData: any) => ({
                                     ...prevData,
-                                    shopType: prevData.shopType.filter((val: any) => val !== e.target.value),
+                                    shopType: (prevData.shopType || []).filter(
+                                      (val: any) => val !== e.target.value
+                                    ),
                                   }));
-
                                 }
                               }}
                             />{" "}
@@ -581,6 +673,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                   </Col>
                 </Row>
               </FormGroup>
+
               <FormGroup className="mb-3 ">
                 <Row>
                   <Col xl="3" sm="4">
@@ -604,14 +697,13 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                       required
                     />
                   </Col>
-                  <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
 
               <FormGroup className="mb-3 ">
                 <Row>
                   <Col xl="3" sm="4">
-                    <Label className="fw-bold mb-0">Selling Price: :</Label>
+                    <Label className="fw-bold mb-0">Selling Price:</Label>
                   </Col>
                   <Col sm="7" xl="8">
                     <Input
@@ -628,7 +720,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                       type="number"
                     />
                   </Col>
-                  <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
 
@@ -653,8 +744,8 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     />
                   </Col>
                 </Row>
-                <div className="valid-feedback">Looks good!</div>
               </FormGroup>
+
               <FormGroup className=" mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -676,14 +767,12 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     />
                   </Col>
                 </Row>
-                <div className="valid-feedback">Looks good!</div>
               </FormGroup>
+
               <FormGroup className=" mb-3">
                 <Row>
                   <Col xl="3" sm="4">
-                    <Label className="fw-bold mb-0">
-                      Product Specification :
-                    </Label>
+                    <Label className="fw-bold mb-0">Product Specification :</Label>
                   </Col>
                   <Col xl="4" sm="4">
                     <Input
@@ -737,42 +826,41 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     </Button>
                   </div>
                 </Row>
-                <div className="valid-feedback">Looks good!</div>
               </FormGroup>
+
               {specificationArray &&
                 specificationArray.map((data, index) => {
                   return (
-                    <>
-                      <Row className="mb-3">
-                        <Col xl="3" sm="4">
-                          <Label className="fw-bold mb-0">Question :</Label>
-                        </Col>
-                        <Col sm="7" xl="8">
-                          {data.question}{" "}
-                          <XCircle
-                            style={{
-                              position: "relative",
-                              top: "5px",
-                              left: "20px",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              setSpecificationArray((prevArray) =>
-                                prevArray.filter((_, i) => i !== index)
-                              );
-                            }}
-                          />
-                        </Col>
-                        <Col xl="3" sm="4">
-                          <Label className="fw-bold mb-0">Answer :</Label>
-                        </Col>
-                        <Col sm="7" xl="8">
-                          {data.answer}
-                        </Col>
-                      </Row>
-                    </>
+                    <Row className="mb-3" key={index}>
+                      <Col xl="3" sm="4">
+                        <Label className="fw-bold mb-0">Question :</Label>
+                      </Col>
+                      <Col sm="7" xl="8">
+                        {data.question}{" "}
+                        <XCircle
+                          style={{
+                            position: "relative",
+                            top: "5px",
+                            left: "20px",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setSpecificationArray((prevArray) =>
+                              prevArray.filter((_, i) => i !== index)
+                            );
+                          }}
+                        />
+                      </Col>
+                      <Col xl="3" sm="4">
+                        <Label className="fw-bold mb-0">Answer :</Label>
+                      </Col>
+                      <Col sm="7" xl="8">
+                        {data.answer}
+                      </Col>
+                    </Row>
                   );
                 })}
+
               <FormGroup className="mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -813,33 +901,32 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     </Button>
                   </div>
                 </Row>
-                <div className="valid-feedback">Looks good!</div>
               </FormGroup>
+
               <Row className="mb-3">
                 {specificationArray1 &&
                   specificationArray1.map((data, index) => {
                     return (
-                      <>
-                        <Col sm="7" xl="8">
-                          {data}{" "}
-                          <XCircle
-                            style={{
-                              position: "relative",
-                              top: "5px",
-                              left: "20px",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              setSpecificationArray1((prevArray) =>
-                                prevArray.filter((_, i) => i !== index)
-                              );
-                            }}
-                          />
-                        </Col>
-                      </>
+                      <Col sm="7" xl="8" key={index}>
+                        {data}{" "}
+                        <XCircle
+                          style={{
+                            position: "relative",
+                            top: "5px",
+                            left: "20px",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setSpecificationArray1((prevArray) =>
+                              prevArray.filter((_, i) => i !== index)
+                            );
+                          }}
+                        />
+                      </Col>
                     );
                   })}
               </Row>
+
               <FormGroup className=" mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -860,7 +947,6 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     />
                   </Col>
                 </Row>
-                <div className="valid-feedback">Looks good!</div>
               </FormGroup>
 
               <FormGroup className=" mb-3 ">
@@ -869,7 +955,8 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     <Label className="fw-bold">Add Description :</Label>
                   </Col>
                   <Col xl="8" sm="7" className=" description-sm">
-                    <MDEditor style={{ color: "black" }}
+                    <MDEditor
+                      style={{ color: "black" }}
                       preview="edit"
                       value={variantsData.description}
                       onChange={(e: any) => {
@@ -882,6 +969,7 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                   </Col>
                 </Row>
               </FormGroup>
+
               <FormGroup className="mb-3">
                 <Row>
                   <Col xl="3" sm="4">
@@ -916,7 +1004,8 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                         style={{ height: "50vh", overflow: "auto" }}
                       >
                         {colorData.map((color) => (
-                          <DropdownItem style={{ display: "flex" }}
+                          <DropdownItem
+                            style={{ display: "flex" }}
                             key={color.code}
                             onClick={() => {
                               setVariantsData((prevData: any) => ({
@@ -935,155 +1024,173 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                                 marginRight: "8px",
                               }}
                             ></span>
-                            <div style={{ position: "relative", top: "-2px" }}> {color.name}</div>
+                            <div style={{ position: "relative", top: "-2px" }}>
+                              {" "}
+                              {color.name}
+                            </div>
                           </DropdownItem>
                         ))}
                       </DropdownMenu>
                     </Dropdown>
                   </Col>
-                  <div className="valid-feedback">Looks good!</div>
                 </Row>
               </FormGroup>
 
-              <FormGroup className=" mb-3">
+              <FormGroup className="mb-3">
                 <Row>
+                  <Col lg="3">
+                    <Label className="fw-bold mb-0">Size Type:</Label>
+                  </Col>
+                  <Col lg="9">
+                    <Input
+                      type="select"
+                      value={sizeType}
+                      onChange={(e: any) => {
+                        setSizeType(e.target.value);
+                        setSelectedSizes([]);
+                        setSizeQuantities({});
+                      }}
+                    >
+                      <option value="shirts">Shirts/Tops (XS, S, M, L, XL, etc.)</option>
+                      <option value="pants">Pants/Trousers (30, 32, 34, 36, etc.)</option>
+                      <option value="oneSize">No Size</option>
+                    </Input>
+                  </Col>
                 </Row>
               </FormGroup>
 
-           <FormGroup className="mb-3">
-  <Row>
-    <Col lg="3">
-      <Label className="fw-bold mb-0">Select Sizes & Quantities:</Label>
-    </Col>
-    <Col lg="9">
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "15px",
-        }}
-      >
-        {sizeOptions[sizeType]?.map((sizeOption) => (
-          <div
-            key={sizeOption.value}
-            style={{
-              border: "1px solid #ddd",
-              padding: "10px",
-              borderRadius: "5px",
-              backgroundColor: selectedSizes.includes(sizeOption.value)
-                ? "#f8f9fa"
-                : "white",
-            }}
-          >
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="checkbox"
-                  checked={selectedSizes.includes(sizeOption.value)}
-                  onChange={(e) =>
-                    handleSizeChange(sizeOption.value, e.target.checked)
-                  }
-                />
-                {" "}
-                <strong>Size: {sizeOption.label}</strong>
-              </Label>
-            </FormGroup>
+              <FormGroup className="mb-3">
+                <Row>
+                  <Col lg="3">
+                    <Label className="fw-bold mb-0">Select Sizes & Quantities:</Label>
+                  </Col>
+                  <Col lg="9">
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                        gap: "15px",
+                      }}
+                    >
+                      {sizeOptions[sizeType]?.map((sizeOption) => (
+                        <div
+                          key={sizeOption.value}
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "10px",
+                            borderRadius: "5px",
+                            backgroundColor: selectedSizes.includes(sizeOption.value)
+                              ? "#f8f9fa"
+                              : "white",
+                          }}
+                        >
+                          <FormGroup check>
+                            <Label check>
+                              <Input
+                                type="checkbox"
+                                checked={selectedSizes.includes(sizeOption.value)}
+                                onChange={(e) =>
+                                  handleSizeChange(sizeOption.value, e.target.checked)
+                                }
+                              />
+                              {" "}
+                              <strong>Size: {sizeOption.label}</strong>
+                            </Label>
+                          </FormGroup>
 
-            {selectedSizes.includes(sizeOption.value) && (
-              <div style={{ marginTop: "8px" }}>
-                <Label style={{ fontSize: "12px", marginBottom: "5px" }}>
-                  Quantity:
-                </Label>
-                <InputGroup size="sm">
-                  <Button
-                    size="sm"
-                    color="outline-secondary"
-                    onClick={() =>
-                      handleQuantityChange(
-                        sizeOption.value,
-                        Math.max(0, (sizeQuantities[sizeOption.value] || 0) - 1)
-                      )
-                    }
-                  >
-                    -
-                  </Button>
-                  <Input
-                    style={{ textAlign: "center" }}
-                    type="number"
-                    min="0"
-                    max="999"
-                    value={sizeQuantities[sizeOption.value] || 0}
-                    onChange={(e) =>
-                      handleQuantityChange(
-                        sizeOption.value,
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                  />
-                  <Button
-                    size="sm"
-                    color="outline-secondary"
-                    onClick={() =>
-                      handleQuantityChange(
-                        sizeOption.value,
-                        Math.min(999, (sizeQuantities[sizeOption.value] || 0) + 1)
-                      )
-                    }
-                  >
-                    +
-                  </Button>
-                </InputGroup>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                          {selectedSizes.includes(sizeOption.value) && (
+                            <div style={{ marginTop: "8px" }}>
+                              <Label style={{ fontSize: "12px", marginBottom: "5px" }}>
+                                Quantity:
+                              </Label>
+                              <InputGroup size="sm">
+                                <Button
+                                  size="sm"
+                                  color="outline-secondary"
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      sizeOption.value,
+                                      Math.max(0, (sizeQuantities[sizeOption.value] || 0) - 1)
+                                    )
+                                  }
+                                >
+                                  -
+                                </Button>
+                                <Input
+                                  style={{ textAlign: "center" }}
+                                  type="number"
+                                  min="0"
+                                  max="999"
+                                  value={sizeQuantities[sizeOption.value] || 0}
+                                  onChange={(e) =>
+                                    handleQuantityChange(
+                                      sizeOption.value,
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                />
+                                <Button
+                                  size="sm"
+                                  color="outline-secondary"
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      sizeOption.value,
+                                      Math.min(999, (sizeQuantities[sizeOption.value] || 0) + 1)
+                                    )
+                                  }
+                                >
+                                  +
+                                </Button>
+                              </InputGroup>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
-      {selectedSizes.length > 0 && (
-        <div
-          style={{
-            marginTop: "15px",
-            padding: "10px",
-            backgroundColor: "#e9ecef",
-            borderRadius: "5px",
-          }}
-        >
-          <strong>Selected Sizes Summary:</strong>
-          <div style={{ marginTop: "5px" }}>
-            {selectedSizes.map((size) => (
-              <span
-                key={size}
-                style={{
-                  display: "inline-block",
-                  margin: "2px 5px",
-                  padding: "2px 8px",
-                  backgroundColor: "#007bff",
-                  color: "white",
-                  borderRadius: "3px",
-                  fontSize: "12px",
-                }}
-              >
-                {sizeOptions[sizeType].find((s) => s.value === size)?.label}:{" "}
-                {sizeQuantities[size] || 0}
-              </span>
-            ))}
-          </div>
-          <div style={{ marginTop: "5px", fontSize: "14px" }}>
-            <strong>
-              Total Quantity:{" "}
-              {Object.values(sizeQuantities).reduce(
-                (sum, qty) => sum + (qty || 0),
-                0
-              )}
-            </strong>
-          </div>
-        </div>
-      )}
-    </Col>
-  </Row>
-</FormGroup>
-
-
+                    {selectedSizes.length > 0 && (
+                      <div
+                        style={{
+                          marginTop: "15px",
+                          padding: "10px",
+                          backgroundColor: "#e9ecef",
+                          borderRadius: "5px",
+                        }}
+                      >
+                        <strong>Selected Sizes Summary:</strong>
+                        <div style={{ marginTop: "5px" }}>
+                          {selectedSizes.map((size) => (
+                            <span
+                              key={size}
+                              style={{
+                                display: "inline-block",
+                                margin: "2px 5px",
+                                padding: "2px 8px",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                borderRadius: "3px",
+                                fontSize: "12px",
+                              }}
+                            >
+                              {sizeOptions[sizeType].find((s) => s.value === size)?.label}:{" "}
+                              {sizeQuantities[size] || 0}
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: "5px", fontSize: "14px" }}>
+                          <strong>
+                            Total Quantity:{" "}
+                            {Object.values(sizeQuantities).reduce(
+                              (sum, qty) => sum + (qty || 0),
+                              0
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+              </FormGroup>
 
               <Col className="offset-xl-3 offset-sm-4 mb-3 image-file">
                 <ul className="file-upload-product">
@@ -1106,38 +1213,40 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
                     }}
                   >
                     {image.length >= 1 &&
-                      image.map((image, index) => {
+                      image.map((img, index) => {
                         return (
-                          <>
-                            {" "}
+                          <div key={index} style={{ position: "relative" }}>
                             <img
                               alt=""
                               src={
-                                image
-                                  ? image
+                                img
+                                  ? img
                                   : `${ImagePath}/dashboard/user.png`
                               }
                               style={{ width: 150, height: 100 }}
                             />
                             <XCircle
                               style={{
-                                position: "relative",
+                                position: "absolute",
                                 top: "5px",
-                                right: "20px",
+                                right: "5px",
                                 cursor: "pointer",
+                                backgroundColor: "white",
+                                borderRadius: "50%",
                               }}
                               onClick={() => {
                                 setImage((prevArray) =>
                                   prevArray.filter((_, i) => i !== index)
                                 );
                               }}
-                            />{" "}
-                          </>
+                            />
+                          </div>
                         );
                       })}
                   </div>
                 </ul>
               </Col>
+
               <ModalFooter>
                 <div className="offset-xl-9 offset-sm-4">
                   <Button type="submit" color="secondary">
@@ -1152,10 +1261,11 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
           </ModalBody>
         </Modal>
       </ButtonGroup>
+
       <ButtonGroup className=" pull-right order-model">
         <Modal isOpen={open3} toggle={onOpenModal3} className="model-model">
           <ModalBody>
-            <Label className="fw-bold mb-0">Comments: </Label>=
+            <Label className="fw-bold mb-0">Comments: </Label>
             {comment && (
               <Datatable
                 typeUse={"product-list"}
@@ -1177,8 +1287,8 @@ const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({})
           </ModalBody>
         </Modal>
       </ButtonGroup>
-
     </>
   );
 };
+
 export default ProductList;
