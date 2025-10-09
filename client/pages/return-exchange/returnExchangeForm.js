@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Input, Button, Form, FormFeedback } from "reactstrap";
-// import Api from "../Api";
 import toast from "react-hot-toast";
 import {
   FormControl,
@@ -10,7 +9,7 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
-import Api from "../../components/Api";
+
 function ReturnExchangeForm() {
   const [formData, setFormData] = useState({
     name: "",
@@ -24,29 +23,34 @@ function ReturnExchangeForm() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ✅ Your Google Apps Script Web App URL
+  const SPREADSHEET_URL =
+    "https://script.google.com/macros/s/AKfycbwsCo_72Jv3M4MVuIywciqHU-DFmF1Wy-c3xE0b8XrmYrUsjq4AtcioHd2lam2OHyzi/exec";
+
+  // Handle input changes
   const handleChange = (e) => {
     const { id, value } = e.target;
-    console.log("id", id);
-
-    console.log("value", value);
-
-    setFormData({
-      ...formData,
-      [id]: value,
-    });
+    setFormData({ ...formData, [id]: value });
   };
 
+  // Handle radio changes
+  const handleRadioChange = (e) => {
+    setFormData({ ...formData, type: e.target.value });
+  };
+
+  // Simple validation
   const validate = () => {
-    const errors = {};
-    if (!formData.name) errors.name = "Name is required.";
-    if (!formData.orderId) errors.orderId = "Order Id is required.";
-    if (!formData.email) errors.email = "Email is required.";
-    if (!formData.number) errors.number = "Number is required.";
-    if (!formData.type) errors.type = "Type is required.";
-    if (!formData.message) errors.message = "Message is required.";
-    return errors;
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required.";
+    if (!formData.orderId.trim()) newErrors.orderId = "Order ID is required.";
+    if (!formData.email.trim()) newErrors.email = "Email is required.";
+    if (!formData.number.trim()) newErrors.number = "Number is required.";
+    if (!formData.type.trim()) newErrors.type = "Type is required.";
+    if (!formData.message.trim()) newErrors.message = "Message is required.";
+    return newErrors;
   };
 
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -58,30 +62,42 @@ function ReturnExchangeForm() {
 
     setIsSubmitting(true);
 
-    //  const  {name,email , number,message} = formData
     try {
-      //   const res = await Api.contactUs({name:name , email:email , message:message , phone:number})
+      const formDataPayload = new FormData();
+      formDataPayload.append("name", formData.name);
+      formDataPayload.append("orderId", formData.orderId);
+      formDataPayload.append("email", formData.email);
+      formDataPayload.append("number", formData.number);
+      formDataPayload.append("type", formData.type);
+      formDataPayload.append("message", formData.message);
 
-      await Api.returnAndExchange(formData);
-      toast.success("Form submitted successfully");
-      setFormData({
-        name: "",
-        orderId: "",
-        email: "",
-        number: "",
-        message: "",
+      const response = await fetch(SPREADSHEET_URL, {
+        method: "POST",
+        body: formDataPayload,
       });
-      setErrors({});
-      return;
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        toast.success("Form submitted successfully!");
+        setFormData({
+          name: "",
+          orderId: "",
+          email: "",
+          number: "",
+          type: "exchange",
+          message: "",
+        });
+        setErrors({});
+      } else {
+        toast.error("Something went wrong. Please try again!");
+      }
     } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Failed to submit. Please try again later!");
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleRadioChange = (e) => {
-    setFormData({ ...formData, type: e.target.value });
-    console.log("Selected type:", e.target.value);
   };
 
   return (
@@ -138,6 +154,7 @@ function ReturnExchangeForm() {
         style={{ width: "100%" }}
       />
       {errors.number && <FormFeedback>{errors.number}</FormFeedback>}
+
       <FormControl component="fieldset" error={!!errors.type}>
         <FormLabel component="legend">Select an Option</FormLabel>
         <RadioGroup
@@ -151,16 +168,20 @@ function ReturnExchangeForm() {
             control={<Radio />}
             label="Exchange"
           />
-          <FormControlLabel value="return" control={<Radio />} label="Return" />
+          <FormControlLabel
+            value="return"
+            control={<Radio />}
+            label="Return"
+          />
         </RadioGroup>
         {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
       </FormControl>
 
       <Input
         type="textarea"
-        name="message"
-        defaultValue={formData.message}
-        onChange={(e) => setFormData({...formData, message: e.target.value})}
+        id="message"
+        value={formData.message}
+        onChange={handleChange}
         invalid={!!errors.message}
         placeholder="Message"
         style={{ width: "100%" }}

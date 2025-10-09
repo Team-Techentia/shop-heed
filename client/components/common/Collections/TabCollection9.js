@@ -92,7 +92,7 @@ const TabCollection9 = ({ type, cartClass, spanClass, midBox }) => {
               <h4 className="mb-4" style={{ lineHeight: "1.6" }}>
                 Uplift your clothing style to comfort luxury with HEED to make you look attentive and flexible in your everyday clothing choices.
               </h4>
-            <Link href="/collections/all ">
+            <Link href="/category/shirts" passHref legacyBehavior>
                 <Button className="btn btn-solid py-2 px-4">EXPLORE NOW</Button>
               </Link>
             </Col>

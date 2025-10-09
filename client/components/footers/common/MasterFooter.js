@@ -1,15 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import { Container, Row, Col } from "reactstrap";
-import LogoImage from "../../headers/common/logo";
 import CopyRight from "./copyright";
 import XIcon from "@mui/icons-material/X";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import YouTubeIcon from "@mui/icons-material/YouTube";
-import EmailIcon from "@mui/icons-material/Email";
-import LanguageIcon from "@mui/icons-material/Language";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const MasterFooter = ({
   layoutClass,
@@ -22,22 +18,32 @@ const MasterFooter = ({
     <footer
       className={footerClass}
       style={{
-        paddingTop: "15px",
+        backgroundColor: "#EEE1C6", // Beige
+        paddingTop: "20px",
+        color: "#000000",
       }}
     >
       <section className={belowSection}>
         <Container fluid={belowContainerFluid ? belowContainerFluid : ""}>
           <Row className="footer-theme partition-f">
-            {/* About Section */}
+            {/* About Us */}
             <Col lg="4" md="6" className="mb-4">
               <div className="footer-title footer-mobile-title">
-                <h4 style={{ color: "#FFFFFF" }}>About Us</h4>
+                <h4 style={{ color: "#000000", fontWeight: "bold" }}>About Us</h4>
               </div>
               <div className="footer-contant">
                 <div className="footer-logo mb-3">
-                  <LogoImage logo={"whitelogo.png"} />
+                  <img
+                    src="assets/images/logo1.png"
+                    alt="Heed Logo"
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      objectFit: "contain",
+                    }}
+                  />
                 </div>
-                <p style={{ fontSize: "14px", lineHeight: "1.6" }}>
+                <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#333" }}>
                   Heed is an Indian contemporary clothing brand committed to
                   empowering discerning men to elevate their style with
                   comfort-luxury, while making every day great fashion choices.
@@ -52,13 +58,10 @@ const MasterFooter = ({
                       style={{
                         width: "40px",
                         height: "40px",
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        transition: "all 0.3s",
+                        backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <FacebookIcon
-                        style={{ color: "#FFFFFF", fontSize: "20px" }}
-                      />
+                      <FacebookIcon style={{ color: "#000000", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://x.com/heedyourlooks?s=08"
@@ -68,11 +71,10 @@ const MasterFooter = ({
                       style={{
                         width: "40px",
                         height: "40px",
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        transition: "all 0.3s",
+                        backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <XIcon style={{ color: "#FFFFFF", fontSize: "20px" }} />
+                      <XIcon style={{ color: "#000000", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://www.instagram.com/heedyourlooks/"
@@ -82,13 +84,10 @@ const MasterFooter = ({
                       style={{
                         width: "40px",
                         height: "40px",
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        transition: "all 0.3s",
+                        backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <InstagramIcon
-                        style={{ color: "#FFFFFF", fontSize: "20px" }}
-                      />
+                      <InstagramIcon style={{ color: "#000000", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://www.youtube.com/@heedyourlooks"
@@ -98,13 +97,10 @@ const MasterFooter = ({
                       style={{
                         width: "40px",
                         height: "40px",
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        transition: "all 0.3s",
+                        backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <YouTubeIcon
-                        style={{ color: "#FFFFFF", fontSize: "20px" }}
-                      />
+                      <YouTubeIcon style={{ color: "#000000", fontSize: "20px" }} />
                     </a>
                   </div>
                 </div>
@@ -113,155 +109,82 @@ const MasterFooter = ({
 
             {/* Main Menu */}
             <Col lg="4" md="6" className="mb-4">
-              <div className="sub-title">
-                <div className="footer-title">
-                  <h4>Main Menu</h4>
-                </div>
-                <div className="footer-contant">
-                  <Row>
-                    <Col sm="6">
-                      <ul className="list-unstyled">
-                        {/* <li className="mb-2">
-                          <Link
-                            href={`/`}
-                            className="text-white text-decoration-none"
-                          >
-                            Home
-                          </Link>
-                        </li> */}
-                        <li className="mb-2">
-                          <Link
-                            href={`/collections/all`}
-                            className="text-white text-decoration-none"
-                          >
-                            All Products
-                          </Link>
-                        </li>
-                        <li className="mb-2">
-                          <Link
-                            href={`/about-us`}
-                            className="text-white text-decoration-none"
-                          >
-                            About Us
-                          </Link>
-                        </li>
-                        <li className="mb-2">
-                          <Link
-                            href={`/contact-us`}
-                            className="text-white text-decoration-none"
-                          >
-                            Contact Us
-                          </Link>
-                        </li>
-                      </ul>
-                    </Col>
-                    <Col sm="6">
-                      <ul className="list-unstyled">
-                        <li className="mb-2">
-                          <Link
-                            href={`/blogs/all-blogs`}
-                            className="text-white text-decoration-none"
-                          >
-                            Blog
-                          </Link>
-                        </li>
-                        <li className="mb-2">
-                          <Link
-                            href={`https://www.shiprocket.in/shipment-tracking/`}
-                            className="text-white text-decoration-none"
-                          >
-                            Track Order
-                          </Link>
-                        </li>
-                        <li className="mb-2">
-                          <Link
-                            href={`/return-exchange`}
-                            className="text-white text-decoration-none"
-                          >
-                            Return And Exchange
-                          </Link>
-                        </li>
-                      </ul>
-                    </Col>
-                  </Row>
-                </div>
+              <div className="footer-title">
+                <h4 style={{ color: "#000000", fontWeight: "bold" }}>Main Menu</h4>
+              </div>
+              <div className="footer-contant">
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/about-us`} className="text-dark text-decoration-none">
+                      About Us
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/contact-us`} className="text-dark text-decoration-none">
+                      Contact Us
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/bulk-enquiry`} className="text-dark text-decoration-none">
+                      Work With Us
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled">
+                  <li>
+                    <Link href={`/blogs/all-blogs`} className="text-dark text-decoration-none">
+                      Blog
+                    </Link>
+                  </li>
+                </ul>
               </div>
             </Col>
 
-            {/* Contact Us */}
+            {/* Help */}
             <Col lg="4" md="6" className="mb-4">
-              <div className="sub-title">
-                <div className="footer-title">
-                  <h4>Contact Us</h4>
-                </div>
-                <div className="footer-contant">
-                  <div
-                    className="mb-3"
-                    style={{ borderRadius: "8px", overflow: "hidden" }}
-                  >
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: `<iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d14005.160709674936!2d77.1661815!3d28.6510289!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d02ec14d8d6cf%3A0x4052b4c2900e5c30!2sBrands%20In!5e0!3m2!1sen!2sin!4v1728665869319!5m2!1sen!2sin" width="100%" height="150" style="border-radius:8px;border:none;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`,
-                      }}
-                    />
-                  </div>
-                  <ul className="list-unstyled contact-list">
-                    {/* <li className="mb-2 d-flex align-items-center">
-                      <LocationOnIcon
-                        style={{
-                          fontSize: "16px",
-                          marginRight: "10px",
-                          color: "#F5DEB3",
-                        }}
-                      /> */}
-                      {/* <span style={{ fontSize: "14px" }}>
-                        Brands In, H-25/134, Delhi, India
-                      </span> */}
-                    {/* </li> */}
-                    <li className="mb-2 d-flex align-items-center">
-                      <EmailIcon
-                        style={{
-                          fontSize: "16px",
-                          marginRight: "10px",
-                          color: "#F5DEB3",
-                        }}
-                      />
-                      <a
-                        href="mailto:heed.brandsin@gmail.com"
-                        className="text-white text-decoration-none"
-                        style={{ fontSize: "14px" }}
-                      >
-                        heed.brandsin@gmail.com
-                      </a>
-                    </li>
-                    <li className="d-flex align-items-center">
-                      <LanguageIcon
-                        style={{
-                          fontSize: "16px",
-                          marginRight: "10px",
-                          color: "#F5DEB3",
-                        }}
-                      />
-                      <Link
-                        href="https://shopheed.com/"
-                        className="text-white text-decoration-none"
-                        style={{ fontSize: "14px" }}
-                      >
-                        www.shopheed.com
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
+              <div className="footer-title">
+                <h4 style={{ color: "#000000", fontWeight: "bold" }}>Help</h4>
+              </div>
+              <div className="footer-contant">
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/return-exchange`} className="text-dark text-decoration-none">
+                      Return & Exchange
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/shipping-delivery`} className="text-dark text-decoration-none">
+                      Shipping & Delivery
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled mb-2">
+                  <li>
+                    <Link href={`/privacy-policy`} className="text-dark text-decoration-none">
+                      Privacy Policy
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="list-unstyled">
+                  <li>
+                    <Link href={`/terms-conditions`} className="text-dark text-decoration-none">
+                      Terms & Conditions
+                    </Link>
+                  </li>
+                </ul>
               </div>
             </Col>
           </Row>
         </Container>
       </section>
 
-      <CopyRight
-        layout={layoutClass}
-        fluid={CopyRightFluid ? CopyRightFluid : ""}
-      />
+      <CopyRight/>
     </footer>
   );
 };

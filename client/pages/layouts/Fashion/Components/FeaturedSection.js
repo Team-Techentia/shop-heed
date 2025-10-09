@@ -29,7 +29,6 @@ const MasterSection = ({ img, title, link }) => {
               width: "100%",
               height: "100%",
               maxHeight: "450px",
-             
               borderRadius: "10px",
             }}
             src={img || defaultImage}
@@ -57,7 +56,6 @@ const MasterSection = ({ img, title, link }) => {
               height: "50px",
               lineHeight: "50px",
               borderRadius: "5px",
-              // background: "rgba(0,0,0,0.3)",
             }}
           >
             {title}
@@ -94,11 +92,13 @@ const FeaturedSections = () => {
   }, []);
 
   const formatCategoryName = (category, subCategory) => {
-    let displayName = category.toUpperCase().replace("-", " ");
+    // Agar subcategory hai toh sirf subcategory display karo
     if (subCategory) {
-      displayName += ` - ${subCategory.toUpperCase()}`;
+      // Space ko hyphen se replace karo aur uppercase mein convert karo
+      return subCategory.replace(/-/g, ' ').toUpperCase();
     }
-    return displayName;
+    // Agar sirf category hai toh category display karo
+    return category.toUpperCase();
   };
 
   const generateLink = (category, subCategory) => {

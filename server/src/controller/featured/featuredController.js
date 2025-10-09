@@ -42,40 +42,52 @@ const createFeaturedSection = async (req, res) => {
         }
 
         let sectionDoc;
+        let imageUrl = "";
 
-        if (data.category && data.subCategory) {
+        if (data.subCategory) {
+            // Query for subcategory - Fixed the query structure
             sectionDoc = await subCategoryModel.findOne({
                 category: data.category,
-                subCategory: data.subCategory
+                value: data.subCategory  // Changed from subCategory to value
             });
+            
+            if (!sectionDoc) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Subcategory not found"
+                });
+            }
+            imageUrl = sectionDoc.image;
         } else {
+            // Query for category only
             sectionDoc = await categoryModel.findOne({
                 value: data.category
             });
+            
+            if (!sectionDoc) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Category not found"
+                });
+            }
+            imageUrl = sectionDoc.image;
         }
 
-        if (!sectionDoc) {
-            return res.status(404).json({
-                success: false,
-                message: "Category/Subcategory not found"
-            });
-        }
-
-         const newSection = new FeaturedSection({
+        const newSection = new FeaturedSection({
             category: data.category,
             subCategory: data.subCategory || null,
             priority: data.priority || 1,
             description: data.description || "",
-            image: sectionDoc.image, // <-- important
+            image: imageUrl,
             isActive: true
         });
 
-                const savedSection = await newSection.save();
+        const savedSection = await newSection.save();
 
         return res.status(201).json({
             success: true,
             message: "Featured section created successfully",
-            // data: savedSection
+            data: savedSection
         });
 
     } catch (error) {

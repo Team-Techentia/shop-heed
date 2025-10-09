@@ -9,7 +9,6 @@ import {
   Row,
   Col,
 } from "reactstrap";
-import Api from "../../components/Api";
 import toast from "react-hot-toast";
 
 function BulkForm() {
@@ -32,6 +31,10 @@ function BulkForm() {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ✅ Google Apps Script Web App URL
+  const SPREADSHEET_URL =
+    "https://script.google.com/macros/s/AKfycbyzCoFX8WqfRd_es21P-mJSdK19gMtViQFpFRzh40oYrbxGXWY-nHsfmtFy_cBqjHRQuw/exec";
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -57,6 +60,7 @@ function BulkForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -64,27 +68,46 @@ function BulkForm() {
     }
 
     setIsSubmitting(true);
+
     try {
-      const res = await Api.BulkEnquiry(formData);
-      toast.success("Form submitted successfully");
-      setFormData({
-        fullName: "",
-        companyName: "",
-        natureOfBusiness: "",
-        email: "",
-        phoneNumber: "",
-        preferredContact: "",
-        productsInterested: "",
-        quantityRequired: "",
-        shippingAddress: "",
-        deliveryDate: "",
-        additionalInfo: "",
-        priceRange: "",
-        heardAboutUs: "",
-        otherSource: "",
+      // ✅ Prepare payload for Google Sheets
+      const payload = new FormData();
+      Object.keys(formData).forEach((key) => {
+        payload.append(key, formData[key]);
       });
-      setErrors({});
+
+      const response = await fetch(SPREADSHEET_URL, {
+        method: "POST",
+        body: payload,
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        toast.success("Form submitted successfully!");
+        setFormData({
+          fullName: "",
+          companyName: "",
+          natureOfBusiness: "",
+          email: "",
+          phoneNumber: "",
+          preferredContact: "",
+          productsInterested: "",
+          quantityRequired: "",
+          shippingAddress: "",
+          deliveryDate: "",
+          additionalInfo: "",
+          priceRange: "",
+          heardAboutUs: "",
+          otherSource: "",
+        });
+        setErrors({});
+      } else {
+        toast.error("Something went wrong. Please try again!");
+      }
     } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Failed to submit. Please try again later!");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,10 +115,11 @@ function BulkForm() {
 
   return (
     <Form
-    className="bulk-from"
+      className="bulk-from"
       onSubmit={handleSubmit}
       style={{ width: "100%", paddingBottom: "20px", textAlign: "left" }}
     >
+      {/* Full Name + Company Name */}
       <Row>
         <Col md={6}>
           <FormGroup>
@@ -127,6 +151,7 @@ function BulkForm() {
         </Col>
       </Row>
 
+      {/* Nature of Business */}
       <FormGroup>
         <Label>Nature of Business</Label>
         <Input
@@ -144,6 +169,7 @@ function BulkForm() {
         </Input>
       </FormGroup>
 
+      {/* Email + Phone */}
       <Row>
         <Col md={6}>
           <FormGroup>
@@ -177,6 +203,7 @@ function BulkForm() {
         </Col>
       </Row>
 
+      {/* Preferred Contact */}
       <FormGroup className="bulk-radio">
         <Label>Preferred Method of Contact</Label>
         <FormGroup check>
@@ -204,6 +231,8 @@ function BulkForm() {
           </Label>
         </FormGroup>
       </FormGroup>
+
+      {/* Products + Delivery Date */}
       <Row>
         <Col md={6}>
           <FormGroup>
@@ -233,6 +262,8 @@ function BulkForm() {
           </FormGroup>
         </Col>
       </Row>
+
+      {/* Shipping Address */}
       <FormGroup>
         <Label for="shippingAddress">Shipping Address</Label>
         <Input
@@ -247,6 +278,7 @@ function BulkForm() {
         )}
       </FormGroup>
 
+      {/* Quantity */}
       <FormGroup>
         <Label for="quantityRequired">
           Quantity Required (Minimum Order: [Insert Minimum Quantity])
@@ -263,6 +295,7 @@ function BulkForm() {
         )}
       </FormGroup>
 
+      {/* Additional Info + Price Range */}
       <FormGroup>
         <Label for="additionalInfo">
           Any Additional Information / Specific Requirement
@@ -287,6 +320,7 @@ function BulkForm() {
         />
       </FormGroup>
 
+      {/* Heard About Us */}
       <FormGroup>
         <Label>How Did You Hear About Us?</Label>
         <Input
@@ -312,7 +346,7 @@ function BulkForm() {
         )}
       </FormGroup>
 
-      <Button className="btn-solid" type="submit"  disabled={isSubmitting}>
+      <Button className="btn-solid" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit"}
       </Button>
     </Form>

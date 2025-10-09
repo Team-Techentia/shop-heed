@@ -91,7 +91,7 @@ const Fashion = () => {
       <Sections />
 
       {/* Top Collection */}
-      <Link href="/collections/new" passHref legacyBehavior>
+      <Link href="/collections/new%20and%20trending" passHref legacyBehavior>
         <a style={{ textDecoration: "none" }}>
           <Paragraph
             title="title1 section-t-space"
@@ -128,13 +128,9 @@ const Fashion = () => {
 
       {/* Footer */}
       <MasterFooter
-        footerClass={`footer-light`}
-        footerLayOut={"light-layout upper-footer"}
-        footerSection={"small-section border-section border-top-0"}
-        belowSection={" light-layout"}
-        newLatter={true}
-        logoName={"logo.png"}
-      />
+  
+  logoName="logo.png"
+/>
     </>
   );
 };

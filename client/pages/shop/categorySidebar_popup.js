@@ -716,14 +716,9 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
             </section>
 
             {/* <CatogeryPopupSidebar /> */}
-            <MasterFooter
-                footerClass={`footer-light`}
-                footerLayOut={"light-layout upper-footer"}
-                footerSection={"small-section border-section border-top-0"}
-                belowSection={"section-b-space light-layout"}
-                newLatter={true}
-                logoName={"logo.png"}
-            />
+           <MasterFooter
+  logoName="logo.png"
+/>
         </>
     );
 };

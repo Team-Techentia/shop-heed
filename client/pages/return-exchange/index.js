@@ -1,87 +1,113 @@
 import React from "react";
 import CommonLayout from "../../components/shop/common-layout";
-import { Container, Row } from "reactstrap";
-import { Col, Media, } from "reactstrap";
-import newsLetter from "../../public/assets/images/newletterimage.png";
+import { Container, Row, Col } from "reactstrap";
+import { Phone, Mail, Clock } from "lucide-react"; // icons
 import ReturnExchangeForm from "./returnExchangeForm";
 
 const ReturnAndExchangePage = () => {
   return (
-    <CommonLayout title="Contact Us" parent="home">
-      <section style={{paddingTop:"30px"}} className="section-b-space ratio_asos mb-5  contact-us">
+    <CommonLayout title="Return & Exchange" parent="home">
+      <section
+        style={{ paddingTop: "30px" }}
+        className="section-b-space ratio_asos mb-5 contact-us"
+      >
         <div className="collection-wrapper">
           <Container>
-            <div>
-              <div>
-                <h3 style={{fontWeight:"600" , color:"#000000"}}>Contact Heed</h3>
-                <p>
-                  {/* Have a question or need assistance? We're here to help! Feel
-                  free to reach out to us through any of the following channels */}
-                  We'd love to hear from you! If you have any questions, concerns, or feedback, feel free to reach out to us.
-                </p>
-                {/* <h4 className="mt-4">Customer Support</h4>
-                <p>
-                  Our dedicated customer support team is available to assist you
-                  with any inquiries or concerns you may have. Whether you need
-                  help with product information, order tracking, or general
-                  assistance, we're committed to providing you with prompt and
-                  helpful service.
-                </p> */}
-              </div>
-              <div className="mt-4" >
-                <Row
-
+            <div className="mt-4">
+              <Row
+                style={{
+                  border: "0.1px solid rgba(211, 198, 198, 0.45)",
+                  padding: "0px",
+                  margin: "0px",
+                  borderRadius: "10px",
+                }}
+              >
+                {/* LEFT SIDE: CONTACT INFO */}
+                <Col
+                  xs="12"
+                  sm="12"
+                  md="6"
+                  lg="6"
+                  xl="6"
                   style={{
-                    border: "0.1px solid rgba(211, 198, 198, 0.4509803922)",
-                    padding: "0px",
-                    margin: "0px",
-                    borderRadius: "10px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: "40px",
                   }}
                 >
-                  <Col
-                    xs="12"
-                    sm="12"
-                    md="6"
-                    lg="6"
-                    xl="6"
-                    style={{ padding: "0px", margin: "0px" }}
+                  <h3
+                    style={{
+                      fontWeight: "600",
+                      color: "#000000",
+                      marginBottom: "20px",
+                    }}
                   >
-                    <Media
+                    CONTACT US
+                  </h3>
+
+                  <div style={{ lineHeight: "2.2", color: "#000000" }}>
+                    <div
                       style={{
-                        maxHeight: "400px",
-                        width: "100%",
-                        borderRadius: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                        fontSize: "20px",
                       }}
-                      src={newsLetter.src}
-                      alt="show"
-                    />
-                  </Col>
-
-                  <Col
-                    xs="12"
-                    sm="12"
-                    md="6"
-                    lg="6"
-                    xl="6"
-                   
-                  >
-                    <div style={{ }}>
-                      <br />
-                      <h3 style={{fontWeight:"600" , color:"#000000"}}> Return Exchange </h3>
-
-                      <p>
-                        {" "}
-                        We would be happy to connect with you & Thank You for
-                        Contact Us
-                      </p>
-
-                      <Col >
-                      <ReturnExchangeForm />
-                      </Col>
+                    >
+                      <Phone color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
+                      <span>Customer Care - ‪+91-7703933743</span>
                     </div>
-                  </Col>
-                </Row>
-              </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                        fontSize: "20px",
+                      }}
+                    >
+                      <Mail color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
+                      <span>Heed.brandsin@gmail.com</span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: "20px",
+                      }}
+                    >
+                      <Clock color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
+                      <span>Sun-Sat | 10:30 AM - 06:00 PM (IST)</span>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* RIGHT SIDE: RETURN & EXCHANGE FORM */}
+                <Col
+                  xs="12"
+                  sm="12"
+                  md="6"
+                  lg="6"
+                  xl="6"
+                  style={{ padding: "40px" }}
+                >
+                  <div>
+                    <h3 style={{ fontWeight: "600", color: "#000000" }}>
+                      Return & Exchange
+                    </h3>
+                    <p style={{ color: "#555" }}>
+                      Please fill out the form below to initiate your return or
+                      exchange request. We’ll get back to you shortly.
+                    </p>
+                    <Col>
+                      <ReturnExchangeForm />
+                    </Col>
+                  </div>
+                </Col>
+              </Row>
             </div>
           </Container>
         </div>
