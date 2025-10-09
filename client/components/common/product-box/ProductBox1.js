@@ -30,12 +30,12 @@ margin-bottom: ${({ isMobile }) => (isMobile ? "15px" : "25px")};
 
 const DiscountBadge = styled.div`
   position: absolute;
-  top: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "10px" : "12px") : "20px")};
-  left: ${({ isMobile }) => (isMobile ? "10px" : "20px")};
+  top: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "7px" : "10px") : "15px")};
+  left: ${({ isMobile }) => (isMobile ? "0px" : "0px")};
   background: linear-gradient(90deg, #4aa184, #5ab195);
   color: #fff;
   padding: ${({ isMobile }) => (isMobile ? "2px 5px" : "3px 8px")};
-  border-radius: 4px;
+ opacity:0.7;
   font-size: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "6px" : "8px") : "12px")};
   font-weight: bold;
   z-index: 2;
