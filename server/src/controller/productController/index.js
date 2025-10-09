@@ -426,10 +426,11 @@ const filterProduct = async (req, res) => {
       };
     }
     if (isTrending) {
-      where.shopType = { $in: ["trending"] };
+      where.shopType = { $in: ["price drop"] };
     } else if (shopType) {
       where.shopType = { $in: shopType && shopType.split(",").map((item) => item) };
     }
+    console.log(where)
     if (subCategory === "all") {
       products = await mainProductModel
         .find(filter)
@@ -469,7 +470,7 @@ const filterProductV2 = async (req, res) => {
       };
     }
     if (isTrending) {
-      where.shopType = { $in: ["trending"] };
+      where.shopType = { $in: ["price drop"] };
     }
     if (subCategory === "all") {
       products = await productModel

@@ -9,7 +9,7 @@ const specialShopTypes = [
   "everyday wear",
   "designer wear",
   "street wear",
-  "trending",
+  "price drop",
   "bestseller",
 ];
 

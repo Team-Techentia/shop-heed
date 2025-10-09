@@ -442,7 +442,7 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
           >
             <option value="" >Select Type</option>
             
-            <option value="trending">Trending</option>
+            <option value="price drop">Price Drop</option>
 
           </Input> </div>
         };
@@ -567,7 +567,7 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
           >
             <option value="" >Select Type</option>
             
-            <option value="trending">Trending</option>
+            <option value="price drop">Price Drop</option>
 
           </Input> </div>
         };
@@ -710,7 +710,7 @@ const Datatable = ({handleDeleteComment,handleGenerateInvoicing, openPopUp, hand
           >
             <option value="" >Select Type</option>
             
-            <option value="trending">Trending</option>
+            <option value="price drop">Price Drop</option>
 
           </Input> </div>
         };

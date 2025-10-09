@@ -68,14 +68,15 @@ function Category() {
             params.subCategory = "";
             params.shopType = subCategory;
           }
-          if(subCategory == "trending") {
+          if(subCategory == "price drop") {
             params.subCategory = "";
-            params.shopType = subCategory;
+            params.shopType = "price drop";
           }
-          if(subCategory == "new") {
+          if(subCategory == "new and trending") {
             params.subCategory = "";
-            params.shopType = subCategory;
+            params.shopType = "new and trending";
           }
+          console.log(params)
           setLoading(true)
           const res = await Api.filterProduct(params)
           setData(res.data)

@@ -183,7 +183,7 @@ const SideBar = () => {
                 </li>
               </ul>
             </li>
-            <li><Link href="/collections/trending">PRICE DROP</Link></li>
+            <li><Link href="/collections/price%20drop">PRICE DROP</Link></li>
             <li><Link href="/bulk-enquiry">Bulk Enquiry</Link></li>
             <li><Link href="/contact-us">Contact us</Link></li>
             <li>

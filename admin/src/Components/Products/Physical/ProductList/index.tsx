@@ -88,8 +88,8 @@ const shopTypeData = [
   { value: "everyday wear", item: "EveryDay Wear" },
   { value: "designer wear", item: "Designer Wear" },
   { value: "street wear", item: "Street Wear" },
-  { value: "trending", item: "Trending" },
-   { value: "new", item: 'New' },
+  { value: "price drop", item: "Price Drop" },
+   { value: "new and trending", item: 'New and Trending' },
 ];
 
 const ProductList = () => {

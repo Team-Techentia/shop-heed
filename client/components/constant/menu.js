@@ -17,7 +17,7 @@ MENUITEMS = [
   {
     title: "PRICE DROP",
     type: "link",
-    path: "/collections/PRICE%20DROP",
+    path: "/collections/price%20drop",
   },
 
   {
