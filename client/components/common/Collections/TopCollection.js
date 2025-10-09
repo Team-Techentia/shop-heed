@@ -26,7 +26,9 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
 
   return (
     <div className="premium-collection">
+     
       <Container>
+        
         <Row className="margin-default">
           {showLoader ? (
             [...Array(4)].map((_, i) => (

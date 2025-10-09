@@ -121,7 +121,7 @@ const get_All_Product = async function (req, res) {
 const get_NEW_Product = async function (req, res) {
   try {
     const allProduct = await mainProductModel
-      .find({ isDeleted: false, shopType: { $in: ["new"] }, })
+      .find({ isDeleted: false, shopType: { $in: ["new and trending"] }, })
       .populate("products")
       .sort({ createdAt: -1 });
     if (!allProduct) {

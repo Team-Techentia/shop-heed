@@ -716,9 +716,7 @@ const CategorySidebar_popup = ({ product, banner, subCategory, backImage, title,
             </section>
 
             {/* <CatogeryPopupSidebar /> */}
-           <MasterFooter
-  logoName="logo.png"
-/>
+           <MasterFooter logoName="logo1.png"/>
         </>
     );
 };

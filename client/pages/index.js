@@ -104,7 +104,7 @@ const Fashion = () => {
       <TopCollection
         dataContStart={0}
         dataContEnd={50}
-        noTitle="null"
+        noTitle="new and trending"
         backImage={true}
         type="fashion"
         subtitle="special offer"
@@ -127,10 +127,7 @@ const Fashion = () => {
       <TabCollection9 type="marijuana" midBox={true} spanClass={true} />
 
       {/* Footer */}
-      <MasterFooter
-  
-  logoName="logo.png"
-/>
+      <MasterFooter/>
     </>
   );
 };

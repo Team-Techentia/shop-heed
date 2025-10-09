@@ -19,12 +19,12 @@ const ImageWrapper = styled.div`
 `;
 
 const ProductContainer = styled.div`
-  // border: 1px solid #f1f1f1;
+  border: 1px solid #f1f1f1;
   border-radius: 15px;
   background: #fff;
   position: relative;
-
-  // padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
+//  padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
+margin-bottom: ${({ isMobile }) => (isMobile ? "15px" : "25px")};
   
 `;
 

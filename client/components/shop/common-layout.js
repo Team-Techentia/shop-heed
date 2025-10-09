@@ -9,9 +9,7 @@ const CommonLayout = ({ children, title, parent, subTitle }) => {
       <HeaderOne topClass="top-header" logoName="logo.png" />
       <Breadcrubs title={title} parent={parent} subTitle={subTitle} />
       <>{children}</>
-      <MasterFooter
-       
-      />
+      <MasterFooter/>
     </>
   );
 };
