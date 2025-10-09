@@ -15,9 +15,9 @@ MENUITEMS = [
     children: [],
   },
   {
-    title: "Trending Now",
+    title: "PRICE DROP",
     type: "link",
-    path: "/collections/trending%20now",
+    path: "/collections/PRICE%20DROP",
   },
 
   {

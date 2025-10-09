@@ -262,7 +262,7 @@ const TermsAndConditions = () => {
                 NAGAR, NEW DELHI, Central Delhi, Delhi, 110008 ,
               </li>
               <li>
-                <strong>Email :</strong> info@shopheed.com ,{" "}
+                <strong>Email :</strong> heed.brandsin@gmail.com ,{" "}
               </li>
               <li>
                 <strong>Website :</strong> - www.shopheed.com

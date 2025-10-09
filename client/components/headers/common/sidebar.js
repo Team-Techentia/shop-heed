@@ -164,7 +164,41 @@ const SideBar = () => {
             </div>
           </a>
           <ul id="sub-menu" className="sidebar-menu">
-            {isLogin ? (
+            <li><Link href="/">Home</Link></li>
+            <li>
+              <a onClick={handleMegaSubmenu}>
+                Shop
+                <span
+                  className="sub-arrow"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
+                    if (element) element.classList.toggle('opensidesubmenu');
+                  }}
+                ></span>
+              </a>
+              <ul className="mega-menu clothing-menu">
+                <li>
+                  <Row m="0">{renderDynamicCategories()}</Row>
+                </li>
+              </ul>
+            </li>
+            <li><Link href="/collections/trending">PRICE DROP</Link></li>
+            <li><Link href="/bulk-enquiry">Bulk Enquiry</Link></li>
+            <li><Link href="/contact-us">Contact us</Link></li>
+            <li>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  closeNav();
+                  const searchSidebar = document.getElementById("search_side_bar");
+                  if (searchSidebar) searchSidebar.classList.add("open-side");
+                }}
+              >
+                Search
+              </a>
+            </li>
+             {isLogin ? (
               <>
                 <li><Link href={`/page/user/profile`}>Profile</Link></li>
                 <li><Link href="/page/user/orders">Orders</Link></li>
@@ -193,40 +227,6 @@ const SideBar = () => {
               </li>
 
             )}
-            <li><Link href="/">Home</Link></li>
-            <li>
-              <a onClick={handleMegaSubmenu}>
-                Shop
-                <span
-                  className="sub-arrow"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const element = document.getElementsByClassName('mega-menu clothing-menu')[0];
-                    if (element) element.classList.toggle('opensidesubmenu');
-                  }}
-                ></span>
-              </a>
-              <ul className="mega-menu clothing-menu">
-                <li>
-                  <Row m="0">{renderDynamicCategories()}</Row>
-                </li>
-              </ul>
-            </li>
-            <li><Link href="/collections/trending">Trending Now</Link></li>
-            <li><Link href="/bulk-enquiry">Bulk Enquiry</Link></li>
-            <li><Link href="/contact-us">Contact us</Link></li>
-            <li>
-              <a
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  closeNav();
-                  const searchSidebar = document.getElementById("search_side_bar");
-                  if (searchSidebar) searchSidebar.classList.add("open-side");
-                }}
-              >
-                Search
-              </a>
-            </li>
             {isLogin && (
               <li style={{ cursor: "pointer" }} onClick={() => logOut()}>
                 <a>Logout</a>

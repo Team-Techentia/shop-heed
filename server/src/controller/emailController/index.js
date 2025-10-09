@@ -776,12 +776,12 @@ const htmlContentForMailTemplate = (name, title, dis) => {
                                                                               <td align="center"
                                                                                   style="font-family:'Roboto', Arial, Helvetica, sans-serif;font-size: 13px;color: #dadada;line-height: 19px;">
                                                                                   This email was sent to :
-                                                                         info@shopheed.com<br>
+                                                                         heed.brandsin@gmail.com<br>
                                                                                   You are receiving this email because
                                                                                   you are subscribed to our mailing
                                                                                   list.<br>
                                                                                   For any questions please send to
-                                                                              info@shopheed.com
+                                                                              heed.brandsin@gmail.com
                                                                               </td>
                                                                           </tr>
                                                                           <tr>

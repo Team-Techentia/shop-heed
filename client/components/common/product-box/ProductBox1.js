@@ -19,12 +19,13 @@ const ImageWrapper = styled.div`
 `;
 
 const ProductContainer = styled.div`
-  border: 1px solid #f1f1f1;
+  // border: 1px solid #f1f1f1;
   border-radius: 15px;
   background: #fff;
   position: relative;
+
   // padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
-  // margin-bottom: 20px;
+  
 `;
 
 const DiscountBadge = styled.div`
@@ -134,12 +135,12 @@ const ProductItem = ({ product, onClick }) => {
           style={{
             marginTop: "12px",
             fontSize: isMobile ? "14px" : "18px",
-            fontWeight: "600",
+            fontWeight: "500",
             color: "#000",
             marginBottom: "4px",
             marginLeft: "5px",
             letterSpacing: "1px",
-            textTransform: "uppercase",
+            // textTransform: "uppercase",
           }}
         >
           {product.brand}
@@ -153,7 +154,7 @@ const ProductItem = ({ product, onClick }) => {
           color: "gray",
           fontSize: isMobile ? "12px" : "16px",
           marginLeft: "5px",
-          letterSpacing: "1.2px",
+          lineHeight: "1.5",
           fontFamily: "'Roboto', sans-serif",
           fontWeight: "500",
           textTransform: "capitalize",
@@ -166,25 +167,14 @@ const ProductItem = ({ product, onClick }) => {
       <div style={{ marginLeft: "5px", marginTop: "4px" }}>
         {product.discount ? (
           <>
-            <span
-              style={{
-                textDecoration: "line-through",
-                color: "#888",
-                marginRight: "6px",
-                fontSize: isMobile ? "12px" : "14px",
-                fontWeight: "bold",
-                letterSpacing: "1px",
-              }}
-            >
-              ₹{product.price}
-            </span>
-            <span
+          <span
               style={{
                 fontWeight: "bold",
-                fontSize: isMobile ? "14px" : "16px",
-                background: "linear-gradient(90deg, #4AA184, #5ab195)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                fontSize: isMobile ? "14px" : "18px",
+                color:"000",
+                // background: "linear-gradient(90deg, #4AA184, #5ab195)",
+                // WebkitBackgroundClip: "text",
+                // WebkitTextFillColor: "transparent",
                 display: "inline-block",
                 letterSpacing: "1px",
                 textTransform: "uppercase",
@@ -192,6 +182,19 @@ const ProductItem = ({ product, onClick }) => {
             >
               ₹{product.finalPrice}
             </span>
+            <span
+              style={{
+                textDecoration: "line-through",
+                color: "#888",
+                marginLeft: "7px",
+                fontSize: isMobile ? "12px" : "16px",
+                fontWeight: "bold",
+                letterSpacing: "1px",
+              }}
+            >
+              ₹{product.price}
+            </span>
+            
           </>
         ) : (
           <span

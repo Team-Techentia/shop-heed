@@ -19,17 +19,17 @@ const CancellationAndRefund = () => {
 
       <h2>Process of Exchange</h2>
       <p>
-        If you are dissatisfied with your purchase for any reason, you can exchange it for a new size, color, or an entirely new model. For exchanging the purchased product, please share pictures of the product received along with your reason for exchange through mail at <a href="mailto:info@shopheed.com">info@shopheed.com</a> within 3 days of the product delivery. Upon receiving the request, we will process the exchange typically within 24-72 hours.
+        If you are dissatisfied with your purchase for any reason, you can exchange it for a new size, color, or an entirely new model. For exchanging the purchased product, please share pictures of the product received along with your reason for exchange through mail at <a href="mailto:heed.brandsin@gmail.com">heed.brandsin@gmail.com</a> within 3 days of the product delivery. Upon receiving the request, we will process the exchange typically within 24-72 hours.
       </p>
 
       <h2>Process of Return</h2>
       <p>
-        If you are unhappy with your purchase and wish to return any item(s), you can easily return the product and opt for a refund through Shopheed credit note, valid for 3 months, and can be availed on all new collections. You can mail us mentioning the name and picture of the product(s) along with your reason for return through mail at <a href="mailto:info@shopheed.com">info@shopheed.com</a> within 3 days of product delivery. The balance of return amount will be refunded as credit points in your Shopheed account. <strong>We do not offer a refund in the bank.</strong>
+        If you are unhappy with your purchase and wish to return any item(s), you can easily return the product and opt for a refund through Shopheed credit note, valid for 3 months, and can be availed on all new collections. You can mail us mentioning the name and picture of the product(s) along with your reason for return through mail at <a href="mailto:heed.brandsin@gmail.com">heed.brandsin@gmail.com</a> within 3 days of product delivery. The balance of return amount will be refunded as credit points in your Shopheed account. <strong>We do not offer a refund in the bank.</strong>
       </p>
 
       <h2>In case of Damage Product Received</h2>
       <p>
-        We're pretty stringent with our quality control, but occasionally something might slip through the cracks. If your product is faulty or we sent you an incorrect order by mistake, please mail us at <a href="mailto:info@shopheed.com">info@shopheed.com</a> with reference pictures of the product along with damage details within 24 hours of product delivery for assistance.
+        We're pretty stringent with our quality control, but occasionally something might slip through the cracks. If your product is faulty or we sent you an incorrect order by mistake, please mail us at <a href="mailto:heed.brandsin@gmail.com">heed.brandsin@gmail.com</a> with reference pictures of the product along with damage details within 24 hours of product delivery for assistance.
       </p>
 
       <ul>

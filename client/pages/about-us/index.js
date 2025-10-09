@@ -41,7 +41,7 @@ const AboutUs = () => {
 
                         <h3 style={{color:"#000000" , fontWeight:"600"}}>Contact Us</h3>
                         <p>
-                            Have questions or need assistance? Our dedicated customer support team is here to help. Reach out to us at <a href="mailto:info@shopheed.com">info@shopheed.com</a>
+                            Have questions or need assistance? Our dedicated customer support team is here to help. Reach out to us at <a href="mailto:heed.brandsin@gmail.com">heed.brandsin@gmail.com</a>
                             , and we’ll be happy to assist you.
                         </p>
 
