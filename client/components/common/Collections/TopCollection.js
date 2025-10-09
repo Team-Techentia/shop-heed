@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { LoaderContext } from "../../../helpers/loaderContext";
 import { useQuery } from "@tanstack/react-query";
 import Api from "../../Api";
-import { Row, Col, Container, Button } from "reactstrap";
+import { Row, Col, Container } from "reactstrap";
 import Link from "next/link";
 import PostLoader from "../PostLoader";
 import ProductItems from "../product-box/ProductBox1";
@@ -48,12 +48,37 @@ export default function TopCollection({ dontRepeat, title, cartClass, backImage 
           )}
         </Row>
 
-        {/* Enhanced View More Button */}
-        
+        {/* View More Button */}
+        {!showLoader && data?.length > 8 && (
+          <div className="text-center mt-4">
+            <Link href="/collections/new%20and%20trending" passHref legacyBehavior>
+              <a className="view-more-button">View More</a>
+            </Link>
+          </div>
+        )}
       </Container>
 
-      {/* Modern Gradient Button with Animations */}
-     
+      {/* Inline CSS Styling */}
+      <style jsx>{`
+        .view-more-button {
+          display: inline-block;
+          padding: 12px 30px;
+          background: linear-gradient(135deg, #ff7e5f, #feb47b);
+          color: white;
+          font-weight: 600;
+          text-transform: uppercase;
+          border-radius: 30px;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .view-more-button:hover {
+          background: linear-gradient(135deg, #feb47b, #ff7e5f);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+          transform: translateY(-2px);
+        }
+      `}</style>
     </div>
   );
 }
