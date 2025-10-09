@@ -469,7 +469,7 @@ const generateInvoicing = async (req, res) => {
         name: "Shopheed",
         address:
           "A-39, WEST PATEL NAGAR, WEST PATEL NAGAR, NEW DELHI, Central Delhi, Delhi, 110008",
-        email: "info@shopheed.com",
+        email: "heed.brandsin@gmail.com",
       },
       to: {
         name: `${customerDetails.first_name} ${customerDetails.last_name}`,

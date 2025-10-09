@@ -121,14 +121,14 @@ const MasterFooter = ({
                   <Row>
                     <Col sm="6">
                       <ul className="list-unstyled">
-                        <li className="mb-2">
+                        {/* <li className="mb-2">
                           <Link
                             href={`/`}
                             className="text-white text-decoration-none"
                           >
                             Home
                           </Link>
-                        </li>
+                        </li> */}
                         <li className="mb-2">
                           <Link
                             href={`/collections/all`}
@@ -206,18 +206,18 @@ const MasterFooter = ({
                     />
                   </div>
                   <ul className="list-unstyled contact-list">
-                    <li className="mb-2 d-flex align-items-center">
+                    {/* <li className="mb-2 d-flex align-items-center">
                       <LocationOnIcon
                         style={{
                           fontSize: "16px",
                           marginRight: "10px",
                           color: "#F5DEB3",
                         }}
-                      />
-                      <span style={{ fontSize: "14px" }}>
+                      /> */}
+                      {/* <span style={{ fontSize: "14px" }}>
                         Brands In, H-25/134, Delhi, India
-                      </span>
-                    </li>
+                      </span> */}
+                    {/* </li> */}
                     <li className="mb-2 d-flex align-items-center">
                       <EmailIcon
                         style={{
@@ -227,11 +227,11 @@ const MasterFooter = ({
                         }}
                       />
                       <a
-                        href="mailto:info@shopheed.com"
+                        href="mailto:heed.brandsin@gmail.com"
                         className="text-white text-decoration-none"
                         style={{ fontSize: "14px" }}
                       >
-                        info@shopheed.com
+                        heed.brandsin@gmail.com
                       </a>
                     </li>
                     <li className="d-flex align-items-center">

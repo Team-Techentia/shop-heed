@@ -97,7 +97,7 @@ const Fashion = () => {
             title="title1 section-t-space"
             inner="title-inner1"
             hrClass={false}
-            titleData="Our Top Shelf Pick"
+            titleData="New AND Trending"
           />
         </a>
       </Link>
@@ -119,7 +119,7 @@ const Fashion = () => {
         title="title1 section-t-space"
         inner="title-inner1"
         hrClass={false}
-        titleData="Featured Category"
+        titleData="Featured Categories"
       />
       <FeaturedSections />
 
