@@ -9,11 +9,11 @@ import SocialMediaIcons from "./SocialMediaIcons";
 import Api from "@/Components/Api";
 
 const LoginForm = () => {
-  const { i18LangStatus } = useAppSelector((store) => store.LangReducer);
+  const {} = useAppSelector((store) => store.LangReducer);
   const [showPassWord, setShowPassWord] = useState(false);
   const [formValues, setFormValues] = useState({
-    emailOrPhone: "admin@heed.com",
-    password: "Q7879+5445_LCM",
+    emailOrPhone: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false); // State to manage loading
 
