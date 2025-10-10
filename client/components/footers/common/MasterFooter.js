@@ -32,7 +32,7 @@ const MasterFooter = ({
                 <h4 style={{ color: "#000000", fontWeight: "bold" }}>About Us</h4>
               </div>
               <div className="footer-contant">
-                <div className="footer-logo mb-3">
+                {/* <div className="footer-logo mb-3">
                   <img
                     src="assets/images/logo1.png"
                     alt="Heed Logo"
@@ -42,8 +42,8 @@ const MasterFooter = ({
                       objectFit: "contain",
                     }}
                   />
-                </div>
-                <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#333" }}>
+                </div> */}
+                <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#333", marginRight:"30px"}}>
                   Heed is an Indian contemporary clothing brand committed to
                   empowering discerning men to elevate their style with
                   comfort-luxury, while making every day great fashion choices.
