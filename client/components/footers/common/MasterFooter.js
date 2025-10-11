@@ -18,9 +18,9 @@ const MasterFooter = ({
     <footer
       className={footerClass}
       style={{
-        backgroundColor: "#EEE1C6", // Beige
+        backgroundColor: "#A94C37", // Beige
         paddingTop: "20px",
-        color: "#000000",
+        color: "#ffffff",
       }}
     >
       <section className={belowSection}>
@@ -29,7 +29,7 @@ const MasterFooter = ({
             {/* About Us */}
             <Col lg="4" md="6" className="mb-4">
               <div className="footer-title footer-mobile-title">
-                <h4 style={{ color: "#000000", fontWeight: "bold" }}>About Us</h4>
+                <h4 style={{ color: "#ffffff", fontWeight: "bold" }}>About Us</h4>
               </div>
               <div className="footer-contant">
                 {/* <div className="footer-logo mb-3">
@@ -43,7 +43,7 @@ const MasterFooter = ({
                     }}
                   />
                 </div> */}
-                <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#333", marginRight:"30px"}}>
+                <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#ffffff", marginRight:"30px"}}>
                   Heed is an Indian contemporary clothing brand committed to
                   empowering discerning men to elevate their style with
                   comfort-luxury, while making every day great fashion choices.
@@ -61,7 +61,7 @@ const MasterFooter = ({
                         backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <FacebookIcon style={{ color: "#000000", fontSize: "20px" }} />
+                      <FacebookIcon style={{ color: "#ffffff", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://x.com/heedyourlooks?s=08"
@@ -74,7 +74,7 @@ const MasterFooter = ({
                         backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <XIcon style={{ color: "#000000", fontSize: "20px" }} />
+                      <XIcon style={{ color: "#ffffff", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://www.instagram.com/heedyourlooks/"
@@ -87,7 +87,7 @@ const MasterFooter = ({
                         backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <InstagramIcon style={{ color: "#000000", fontSize: "20px" }} />
+                      <InstagramIcon style={{ color: "#ffffff", fontSize: "20px" }} />
                     </a>
                     <a
                       href="https://www.youtube.com/@heedyourlooks"
@@ -100,7 +100,7 @@ const MasterFooter = ({
                         backgroundColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      <YouTubeIcon style={{ color: "#000000", fontSize: "20px" }} />
+                      <YouTubeIcon style={{ color: "#ffffff", fontSize: "20px" }} />
                     </a>
                   </div>
                 </div>
@@ -110,33 +110,33 @@ const MasterFooter = ({
             {/* Main Menu */}
             <Col lg="4" md="6" className="mb-4">
               <div className="footer-title">
-                <h4 style={{ color: "#000000", fontWeight: "bold" }}>Main Menu</h4>
+                <h4 style={{ color: "#ffffff", fontWeight: "bold" }}>Main Menu</h4>
               </div>
               <div className="footer-contant">
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/about-us`} className="text-dark text-decoration-none">
+                    <Link href={`/about-us`} className="text-light text-decoration-none">
                       About Us
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/contact-us`} className="text-dark text-decoration-none">
+                    <Link href={`/contact-us`} className="text-light text-decoration-none">
                       Contact Us
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/bulk-enquiry`} className="text-dark text-decoration-none">
+                    <Link href={`/bulk-enquiry`} className="text-light text-decoration-none">
                       Work With Us
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled">
                   <li>
-                    <Link href={`/blogs/all-blogs`} className="text-dark text-decoration-none">
+                    <Link href={`/blogs/all-blogs`} className="text-light text-decoration-none">
                       Blog
                     </Link>
                   </li>
@@ -147,33 +147,33 @@ const MasterFooter = ({
             {/* Help */}
             <Col lg="4" md="6" className="mb-4">
               <div className="footer-title">
-                <h4 style={{ color: "#000000", fontWeight: "bold" }}>Help</h4>
+                <h4 style={{ color: "#ffffff", fontWeight: "bold" }}>Help</h4>
               </div>
               <div className="footer-contant">
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/return-exchange`} className="text-dark text-decoration-none">
+                    <Link href={`/return-exchange`} className="text-light text-decoration-none">
                       Return & Exchange
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/shipping-delivery`} className="text-dark text-decoration-none">
+                    <Link href={`/shipping-delivery`} className="text-light text-decoration-none">
                       Shipping & Delivery
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled mb-2">
                   <li>
-                    <Link href={`/privacy-policy`} className="text-dark text-decoration-none">
+                    <Link href={`/privacy-policy`} className="text-light text-decoration-none">
                       Privacy Policy
                     </Link>
                   </li>
                 </ul>
                 <ul className="list-unstyled">
                   <li>
-                    <Link href={`/terms-conditions`} className="text-dark text-decoration-none">
+                    <Link href={`/terms-conditions`} className="text-light text-decoration-none">
                       Terms & Conditions
                     </Link>
                   </li>

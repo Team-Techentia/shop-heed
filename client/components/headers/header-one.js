@@ -13,21 +13,32 @@ import SearchOverlay from "./common/search-overlay";
 import { useMediaQuery } from "@mui/material";
 import SearchSiteBar from "./common/searchSideBar";
 
-
 const HeaderOne = ({ logoName }) => {
   const router = useRouter();
   const [value, setValue] = useState("");
   const isSmallScreen = useMediaQuery("(max-width: 1199px)");
+
   useEffect(() => {
-    setTimeout(function () {
-      document.querySelectorAll(".loader-wrapper").style = "display:none";
+    // ✅ Smooth scroll globally via inline style injection
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = `html { scroll-behavior: smooth; }`;
+    document.head.appendChild(styleTag);
+
+    // ✅ Hide loader after 2s
+    setTimeout(() => {
+      const loader = document.querySelector(".loader-wrapper");
+      if (loader) loader.style.display = "none";
     }, 2000);
 
-    if (router.asPath !== "/layouts/Christmas")
+    // ✅ Scroll event binding if not Christmas layout
+    if (router.asPath !== "/layouts/Christmas") {
       window.addEventListener("scroll", handleScroll);
+    }
 
+    // ✅ Cleanup scroll event
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      document.head.removeChild(styleTag);
     };
   }, []);
 
@@ -39,30 +50,35 @@ const HeaderOne = ({ logoName }) => {
       0;
 
     setTimeout(() => {
-      if (document.getElementById("sticky").classList) {
+      const stickyEl = document.getElementById("sticky");
+      if (stickyEl && stickyEl.classList) {
         if (number > 1) {
           if (number >= 50) {
-            if (window.innerWidth < 81)
-              document.getElementById("sticky").classList.remove("fixed");
-            else document.getElementById("sticky").classList.add("fixed");
+            if (window.innerWidth < 81) {
+              stickyEl.classList.remove("fixed");
+            } else {
+              stickyEl.classList.add("fixed");
+            }
           }
-        } else document.getElementById("sticky").classList.remove("fixed");
+        } else {
+          stickyEl.classList.remove("fixed");
+        }
       }
     }, 100);
   };
 
   const openNav = () => {
-    var openmyslide = document.getElementById("mySidenav");
+    const openmyslide = document.getElementById("mySidenav");
     if (openmyslide) {
       openmyslide.classList.add("open-side");
-      document.body.style.overflow = 'hidden';
-    };
-  }
+      document.body.style.overflow = "hidden";
+    }
+  };
 
   return (
     <div>
       <header id="sticky" className="sticky header-2 header-6">
-        <TopBarDark topClass="top-header d-sm-block" />
+        <TopBarDark />
 
         <Container>
           <Row>
@@ -99,7 +115,7 @@ const HeaderOne = ({ logoName }) => {
                         marginLeft: "16px",
                       }}
                       onClick={() => {
-                        var closemyslide =
+                        const closemyslide =
                           document.getElementById("search_side_bar");
                         if (closemyslide)
                           closemyslide.classList.add("open-side");
@@ -107,10 +123,11 @@ const HeaderOne = ({ logoName }) => {
                     />
                   </form>
                 </div>
+
                 <SearchSiteBar />
+
                 {isSmallScreen ? (
                   <>
-                    {" "}
                     <a
                       style={{ position: "relative" }}
                       href={null}
@@ -122,15 +139,17 @@ const HeaderOne = ({ logoName }) => {
                         aria-hidden="true"
                       ></i>
                     </a>
-                    <SideBar />{" "}
+                    <SideBar />
                   </>
                 ) : null}
+
                 <div
                   className="brand-logo layout2-logo"
                   style={{ left: isSmallScreen ? "" : "-75px" }}
                 >
                   <LogoImage logo={logoName} />
                 </div>
+
                 <div className="menu-right pull-right">
                   <div>
                     <div className="icon-nav">
@@ -141,10 +160,7 @@ const HeaderOne = ({ logoName }) => {
                           alignItems: "center",
                         }}
                       >
-                        {isSmallScreen ? null : (
-                          <Currency icon={settings.src} />
-                        )}
-
+                        {!isSmallScreen && <Currency icon={settings.src} />}
                         <CartContainer icon={cart.src} />
                       </ul>
                     </div>
@@ -154,6 +170,7 @@ const HeaderOne = ({ logoName }) => {
             </Col>
           </Row>
         </Container>
+
         <Container>
           <Row>
             <Col lg="12">
