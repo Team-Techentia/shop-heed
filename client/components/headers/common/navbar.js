@@ -24,7 +24,7 @@ const NavBar = () => {
 
     return navCategoriesData.data
       // Filter out categories with no subcategories (non-empty only)
-      .filter(category => category.subcategories && category.subcategories.length > 0)
+      // .filter(category => category.subcategories && category.subcategories.length > 0)
       // Sort by number of subcategories (descending - most subcategories first)
       .sort((a, b) => b.subcategories.length - a.subcategories.length)
       // Take only top 5 categories
