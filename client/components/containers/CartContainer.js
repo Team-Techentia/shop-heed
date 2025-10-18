@@ -9,22 +9,23 @@ const CartContainer = ({ icon }) => {
   const cartList = context.state;
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
+  const [prevCount, setPrevCount] = useState(0);
 
   const goToCart = () => {
     router.push("/page/account/cart");
   };
 
-  // Animate popup every second
+  // Animate popup only once when cart count increases
   useEffect(() => {
-    if (cartList.length > 0) {
-      const interval = setInterval(() => {
-        setShowPopup(true);
-        setTimeout(() => setShowPopup(false), 900);
-      }, 1000);
-
-      return () => clearInterval(interval);
+    if (cartList.length > prevCount) {
+      setShowPopup(true);
+      const timer = setTimeout(() => setShowPopup(false), 900);
+      setPrevCount(cartList.length);
+      return () => clearTimeout(timer);
+    } else {
+      setPrevCount(cartList.length);
     }
-  }, [cartList.length]);
+  }, [cartList.length, prevCount]);
 
   return (
     <Fragment>
@@ -32,11 +33,11 @@ const CartContainer = ({ icon }) => {
         .cart-qty-cls {
           transition: all 0.3s ease;
         }
-        
+
         .cart-popup {
           animation: cartPulse 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97);
         }
-        
+
         @keyframes cartPulse {
           0%, 100% {
             transform: scale(1) rotate(0deg);
@@ -60,11 +61,11 @@ const CartContainer = ({ icon }) => {
             transform: scale(1.15) rotate(-2deg);
           }
         }
-        
+
         .cart-icon-shake {
           animation: iconShake 0.9s ease;
         }
-        
+
         @keyframes iconShake {
           0%, 100% {
             transform: translateX(0);
@@ -77,21 +78,21 @@ const CartContainer = ({ icon }) => {
           }
         }
       `}</style>
-      
-      <li style={{cursor:"pointer"}} className="onhover-div"> 
+
+      <li style={{ cursor: "pointer" }} className="onhover-div">
         <Link href={`/page/account/cart`}>
-          <div 
-            style={{display: cartList.length > 0 ? "" : "none"}} 
-            className={`cart-qty-cls ${showPopup ? 'cart-popup' : ''}`}
+          <div
+            style={{ display: cartList.length > 0 ? "" : "none" }}
+            className={`cart-qty-cls ${showPopup ? "cart-popup" : ""}`}
           >
             {cartList.length}
           </div>
-        
-          <div href={null}>
-            <Media 
-              style={{height:"23px"}}  
-              src={icon} 
-              className={`img-fluid ${showPopup ? 'cart-icon-shake' : ''}`}
+
+          <div>
+            <Media
+              style={{ height: "23px" }}
+              src={icon}
+              className={`img-fluid ${showPopup ? "cart-icon-shake" : ""}`}
               alt=""
               onClick={goToCart}
             />

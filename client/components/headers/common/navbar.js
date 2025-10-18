@@ -14,7 +14,7 @@ const NavBar = () => {
     queryKey: ["navCategories"],
     queryFn: async () => {
       const res = await Api.getNavbarCategories();
-      return res.data; // Return the data object from the API response
+      return res.data;
     }
   });
 
@@ -23,18 +23,14 @@ const NavBar = () => {
     if (!navCategoriesData?.data) return [];
 
     return navCategoriesData.data
-      // Filter out categories with no subcategories (non-empty only)
-      // .filter(category => category.subcategories && category.subcategories.length > 0)
-      // Sort by number of subcategories (descending - most subcategories first)
       .sort((a, b) => b.subcategories.length - a.subcategories.length)
-      // Take only top 5 categories
-      .slice(0, 5)
-      // Transform to menu structure
+      // .slice(0, 5)
       .map(category => ({
         title: category.name,
         slug: category.slug,
         type: "sub",
         path: `/category/${category.slug}`,
+        // Keep all subcategories (don't slice)
         children: category.subcategories.map(subcategory => ({
           title: subcategory.name,
           path: `/category/${category.slug}/${subcategory.slug}`,
@@ -50,13 +46,11 @@ const NavBar = () => {
     if (!dynamicMenuItems.length) return MENUITEMS;
 
     return MENUITEMS.map(menuItem => {
-      // Update the Shop mega menu with dynamic categories
       if (menuItem.title === "Shop" && menuItem.megaMenu) {
         return {
           ...menuItem,
           children: [
             ...dynamicMenuItems,
-            // Keep existing static categories that aren't replaced
             ...menuItem.children.filter(child =>
               !dynamicMenuItems.some(dynamic =>
                 dynamic.title.toLowerCase() === child.title.toLowerCase()
@@ -71,7 +65,6 @@ const NavBar = () => {
 
   const [mainmenu, setMainMenu] = useState(mergedMenuItems);
 
-  // Update mainmenu when mergedMenuItems changes
   useEffect(() => {
     setMainMenu(mergedMenuItems);
   }, [mergedMenuItems]);
@@ -168,7 +161,6 @@ const NavBar = () => {
     }
   };
 
-  // Show loading state if categories are still being fetched
   if (isLoading) {
     return (
       <div className="main-navbar">
@@ -293,59 +285,104 @@ const NavBar = () => {
                             {menuItem.megaMenu === true ? (
                               <Container>
                                 <Row>
-                                  {menuItem.children.map((megaMenuItem, i) => {
-                                    return (
-                                      <div
-                                        className={`${menuItem.megaMenuType == "small"
-                                            ? "col-xl-2 col-lg-3 col-md-4 col-sm-6 mega-box"
-                                            : menuItem.megaMenuType == "medium"
-                                              ? "col-xl-3 col-lg-4 col-md-6 col-sm-12"
-                                              : menuItem.megaMenuType == "large"
-                                                ? "col-xl-4 col-lg-6 col-md-12"
-                                                : "col-xl-2 col-lg-3 col-md-4 col-sm-6"
-                                          } mb-3`}
-                                        key={i}
-                                        style={{
-                                          minWidth: '200px',
-                                          maxWidth: menuItem.megaMenuType == "small" ? '220px' :
-                                            menuItem.megaMenuType == "medium" ? '280px' : '350px'
-                                        }}>
-                                        <div className="link-section">
-                                          <div className="menu-title">
-                                            <Link href={megaMenuItem.path}>
-                                              <h5>
-                                                {megaMenuItem.title}
-                                              </h5>
-                                            </Link>
-                                          </div>
-                                          <div className="menu-content">
-                                            <ul>
-                                              {megaMenuItem.children?.map(
-                                                (subMegaMenuItem, i) => {
-                                                  return (
-                                                    <li key={i}>
-                                                      <Link
-                                                        href={subMegaMenuItem.path}>
-                                                        {menuItem.title === "Elements" ? (
-                                                          <>
-                                                            <i
-                                                              className={`icon-${subMegaMenuItem.icon}`}></i>
-                                                            {subMegaMenuItem.title}
-                                                          </>
-                                                        ) : (
-                                                          subMegaMenuItem.title
-                                                        )}
-                                                      </Link>
-                                                    </li>
-                                                  );
-                                                }
-                                              )}
-                                            </ul>
+                                  {/* Categories with subcategories */}
+                                  {menuItem.children
+                                    .filter(item => item.children && item.children.length > 0)
+                                    .map((megaMenuItem, i) => {
+                                      return (
+                                        <div
+                                          className="col-3 mb-4"
+                                          key={i}
+                                          style={{
+                                            minWidth: '350px',
+                                            maxWidth: '250px',
+                                            paddingLeft: '30px',
+                                            paddingRight: '30px'
+                                          }}>
+                                          <div className="link-section">
+                                            <div className="menu-title">
+                                              <Link href={megaMenuItem.path}>
+                                                <h5 style={{ color: '#000', marginBottom: '15px', fontWeight: '700' }}>
+                                                  {megaMenuItem.title}
+                                                </h5>
+                                              </Link>
+                                            </div>
+                                            <div className="menu-content">
+                                              <ul style={{
+                                                listStyle: 'none',
+                                                padding: 0,
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                                gap: '10px 20px',
+                                                columnGap: '20px'
+                                              }}>
+                                                {megaMenuItem.children?.map(
+                                                  (subMegaMenuItem, i) => {
+                                                    return (
+                                                      <li key={i} style={{ marginBottom: '0' }}>
+                                                        <Link
+                                                          href={subMegaMenuItem.path}
+                                                          style={{ color: '#000', textDecoration: 'none' }}>
+                                                          {menuItem.title === "Elements" ? (
+                                                            <>
+                                                              <i
+                                                                className={`icon-${subMegaMenuItem.icon}`}></i>
+                                                              {subMegaMenuItem.title}
+                                                            </>
+                                                          ) : (
+                                                            subMegaMenuItem.title
+                                                          )}
+                                                        </Link>
+                                                      </li>
+                                                    );
+                                                  }
+                                                )}
+                                              </ul>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
+                                      );
+                                    })}
+
+                                  {/* Categories without subcategories - show 3 per column */}
+                                  {menuItem.children.filter(item => !item.children || item.children.length === 0).length > 0 && (() => {
+                                    // Split categories into chunks of 3
+                                    const noSubCategories = menuItem.children.filter(item => !item.children || item.children.length === 0);
+                                    const chunked = [];
+                                    for (let i = 0; i < noSubCategories.length; i += 3) {
+                                      chunked.push(noSubCategories.slice(i, i + 3));
+                                    }
+
+                                    return (
+                                      <>
+                                        {chunked.map((group, colIndex) => (
+                                          <div
+                                            key={colIndex}
+                                            className="col-3 mb-4"
+                                            style={{
+                                              minWidth: '250px',
+                                              maxWidth: '250px',
+                                              paddingLeft: '30px',
+                                              paddingRight: '30px',
+                                            }}
+                                          >
+                                            <div className="link-section">
+                                              {group.map((megaMenuItem, i) => (
+                                                <div className="menu-title" key={i} style={{ marginBottom: '20px' }}>
+                                                  <Link href={megaMenuItem.path}>
+                                                    <h5 style={{ color: '#000', marginBottom: '0', fontWeight: '700' }}>
+                                                      {megaMenuItem.title}
+                                                    </h5>
+                                                  </Link>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </>
                                     );
-                                  })}
+                                  })()}
+
                                 </Row>
                               </Container>
                             ) : (

@@ -20,29 +20,31 @@ const SideBar = () => {
     }
   });
 
-  // Transform API data
+  // Transform API data - Show ALL categories
   const dynamicCategories = useMemo(() => {
     if (!navCategoriesData?.data) return [];
     return navCategoriesData.data
-      .filter(c => c.subcategories && c.subcategories.length > 0)
-      .sort((a, b) => b.subcategories.length - a.subcategories.length)
-      .slice(0, 5)
+      // Comment out filter to show ALL categories
+      // .filter(c => c.subcategories && c.subcategories.length > 0)
+      .sort((a, b) => (b.subcategories?.length || 0) - (a.subcategories?.length || 0))
+      // Remove slice to show all categories (not just top 5)
+      // .slice(0, 5)
       .map(c => ({
         name: c.name,
         slug: c.slug,
-        subcategories: c.subcategories.map(sub => ({
+        subcategories: c.subcategories?.map(sub => ({
           name: sub.name,
           path: `/category/${c.slug}/${sub.slug}`,
           slug: sub.slug
-        }))
+        })) || [] // Empty array if no subcategories
       }));
   }, [navCategoriesData]);
 
-  // Initialize all categories as expanded by default
+  // Initialize all categories as collapsed by default (not expanded)
   useEffect(() => {
     const initExpanded = {};
     dynamicCategories.forEach(cat => {
-      initExpanded[cat.slug] = true;
+      initExpanded[cat.slug] = false; // Changed to false
     });
     setExpandedCategories(initExpanded);
   }, [dynamicCategories]);
@@ -108,32 +110,32 @@ const SideBar = () => {
             <div className="link-section">
               {columnCategories.map(category => (
                 <Fragment key={category.slug}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
                     {/* Category name links to category page */}
                     <Link href={`/category/${category.slug}`}>
                       <h5 style={{ cursor: "pointer", margin: 0 }}>{category.name}</h5>
                     </Link>
 
-                    {/* Arrow toggles subcategories */}
-                    {category.subcategories.length > 0 && (
+                    {/* Show + or - icon only if subcategories exist */}
+                    {category.subcategories && category.subcategories.length > 0 && (
                       <span
                         style={{
-                          display: "inline-block",
-                          transform: expandedCategories[category.slug] ? "rotate(90deg)" : "rotate(0deg)",
-                          transition: "0.3s",
                           cursor: "pointer",
-                          marginLeft: "5px"
+                          fontSize: "20px",
+                          fontWeight: "bold",
+                          padding: "0 10px",
+                          userSelect: "none"
                         }}
                         onClick={() => toggleCategory(category.slug)}
                       >
-                        ►
+                        {expandedCategories[category.slug] ? '−' : '+'}
                       </span>
                     )}
                   </div>
 
-                  {/* Subcategories list */}
-                  {expandedCategories[category.slug] && (
-                    <ul>
+                  {/* Subcategories list - only show if expanded */}
+                  {expandedCategories[category.slug] && category.subcategories && category.subcategories.length > 0 && (
+                    <ul style={{ marginBottom: "15px" }}>
                       {category.subcategories.map(sub => (
                         <li key={sub.slug}>
                           <Link href={sub.path}>{sub.name}</Link>
@@ -208,8 +210,8 @@ const SideBar = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    closeNav();    // optional: close sidebar when modal opens
-                    userContext.openLogin();  // open modal from context
+                    closeNav();
+                    userContext.openLogin();
                   }}
                   style={{
                     background: "none",

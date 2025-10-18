@@ -11,7 +11,6 @@ import { useRouter } from "next/router";
 const CartPage = () => {
   const router = useRouter();
   const cartContext = useContext(CartContext);
-
   const cartItems = cartContext.state;
   const total = cartContext.cartTotal;
   const removeFromCart = cartContext.removeFromCart;
@@ -27,7 +26,7 @@ const CartPage = () => {
     cartContext.updateQuantity(item, id, 1);
   };
 
-  // ✅ Checkout: Directly go to checkout
+  // Checkout redirect
   const handleCheckout = () => {
     router.push("/page/account/checkout");
   };
@@ -74,7 +73,11 @@ const CartPage = () => {
                         <Media
                           src={product.image[0]}
                           alt={product.title}
-                          style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                          style={{
+                            width: "100%",
+                            height: "auto",
+                            objectFit: "cover",
+                          }}
                         />
                       </Link>
 
@@ -96,7 +99,10 @@ const CartPage = () => {
                         </Link>
 
                         <p className="mb-1">
-                          Size: <span style={{ textTransform: "uppercase" }}>{product.size}</span>
+                          Size:{" "}
+                          <span style={{ textTransform: "uppercase" }}>
+                            {product.size}
+                          </span>
                         </p>
 
                         <div className="qty-box my-1">
@@ -106,7 +112,11 @@ const CartPage = () => {
                                 type="button"
                                 className="btn quantity-left-minus"
                                 onClick={() =>
-                                  decrementQuantity(item.product, product._id, item.quantity)
+                                  decrementQuantity(
+                                    item.product,
+                                    product._id,
+                                    item.quantity
+                                  )
                                 }
                               >
                                 <RemoveIcon style={{ fontSize: "15px" }} />
@@ -126,7 +136,11 @@ const CartPage = () => {
                                 type="button"
                                 className="btn quantity-right-plus"
                                 onClick={() =>
-                                  incrementQuantity(item.product, product._id, item.quantity)
+                                  incrementQuantity(
+                                    item.product,
+                                    product._id,
+                                    item.quantity
+                                  )
                                 }
                               >
                                 <AddIcon style={{ fontSize: "15px" }} />
@@ -144,8 +158,12 @@ const CartPage = () => {
                           }}
                         >
                           <div>
-                            <p style={{ fontWeight: "bold" }}>Price: ₹{Math.floor(price)}</p>
-                            <p style={{ fontWeight: "bold" }}>Total: ₹{Math.floor(itemTotal)}</p>
+                            <p style={{ fontWeight: "bold" }}>
+                              Price: ₹{Math.floor(price)}
+                            </p>
+                            <p style={{ fontWeight: "bold" }}>
+                              Total: ₹{Math.floor(itemTotal)}
+                            </p>
                           </div>
                           <button
                             onClick={() => removeFromCart(product._id)}
@@ -213,7 +231,10 @@ const CartPage = () => {
                   alt="ordernotfound"
                 />
                 <Link href={"/"}>
-                  <button className="btn btn-solid w-auto" style={{ backgroundColor: "white" }}>
+                  <button
+                    className="btn btn-solid w-auto"
+                    style={{ backgroundColor: "white" }}
+                  >
                     Continue Shopping
                   </button>
                 </Link>

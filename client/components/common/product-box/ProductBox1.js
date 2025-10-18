@@ -12,7 +12,7 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: ${({ isMobile }) => (isMobile ? "210px" : "400px")};
+  height: ${({ isMobile }) => (isMobile ? "220px" : "400px")};
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);

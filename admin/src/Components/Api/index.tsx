@@ -56,7 +56,7 @@ const Api = {
   generateInvoicing: (token: any, orderId: any) => postsApi.get(`/api/orders/generate-invoicing/${orderId} `, token),
 
   // Reviews
-  deleteReview: (productId: any, commentId: any, token: any) => postsApi.get(`/product-api/delete/products/comments/${productId}/${commentId}`, token),
+  // deleteReview: (productId: any, commentId: any, token: any) => postsApi.get(`/product-api/delete/products/comments/${productId}/${commentId}`, token),
   getCommentByProductId: (id: any, token: any) => postsApi.get(`/product-api/get/product/comments/${id}`, token),
 
   // Admin APIs
@@ -104,7 +104,21 @@ const Api = {
   toggleAnnouncement: (token: any) =>
     postsApi.patch("/announcement/toggle", {}, token),
 
+// Review APIs
+// Public routes
+submitReview: (data: any) => postsApi.post("/review/submit-review", data),
+getPublishedReviews: () => postsApi.get("/review/public/published-reviews"),
 
+// Admin routes (protected)
+getAllReviews: (token: any, params?: any) => {
+  const queryString = params ? new URLSearchParams(params).toString() : '';
+  return postsApi.get(`/review/get-all-reviews?${queryString}`, token);
+},
+getReviewById: (id: any, token: any) => postsApi.get(`/review/get-review/${id}`, token),
+updateReview: (id: any, data: any, token: any) => postsApi.put(`/review/update-review/${id}`, data, token),
+deleteReview: (id: any, token: any) => postsApi.delete(`/review/delete-review/${id}`, token),
+sendReviewEmail: (id: any, data: any, token: any) => postsApi.post(`/review/send-email/${id}`, data, token),
+approveReview: (id: any, data: any, token: any) => postsApi.patch(`/review/approve-review/${id}`, data, token),
 }
 
 

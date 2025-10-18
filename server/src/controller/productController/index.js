@@ -250,28 +250,34 @@ const delete_main_Product = async function (req, res) {
     if (!productId) {
       return res
         .status(404)
-        .json({ success: false, message: "product Id not found" });
+        .json({ success: false, message: "Product ID not found" });
     }
+
     const mainProduct = await mainProductModel.findById(productId);
     if (!mainProduct) {
-      return { success: false, message: "Main product not found" };
+      return res
+        .status(404)
+        .json({ success: false, message: "Main product not found" });
     }
-    mainProduct.isDeleted = true;
-    await mainProduct.save();
-    await productModel.updateMany(
-      { _id: { $in: mainProduct.products } },
-      { $set: { isDeleted: true } }
-    );
 
-    return res
-      .status(201)
-      .json({ success: true, message: "product data updated successfully" });
+    // Permanently delete all child products linked to this main product
+    await productModel.deleteMany({ _id: { $in: mainProduct.products } });
+
+    // Permanently delete the main product itself
+    await mainProductModel.deleteOne({ _id: productId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product and related products deleted permanently",
+    });
   } catch (error) {
+    console.error("Delete main product error:", error);
     return res
       .status(500)
-      .json({ success: false, message: "internal server error" });
+      .json({ success: false, message: "Internal server error" });
   }
 };
+
 
 const updated_Product = async function (req, res) {
   try {

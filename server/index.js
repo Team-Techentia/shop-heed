@@ -19,6 +19,7 @@ const imageRoutes = require("./src/Route/routes");
 const addressRouter = require("./src/Route/addressRoute.js");
 
 const cors = require("cors");
+const reviewRouter = require("./src/Route/reviewRouter.js");
 app.use(cors());
 require("dotenv").config();
 app.use(express.json());
@@ -52,6 +53,7 @@ app.use("/api/announcement", announcementRoute);
 app.use("/api/featured-section", featuredSectionRouter);
 app.use("/api", imageRoutes);
 app.use("/api/user", addressRouter);
+app.use('/api/review', reviewRouter);
 
 //scheduler
 scheduleCron()

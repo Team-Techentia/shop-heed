@@ -144,6 +144,13 @@ export const MENUITEMS: any = [
     active: false,
     path:"/header-line",
   },
+   {
+    title: "Reviews",
+    icon: Image,
+    type: "link",
+    active: false,
+    path:"/reviews",
+  },
   
   // {
   //   title: "Pages",
