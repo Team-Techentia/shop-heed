@@ -11,7 +11,7 @@ const CopyRight = ({layout, fluid}) => {
                         <Col xl="6" md="6" sm="12">
                             <div className="footer-end">
                                 <p><i className="fa fa-copyright" aria-hidden="true"></i> 2025 HEED
-                                      POWERED BY   <span><Link style={{color:"inherit"}} href="https://techentia.in/">TECHENTIA</Link></span></p>
+                                      POWERED BY   <span><Link style={{color:"inherit"}} href="https://techentia.com/">TECHENTIA</Link></span></p>
                             </div>
                         </Col>
                         <Col xl="6" md="6" sm="12">
