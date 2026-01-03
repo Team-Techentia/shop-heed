@@ -18,23 +18,32 @@ import UserContext from "../helpers/user/UserContext";
 const Fashion = () => {
   const router = useRouter();
 
-  // user & error states
-  const [user, setUser] = useState({ emailOrPhone: "", name: "", email: "", phoneNumber: "" });
+  const [user, setUser] = useState({
+    emailOrPhone: "",
+    name: "",
+    email: "",
+    phoneNumber: "",
+  });
   const [error, setError] = useState("");
 
-  const { openLogin, openRegister, openOTP } = useContext(UserContext);
+  const { openRegister, openOTP } = useContext(UserContext);
 
-  // Auth handlers
+  // =============================
+  // AUTH HANDLERS
+  // =============================
   const handleMobileNumberLogin = async () => {
     if (!user.emailOrPhone || user.emailOrPhone.length < 10) {
       setError("Enter a valid number");
       setTimeout(() => setError(""), 2000);
       return;
     }
+
     try {
-      const res = await Api.checkMobile({ phoneNumber: user.emailOrPhone });
+      const res = await Api.checkMobile({
+        phoneNumber: user.emailOrPhone,
+      });
+
       if (res.data.message === "Phone number already exist") {
-        // ✅ use context function instead of local state
         openOTP();
       } else {
         localStorage.setItem("phoneNumber", user.emailOrPhone);
@@ -49,11 +58,13 @@ const Fashion = () => {
     if (!user.name || !user.email || !user.phoneNumber) {
       return toast.error("Please fill all required fields");
     }
+
     try {
       const response = await Api.checkUser({
         phoneNumber: user.phoneNumber,
         email: user.email,
       });
+
       if (response.data.message === "Successfully") {
         openOTP();
       }
@@ -64,70 +75,78 @@ const Fashion = () => {
 
   return (
     <>
-      {/* Header */}
-      <HeaderOne noTopBar={false} logoName={"logo.png"} topClass="top-header" />
-
-      {/* Banner */}
-      <Banner router={router} />
-
-      {/* Section Title */}
-      <Paragraph
-        title="title1 section-t-space"
-        inner="title-inner1"
-        hrClass={false}
-        titleData="HEED YOUR LOOKs"
+      {/* ================= HEADER ================= */}
+      <HeaderOne
+        noTopBar={false}
+        logoName={"logo.png"}
+        topClass="top-header"
       />
 
-      {/* 🔑 Auth Modal (global control via context) */}
-      <AuthModal
-        handleMobileNumberLogin={handleMobileNumberLogin}
-        handleRegister={handleRegister}
-        user={user}
-        setUser={setUser}
-        error={error}
-      />
+      {/* ================= BANNER ================= */}
+      <div className="page-wrapper">
+        <Banner router={router} />
 
-      {/* Sections */}
-      <Sections />
+        {/* ================= TITLE ================= */}
+        <Paragraph
+          title="title1 section-t-space"
+          inner="title-inner1"
+          hrClass={false}
+          titleData="HEED YOUR LOOKS"
+        />
 
-      {/* Top Collection */}
-      <Link href="/collections/new%20and%20trending" passHref legacyBehavior>
-        <a style={{ textDecoration: "none" }}>
-          <Paragraph
-            title="title1 section-t-space"
-            inner="title-inner1"
-            hrClass={false}
-            titleData="New AND Trending"
-          />
-        </a>
-      </Link>
-      <TopCollection
-        dataContStart={0}
-        dataContEnd={50}
-        noTitle="new and trending"
-        backImage={true}
-        type="fashion"
-        subtitle="special offer"
-        productSlider={Product45}
-        designClass="section-b-space p-t-0 ratio_asos px-2"
-        noSlider="false"
-        cartClass="cart-info cart-wrap"
-      />
+        {/* ================= AUTH MODAL ================= */}
+        <AuthModal
+          handleMobileNumberLogin={handleMobileNumberLogin}
+          handleRegister={handleRegister}
+          user={user}
+          setUser={setUser}
+          error={error}
+        />
 
-      {/* Featured Category */}
-      <Paragraph
-        title="title1 section-t-space"
-        inner="title-inner1"
-        hrClass={false}
-        titleData="Featured Categories"
-      />
-      <FeaturedSections />
+        {/* ================= SECTIONS ================= */}
+        <Sections />
 
-      {/* Tab Collection */}
-      <TabCollection9 type="marijuana" midBox={true} spanClass={true} />
+        {/* ================= TOP COLLECTION ================= */}
+        <Link href="/collections/new%20and%20trending" legacyBehavior>
+          <a style={{ textDecoration: "none" }}>
+            <Paragraph
+              title="title1 section-t-space"
+              inner="title-inner1"
+              hrClass={false}
+              titleData="New AND Trending"
+            />
+          </a>
+        </Link>
 
-      {/* Footer */}
-      <MasterFooter/>
+        <TopCollection
+          dataContStart={0}
+          dataContEnd={50}
+          noTitle="new and trending"
+          backImage={true}
+          type="fashion"
+          subtitle="special offer"
+          productSlider={Product45}
+          designClass="section-b-space p-t-0 ratio_asos px-2 overflow-hidden"
+          noSlider="false"
+          cartClass="cart-info cart-wrap"
+        />
+
+        {/* ================= FEATURED ================= */}
+        <Paragraph
+          title="title1 section-t-space"
+          inner="title-inner1"
+          hrClass={false}
+          titleData="Featured Categories"
+        />
+
+        <FeaturedSections />
+
+        {/* ================= TABS ================= */}
+        <TabCollection9 type="marijuana" midBox={true} spanClass={true} />
+
+        {/* ================= FOOTER ================= */}
+        <MasterFooter />
+      </div>
     </>
   );
 };
