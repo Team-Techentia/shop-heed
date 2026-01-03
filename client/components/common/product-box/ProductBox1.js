@@ -1,5 +1,5 @@
 // ProductItem.jsx
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext } from "react";
 import Link from "next/link";
 import CartContext from "../../../helpers/cart";
 import { CurrencyContext } from "../../../helpers/Currency/CurrencyContext";
@@ -8,176 +8,149 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 
-// Styled Components
-const ImageWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  height: ${({ isMobile }) => (isMobile ? "220px" : "400px")};
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-`;
+/* ================= STYLES ================= */
 
 const ProductContainer = styled.div`
   border: 1px solid #f1f1f1;
   border-radius: 15px;
   background: #fff;
   position: relative;
-//  padding: ${({ isMobile }) => (isMobile ? "10px" : "15px")};
-margin-bottom: ${({ isMobile }) => (isMobile ? "15px" : "25px")};
-  
+  margin-bottom: 15px;
+`;
+
+const ImageWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;   /* 🔥 FIX: stable height */
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f3f3;
+
+  @media (max-width: 640px) {
+    aspect-ratio: 2 / 3;
+  }
 `;
 
 const DiscountBadge = styled.div`
   position: absolute;
-  top: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "5px" : "6px") : "15px")};
-  left: ${({ isMobile }) => (isMobile ? "0px" : "0px")};
+  top: 6px;
+  left: 0;
   background: linear-gradient(90deg, #4aa184, #5ab195);
   color: #fff;
-  padding: ${({ isMobile }) => (isMobile ? "2px 5px" : "3px 8px")};
- opacity:0.7;
-  font-size: ${({ isMobile, isMobile1 }) => (isMobile ? (isMobile1 ? "6px" : "8px") : "12px")};
+  padding: 3px 8px;
+  font-size: 10px;
   font-weight: bold;
+  opacity: 0.85;
   z-index: 2;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+
+  @media (min-width: 768px) {
+    font-size: 12px;
+    top: 12px;
+  }
 `;
 
 const CartIcon = styled.div`
   position: absolute;
-  bottom: ${({ isMobile }) => (isMobile ? "8px" : "10px")};
-  right: ${({ isMobile }) => (isMobile ? "8px" : "10px")};
+  bottom: 8px;
+  right: 8px;
   background: #fff;
   color: #000;
-  padding: ${({ isMobile }) => (isMobile ? "3px" : "8px")};
+  padding: 6px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
+  border-radius: 6px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: 3;
 `;
 
-const ProductItem = ({ product, onClick }) => {
+/* ================= COMPONENT ================= */
+
+const ProductItem = ({ product }) => {
   const router = useRouter();
   const cartContext = useContext(CartContext);
-  const curContext = useContext(CurrencyContext);
-  const currency = curContext.state;
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isMobile1, setIsMobile1] = useState(false);
-
-  // Detect screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 640);
-      setIsMobile1(window.innerWidth <= 380);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  useContext(CurrencyContext); // currency future use
 
   if (!product) return null;
 
-  const discountPercent = product.discount ? `SAVE ${product.discount}%` : null;
+  const discountPercent = product.discount
+    ? `SAVE ${product.discount}%`
+    : null;
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
     cartContext.addToCart(product, product.id, 1);
   };
 
-  const navigateToProduct = () => {
-    router.push(
-      `/product-details/${encodeURIComponent(
-        product.title.replaceAll(" ", "-").replaceAll("/", "-")
-      )}/${product._id}`
-    );
-  };
+  const productUrl = `/product-details/${encodeURIComponent(
+    product.title.replaceAll(" ", "-").replaceAll("/", "-")
+  )}/${product._id}`;
 
   return (
-    <ProductContainer isMobile={isMobile} onClick={onClick}>
-      {discountPercent && (
-        <DiscountBadge isMobile={isMobile} isMobile1={isMobile1}>
-          {discountPercent}
-        </DiscountBadge>
-      )}
+    <ProductContainer>
+      {discountPercent && <DiscountBadge>{discountPercent}</DiscountBadge>}
 
       <div
-        className="img-wrapper"
         style={{ position: "relative", cursor: "pointer" }}
-        onClick={navigateToProduct}
+        onClick={() => router.push(productUrl)}
       >
-        <Link
-          href={`/product-details/${encodeURIComponent(
-            product.title.replaceAll(" ", "-").replaceAll("/", "-")
-          )}/${product._id}`}
-          className="front"
-        >
-          <ImageWrapper isMobile={isMobile}>
+        <Link href={productUrl}>
+          <ImageWrapper>
             <Image
               src={product.image[0]}
               alt={product.title}
               fill
-              sizes="(max-width: 768px) 100vw, 300px"
-              priority
+              sizes="(max-width: 640px) 50vw, 25vw"
+              style={{ objectFit: "cover" }}
             />
           </ImageWrapper>
         </Link>
 
-        <CartIcon isMobile={isMobile} onClick={handleAddToCart}>
-          <AiOutlineShoppingCart size={isMobile ? 16 : 18} />
+        <CartIcon onClick={handleAddToCart}>
+          <AiOutlineShoppingCart size={18} />
         </CartIcon>
       </div>
 
-      {/* Brand */}
+      {/* BRAND */}
       {product.brand && (
         <p
           style={{
-            marginTop: "12px",
-            fontSize: isMobile ? "14px" : "18px",
-            fontWeight: "500",
+            marginTop: "10px",
+            fontSize: "15px",
+            fontWeight: 500,
             color: "#000",
-            marginBottom: "4px",
-            marginLeft: "5px",
+            marginLeft: "6px",
             letterSpacing: "1px",
-            // textTransform: "uppercase",
           }}
         >
           {product.brand}
         </p>
       )}
 
-      {/* Title */}
+      {/* TITLE */}
       <h4
         style={{
           marginTop: "4px",
-          color: "gray",
-          fontSize: isMobile ? "12px" : "16px",
-          marginLeft: "5px",
-          lineHeight: "1.5",
-          fontFamily: "'Roboto', sans-serif",
-          fontWeight: "500",
+          color: "#666",
+          fontSize: "13px",
+          marginLeft: "6px",
+          lineHeight: "1.4",
+          fontWeight: 500,
           textTransform: "capitalize",
         }}
       >
         {product.title}
       </h4>
 
-      {/* Price */}
-      <div style={{ marginLeft: "5px", marginTop: "4px" }}>
+      {/* PRICE */}
+      <div style={{ marginLeft: "6px", marginTop: "6px" }}>
         {product.discount ? (
           <>
-          <span
+            <span
               style={{
                 fontWeight: "bold",
-                fontSize: isMobile ? "14px" : "18px",
-                color:"000",
-                // background: "linear-gradient(90deg, #4AA184, #5ab195)",
-                // WebkitBackgroundClip: "text",
-                // WebkitTextFillColor: "transparent",
-                display: "inline-block",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
+                fontSize: "15px",
+                color: "#000",
               }}
             >
               ₹{product.finalPrice}
@@ -186,27 +159,20 @@ const ProductItem = ({ product, onClick }) => {
               style={{
                 textDecoration: "line-through",
                 color: "#888",
-                marginLeft: "7px",
-                fontSize: isMobile ? "12px" : "16px",
+                marginLeft: "8px",
+                fontSize: "13px",
                 fontWeight: "bold",
-                letterSpacing: "1px",
               }}
             >
               ₹{product.price}
             </span>
-            
           </>
         ) : (
           <span
             style={{
               fontWeight: "bold",
-              fontSize: isMobile ? "14px" : "16px",
-              background: "linear-gradient(90deg, #4AA184, #5ab195)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              display: "inline-block",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
+              fontSize: "15px",
+              color: "#000",
             }}
           >
             ₹{product.price}
@@ -214,11 +180,11 @@ const ProductItem = ({ product, onClick }) => {
         )}
       </div>
 
-      {/* Colors */}
+      {/* COLORS */}
       {product.colors && (
         <p
           style={{
-            fontSize: isMobile ? "11px" : "12px",
+            fontSize: "11px",
             color: "#555",
             textAlign: "center",
             marginTop: "6px",
