@@ -299,7 +299,7 @@ const OpenModal = ({ userData }) => {
               <div className="modal-bg">
                 <div className="offer-content">
                   <h3 className="mb-3">
-                    {isSending ? "Sending OTP..." : "Send OTP"}
+                  
                   </h3>
 
                   <Form>
@@ -319,7 +319,7 @@ const OpenModal = ({ userData }) => {
                         onClick={handleResendOtp}
                         disabled={isSending}
                       >
-                        {isSending ? "Sending..." : "Resend"}
+                        {isSending ? "Sending..." : "Send OTP"}
                       </Button>
                       <Button
                         className="btn btn-outline"

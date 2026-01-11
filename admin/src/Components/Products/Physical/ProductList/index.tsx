@@ -160,7 +160,6 @@ const ProductList = () => {
 
   const onCloseModal2 = () => {
     setOpen2(false);
-    // Reset form when closing
     setSelectedSizes([]);
     setSizeQuantities({});
     setSizeType("shirts");
@@ -263,7 +262,7 @@ const ProductList = () => {
 
   const handleDeleteComment = async (commentId: any) => {
     try {
-      await Api.deleteReview(mainProductIdForDeleteComments, commentId, token);
+      await Api.deleteReview(mainProductIdForDeleteComments, token);
       getComments(mainProductIdForDeleteComments);
       return toast.success("Comment Successfully deleted");
     } catch (error) {
@@ -332,7 +331,7 @@ const ProductList = () => {
         setSelectedSizes([productData.size]);
       }
       
-      // Determine size type based on the sizes
+     
       if (productData.sizeQuantities) {
         const sizes = Object.keys(productData.sizeQuantities);
         if (sizes.some(s => ["xs", "s", "m", "l", "xl", "xxl", "xxxl", "xxxxl", "xxxxxl"].includes(s.toLowerCase()))) {

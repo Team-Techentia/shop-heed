@@ -100,14 +100,14 @@ const AuthModal = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="auth-modal-header">
-              <h4>Login / Sign up</h4>
+              <h4>Shopheed Login</h4>
               <button 
                 onClick={closeAll}
                 style={{ 
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  fontSize: '20px'
+                  fontSize: '23px'
                 }}
               >
                 <FontAwesomeIcon icon={faTimes} />
@@ -117,15 +117,36 @@ const AuthModal = () => {
             <div className="auth-modal-body">
               {/* Just Phone Number Field */}
               <TextField
-                label="Phone Number"
-                name="phoneNumber"
-                variant="standard"
-                fullWidth
-                type="tel"
-                value={user.phoneNumber || ""}
-                onChange={handleChange}
-                autoFocus
-              />
+  label="Phone Number"
+  name="phoneNumber"
+  variant="standard"
+  fullWidth
+  type="tel"
+  value={user.phoneNumber || ""}
+  onChange={handleChange}
+  autoFocus
+  sx={{
+    "& label": {
+      color: "#000", // label black
+    },
+    "& label.Mui-focused": {
+      color: "#000", // focused label black
+    },
+    "& .MuiInputBase-input": {
+      color: "#000", // input text black
+    },
+    "& .MuiInput-underline:before": {
+      borderBottomColor: "#000", // normal underline
+    },
+    "& .MuiInput-underline:hover:before": {
+      borderBottomColor: "#000",
+    },
+    "& .MuiInput-underline:after": {
+      borderBottomColor: "#000", // focused underline
+    },
+  }}
+/>
+
 
               {/* Get OTP Button */}
               <button
