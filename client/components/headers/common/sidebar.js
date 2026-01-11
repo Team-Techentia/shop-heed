@@ -202,7 +202,7 @@ const SideBar = () => {
             </li>
              {isLogin ? (
               <>
-                <li><Link href={`/page/user/profile`}>Profile</Link></li>
+                {/* <li><Link href={`/page/user/profile`}>Profile</Link></li> */}
                 <li><Link href="/page/user/orders">Orders</Link></li>
               </>
             ) : (

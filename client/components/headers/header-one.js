@@ -19,10 +19,20 @@ const HeaderOne = ({ logoName }) => {
   const isSmallScreen = useMediaQuery("(max-width: 1199px)");
 
   useEffect(() => {
-    // ✅ Smooth scroll globally via inline style injection
+    // ✅ Enhanced smooth scroll with better browser support
     const styleTag = document.createElement("style");
-    styleTag.innerHTML = `html { scroll-behavior: smooth; }`;
+    styleTag.innerHTML = `
+      html {
+        scroll-behavior: smooth !important;
+      }
+      * {
+        scroll-behavior: smooth !important;
+      }
+    `;
     document.head.appendChild(styleTag);
+
+    // Also apply directly to html element for better compatibility
+    document.documentElement.style.scrollBehavior = "smooth";
 
     // ✅ Hide loader after 2s
     setTimeout(() => {
@@ -30,41 +40,52 @@ const HeaderOne = ({ logoName }) => {
       if (loader) loader.style.display = "none";
     }, 2000);
 
-    // ✅ Scroll event binding if not Christmas layout
+    // ✅ Optimized scroll event with throttling
+    let ticking = false;
+    const optimizedHandleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    // ✅ Bind scroll event if not Christmas layout
     if (router.asPath !== "/layouts/Christmas") {
-      window.addEventListener("scroll", handleScroll);
+      window.addEventListener("scroll", optimizedHandleScroll, { passive: true });
     }
 
-    // ✅ Cleanup scroll event
+    // ✅ Cleanup
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.head.removeChild(styleTag);
+      window.removeEventListener("scroll", optimizedHandleScroll);
+      if (styleTag.parentNode) {
+        document.head.removeChild(styleTag);
+      }
+      document.documentElement.style.scrollBehavior = "";
     };
-  }, []);
+  }, [router.asPath]);
 
   const handleScroll = () => {
-    let number =
-      window.pageXOffset ||
+    const number =
+      window.pageYOffset ||
       document.documentElement.scrollTop ||
       document.body.scrollTop ||
       0;
 
-    setTimeout(() => {
-      const stickyEl = document.getElementById("sticky");
-      if (stickyEl && stickyEl.classList) {
-        if (number > 1) {
-          if (number >= 50) {
-            if (window.innerWidth < 81) {
-              stickyEl.classList.remove("fixed");
-            } else {
-              stickyEl.classList.add("fixed");
-            }
-          }
+    const stickyEl = document.getElementById("sticky");
+    if (stickyEl && stickyEl.classList) {
+      if (number >= 50) {
+        if (window.innerWidth >= 81) {
+          stickyEl.classList.add("fixed");
         } else {
           stickyEl.classList.remove("fixed");
         }
+      } else {
+        stickyEl.classList.remove("fixed");
       }
-    }, 100);
+    }
   };
 
   const openNav = () => {

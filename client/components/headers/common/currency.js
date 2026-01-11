@@ -17,9 +17,7 @@ const Currency = ({ icon }) => {
           </div>
           <div className="show-div setting">
             <ul>
-              <li className="hoverTableEffect">
-                <Link href={`/page/user/profile`}>My profile</Link>
-              </li>
+              
               <li className="hoverTableEffect">
                 <Link href={`/page/user/orders`}>My Orders</Link>
               </li>
