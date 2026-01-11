@@ -1,461 +1,437 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { Col, Media, Row, Modal, ModalBody, Form, Button, FormGroup } from "reactstrap";
-import Api from "../../../components/Api";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Snackbar,
-  Alert,
   Typography,
   TextField,
 } from "@mui/material";
 import OTPInput from "react-otp-input";
 import { toast, Toaster } from "react-hot-toast";
+import { useMediaQuery } from "@mui/material";
+
+import Api from "../../../components/Api";
 import UserContext from "../../../helpers/user/UserContext";
 import { setCookie } from "../../../components/cookies";
 import { LoaderContext } from "../../../helpers/loaderContext";
-import { useMediaQuery } from "@mui/material";
 
-const OpenModal = ({ userData, popUpFor, setVerification }) => {
+const OpenModal = ({ userData }) => {
   const isSmallScreen = useMediaQuery("(max-width: 600px)");
 
-  const userContext = useContext(UserContext);
-  const setIslogin = userContext.setIslogin;
-  const isOTPModalOpen = userContext.isOTPModalOpen;
-  const setIsOTPModalOpen = userContext.setIsOTPModalOpen;
+  const { setIslogin, isOTPModalOpen, setIsOTPModalOpen } =
+    useContext(UserContext);
 
-  const [otpType, setOtpType] = useState("Text_Message");
-  const [otpModel, setOtpModel] = useState(false);
+  const { setLoading, catchErrors } = useContext(LoaderContext);
+
+  const [otpModal, setOtpModal] = useState(false);
   const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const LoaderContextData = useContext(LoaderContext);
-  const { catchErrors, setLoading } = LoaderContextData;
+  // 🆕 State for new user name input
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [userName, setUserName] = useState("");
 
-  const toggle = () => setIsOTPModalOpen(!isOTPModalOpen);
+  // 🔐 Prevent double OTP send
+  const otpSentRef = useRef(false);
+  const mountedRef = useRef(false);
 
-  const handleOTPVerify = async () => {
-    try {
-      setLoading(true);
-      const response = await Api.verifyOtp({
-        phoneNumber: userData.phoneNumber,
-        email: userData.email,
-        otpType: otpType,
-        otp: otp,
-      });
-
-      if (response.data.message === "verification successfuy via phone number") {
-        setOtp("");
-        
-        if (popUpFor === "checkoutPage") {
-          // For checkout page - login/register
-          setLoading(true);
-          const loginResponse = await Api.loginRegisterForCheckOutPage({
-            phoneNumber: userData.phoneNumber,
-          });
-          setLoading(false);
-          toast.success("Successfully logged in");
-          setCookie(null, "ectoken", loginResponse.data.token, 100);
-          setIslogin(true);
-        } else if (popUpFor === "register") {
-          // For registration - create new user
-          setLoading(true);
-          const signupResponse = await Api.signUp({
-            name: userData.name,
-            email: userData.email,
-            phoneNumber: userData.phoneNumber,
-          });
-          setLoading(false);
-          toast.success("Signup successful");
-          setCookie(null, "ectoken", signupResponse.data.token, 100);
-          setIslogin(true);
-          window.location.href = "/";
-        } else if (popUpFor === "login") {
-          // For login - authenticate existing user
-          setLoading(true);
-          const loginResponse = await Api.loginRegisterForCheckOutPage({
-            phoneNumber: userData.phoneNumber,
-          });
-          setLoading(false);
-          toast.success("Successfully logged in");
-          setCookie(null, "ectoken", loginResponse.data.token, 100);
-          setIslogin(true);
-          window.location.href = "/";
-        }
-        
-        setOtpModel(false);
-        setIsOTPModalOpen(false);
-      } else if (response.data.message === "verification successfuy via email") {
-        setOtp("");
-        if (popUpFor === "forgetPassword") {
-          setVerification(true);
-        }
-        setOtp("");
-        setOtpModel(false);
-        setIsOTPModalOpen(false);
-      }
-    } catch (error) {
-      catchErrors(error);
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        return toast.error(error.response.data.message);
-      }
-      return toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
+  // =========================
+  // AUTO SEND OTP ONCE
+  // =========================
+  useEffect(() => {
+    if (
+      isOTPModalOpen && 
+      userData?.phoneNumber && 
+      !otpSentRef.current &&
+      !mountedRef.current &&
+      !isSending
+    ) {
+      console.log("🚀 Sending OTP for the first time");
+      mountedRef.current = true;
+      otpSentRef.current = true;
+      sendOtp();
     }
-  };
+    
+    // Reset when modal closes
+    if (!isOTPModalOpen) {
+      otpSentRef.current = false;
+      mountedRef.current = false;
+      setOtp("");
+      setOtpModal(false);
+      setIsSending(false);
+      setShowNameInput(false);
+      setUserName("");
+    }
+  }, [isOTPModalOpen]);
 
-  const handleOTPChange = (otpValue) => {
-    setOtp(otpValue);
-  };
+  // =========================
+  // SEND OTP
+  // =========================
+  const sendOtp = async () => {
+    if (!userData?.phoneNumber) {
+      toast.error("Phone number is required");
+      return;
+    }
 
-  const handleInputChange = (e, index) => {
-    const newOtp = otp.slice(0, index) + e.target.value + otp.slice(index + 1);
-    handleOTPChange(newOtp);
-  };
+    if (isSending || otpSentRef.current) {
+      console.log("🛑 Already sending/sent OTP");
+      return;
+    }
 
-  const renderInput = ({ value, index, ...props }) => {
-    const inputStyle = {
-      marginRight: isSmallScreen ? "10px" : "22px",
-      width: isSmallScreen ? "20px" : "40px",
-      border: "none",
-      borderBottom: "1px solid",
-      borderRadius: "0.1px",
-      textAlign: "center",
-    };
-    const separatorStyle = {
-      marginLeft: "8px",
-      fontSize: "20px",
-      borderBottom: "1px solid",
-      borderRadius: "0.1px",
-    };
-
-    return (
-      <div className="input-otp-box" style={{ display: "flex" }}>
-        {index > 0 && <span style={separatorStyle}>-</span>}
-        <input
-          key={index}
-          type="text"
-          name={`otp-${index}`}
-          value={value}
-          maxLength="1"
-          onChange={(e) => handleInputChange(e, index)}
-          onFocus={(e) => e.target.select()}
-          {...props}
-          style={inputStyle}
-        />
-      </div>
-    );
-  };
-
-  const handleSendOtp = async (otpType) => {
     try {
+      setIsSending(true);
+      otpSentRef.current = true;
       setLoading(true);
-      const response = await Api.sendOTP({
-        email: userData.email,
+
+      console.log("📤 Sending OTP to:", userData.phoneNumber);
+
+      const res = await Api.sendOTP({
         phoneNumber: userData.phoneNumber,
-        otpType,
+        otpType: "Text_Message",
       });
 
-      if (response.data.message === "OTP sent successfully") {
-        setIsOTPModalOpen(false);
-        setOtpModel(true);
+      console.log("📥 OTP Response:", res.data);
+
+      if (res.data.success) {
         toast.success("OTP sent successfully");
+        setOtpModal(true);
+      } else {
+        toast.error(res.data.message || "Failed to send OTP");
+        otpSentRef.current = false;
       }
-    } catch (error) {
-      catchErrors(error);
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        return toast.error(error.response.data.message);
+    } catch (err) {
+      console.error("❌ Send OTP Error:", err);
+      catchErrors(err);
+      toast.error(err?.response?.data?.message || "Failed to send OTP");
+      otpSentRef.current = false;
+    } finally {
+      setLoading(false);
+      setIsSending(false);
+    }
+  };
+
+  // =========================
+  // RESEND OTP
+  // =========================
+  const handleResendOtp = async () => {
+    otpSentRef.current = false;
+    setOtp("");
+    await sendOtp();
+  };
+
+  // =========================
+  // VERIFY OTP → CHECK USER → LOGIN/SIGNUP
+  // =========================
+  const handleOTPVerify = async () => {
+    if (isVerifying) {
+      console.log("🛑 Already verifying");
+      return;
+    }
+
+    if (!userData?.phoneNumber) {
+      toast.error("Phone number is required");
+      return;
+    }
+
+    if (otp.length !== 6) {
+      toast.error("Enter valid 6 digit OTP");
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      setLoading(true);
+
+      console.log("🔐 Step 1: Verifying OTP...");
+
+      // ✅ STEP 1: VERIFY OTP
+      const verifyRes = await Api.verifyOtp({
+        phoneNumber: userData.phoneNumber,
+        otp: otp,
+        otpType: "Text_Message",
+      });
+
+      console.log("📥 Verify Response:", verifyRes.data);
+
+      if (!verifyRes.data.success || !verifyRes.data.verified) {
+        toast.error(verifyRes.data.message || "Invalid OTP");
+        return;
       }
-      return toast.error("Something went wrong");
+
+      console.log("✅ OTP Verified Successfully");
+
+      // ✅ STEP 2: CHECK IF USER EXISTS
+      console.log("🔍 Step 2: Checking if user exists...");
+      
+      const checkRes = await Api.checkMobile({
+        phoneNumber: userData.phoneNumber
+      });
+
+      console.log("📥 Check Mobile Response:", checkRes.data);
+
+      const userExists = checkRes.data?.exists || false;
+
+      if (userExists) {
+        // ✅ USER EXISTS → LOGIN
+        console.log("✅ User exists, logging in...");
+
+        const loginRes = await Api.loginUser({
+          phoneNumber: userData.phoneNumber,
+        });
+
+        console.log("📥 Login Response:", loginRes.data);
+
+        if (loginRes.data.success && loginRes.data.token) {
+          setCookie(null, "ectoken", loginRes.data.token, 100);
+          setIslogin(true);
+          toast.success("Logged in successfully 🎉");
+
+          // Reset & Redirect
+          setOtp("");
+          setOtpModal(false);
+          setIsOTPModalOpen(false);
+
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 500);
+        } else {
+          toast.error(loginRes.data.message || "Login failed");
+        }
+
+      } else {
+        // ✅ USER DOESN'T EXIST → SHOW NAME INPUT
+        console.log("🆕 New user detected, asking for name...");
+        setShowNameInput(true);
+        toast.success("Please enter your name to complete signup");
+      }
+
+    } catch (err) {
+      console.error("❌ Error:", err);
+      catchErrors(err);
+      toast.error(err?.response?.data?.message || "Verification failed");
+    } finally {
+      setIsVerifying(false);
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // SIGNUP NEW USER
+  // =========================
+  const handleSignup = async () => {
+    if (!userName || userName.trim().length < 2) {
+      toast.error("Please enter your name");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log("📝 Signing up new user...");
+
+      const signupRes = await Api.signUp({
+        name: userName,
+        phoneNumber: userData.phoneNumber,
+      });
+
+      console.log("📥 Signup Response:", signupRes.data);
+
+      if (signupRes.data.success && signupRes.data.token) {
+        setCookie(null, "ectoken", signupRes.data.token, 100);
+        setIslogin(true);
+        toast.success("Account created successfully 🎉");
+
+        // Reset & Redirect
+        setOtp("");
+        setUserName("");
+        setShowNameInput(false);
+        setOtpModal(false);
+        setIsOTPModalOpen(false);
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
+      } else {
+        toast.error(signupRes.data.message || "Signup failed");
+      }
+    } catch (err) {
+      console.error("❌ Signup Error:", err);
+      catchErrors(err);
+      toast.error(err?.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
     }
   };
+
+  // =========================
+  // CANCEL
+  // =========================
+  const handleCancelOtp = () => {
+    setOtp("");
+    setUserName("");
+    otpSentRef.current = false;
+    mountedRef.current = false;
+    setOtpModal(false);
+    setIsOTPModalOpen(false);
+    setIsSending(false);
+    setShowNameInput(false);
+  };
+
+  if (!userData || !isOTPModalOpen) {
+    return null;
+  }
 
   return (
     <>
-      <div className="otp-model-model">
-        <Modal
-          isOpen={isOTPModalOpen}
-          toggle={toggle}
-          className="theme-modal modal-lg otp-model-model"
-          centered
-        >
-          <div>
-            <ModalBody className="modal1 otp-model-model">
-              <Row
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  textAlign: "center",
-                }}
-                className="compare-modal"
-              >
-                <Col lg="7" sm="12">
-                  <div className="modal-bg">
-                    <div className="offer-content">
-                      <Media className="img-fluid blur-up lazyload" alt="" />
+      {/* ================= SEND OTP MODAL ================= */}
+      <Modal
+        isOpen={isOTPModalOpen && !otpModal}
+        toggle={handleCancelOtp}
+        className="theme-modal modal-lg"
+        centered
+      >
+        <ModalBody>
+          <Row className="justify-content-center text-center">
+            <Col lg="7" sm="12">
+              <div className="modal-bg">
+                <div className="offer-content">
+                  <h3 className="mb-3">
+                    {isSending ? "Sending OTP..." : "Send OTP"}
+                  </h3>
 
-                      {popUpFor === "forgetPassword" ? (
-                        <div>
-                          <h7 style={{ fontSize: "20px", fontWeight: "700" }}>
-                            Verify Your EMAIL
-                          </h7>
+                  <Form>
+                    <FormGroup>
+                      <TextField
+                        variant="standard"
+                        fullWidth
+                        label="Phone Number"
+                        value={userData.phoneNumber || ""}
+                        disabled
+                      />
+                    </FormGroup>
 
-                          <div className="mt-4">
-                            <Form>
-                              <FormGroup>
-                                <TextField
-                                  multiline
-                                  variant="standard"
-                                  fullWidth
-                                  type="password"
-                                  id="cPassword"
-                                  value={userData && userData.email}
-                                />
-                              </FormGroup>
-                            </Form>
-                          </div>
-
-                          <div style={{ textAlign: "end" }}>
-                            <div
-                              style={{ marginTop: "28px", color: "#2b9dff" }}
-                              className="btn btn-sm btn-solid"
-                              onClick={() => {
-                                handleSendOtp("email");
-                              }}
-                            >
-                              get otp
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <h3 className="mb-3">Send OTP</h3>
-                          <Form
-                            action=""
-                            className="auth-form needs-validation"
-                            method="post"
-                            id="mc-embedded-subscribe-form"
-                            name="mc-embedded-subscribe-form"
-                            target="_blank"
-                          >
-                            <div className="form-group mx-sm-3">
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <div>
-                                  <h4
-                                    style={{
-                                      display: "flex",
-                                      alignContent: "start",
-                                    }}
-                                  >
-                                    Text message (SMS)
-                                  </h4>
-                                  <p
-                                    style={{
-                                      display: "flex",
-                                      alignContent: "start",
-                                    }}
-                                  >
-                                    We'll text you a code.
-                                  </p>
-                                </div>
-                                <input
-                                  type="radio"
-                                  id="textMessageRadioButton"
-                                  checked={otpType === "Text_Message"}
-                                  value="Text_Message"
-                                  onChange={(e) => setOtpType(e.target.value)}
-                                  style={{
-                                    height: "18px",
-                                    width: "18px",
-                                    cursor: "pointer",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                              <br />
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <div>
-                                  <h4
-                                    style={{
-                                      display: "flex",
-                                      alignContent: "start",
-                                    }}
-                                  >
-                                    Phone call
-                                  </h4>
-                                  <p
-                                    style={{
-                                      display: "flex",
-                                      alignContent: "start",
-                                    }}
-                                  >
-                                    We'll call you with a code.
-                                  </p>
-                                </div>
-                                <input
-                                  type="radio"
-                                  id="phoneCallRadioButton"
-                                  value="Phone_Call"
-                                  checked={otpType === "Phone_Call"}
-                                  onChange={(e) => setOtpType(e.target.value)}
-                                  style={{
-                                    height: "18px",
-                                    width: "18px",
-                                    cursor: "pointer",
-                                  }}
-                                />
-                              </div>
-
-                              <Button
-                                type="button"
-                                className="btn btn-solid"
-                                id="mc-submit"
-                                onClick={() => {
-                                  handleSendOtp(otpType);
-                                }}
-                              >
-                                send
-                              </Button>
-                            </div>
-                          </Form>
-                        </>
-                      )}
+                    <div className="mt-4 d-flex gap-3">
+                      <Button 
+                        className="btn btn-solid" 
+                        onClick={handleResendOtp}
+                        disabled={isSending}
+                      >
+                        {isSending ? "Sending..." : "Resend"}
+                      </Button>
+                      <Button
+                        className="btn btn-outline"
+                        onClick={handleCancelOtp}
+                        disabled={isSending}
+                      >
+                        Cancel
+                      </Button>
                     </div>
-                  </div>
-                </Col>
-              </Row>
-            </ModalBody>
-          </div>
-        </Modal>
-      </div>
+                  </Form>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </ModalBody>
+      </Modal>
 
-      <div className="otp-otp">
-        <Dialog
-          open={otpModel}
-          onClose={() => {
-            setOtpModel(false);
-          }}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Typography
-                style={{
-                  fontSize: "17px",
-                  color: "#292929",
-                  fontWeight: "600",
-                }}
-              >
-                Enter the 6-digit OTP
-              </Typography>
-            </div>
-          </DialogTitle>
+      {/* ================= OTP VERIFY MODAL ================= */}
+      <Dialog open={otpModal} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography align="center" fontWeight={600}>
+            {showNameInput ? "Complete Your Signup" : "Enter 6-digit OTP"}
+          </Typography>
+          <Typography align="center" variant="body2" color="textSecondary">
+            {showNameInput ? "Just one more step!" : `Sent to ${userData.phoneNumber}`}
+          </Typography>
+        </DialogTitle>
 
-          <DialogContent dividers>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
+        <DialogContent>
+          {!showNameInput ? (
+            // OTP INPUT
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
               <OTPInput
                 value={otp}
-                onChange={handleOTPChange}
+                onChange={setOtp}
                 numInputs={6}
-                separator={<span>-</span>}
-                isInputNum
                 shouldAutoFocus
-                inputStyle="otp-input"
-                isInputSecure={false}
-                renderInput={renderInput}
+                renderInput={(props) => (
+                  <input
+                    {...props}
+                    style={{
+                      width: isSmallScreen ? "32px" : "44px",
+                      height: "44px",
+                      margin: "0 6px",
+                      fontSize: "18px",
+                      textAlign: "center",
+                      border: "none",
+                      borderBottom: "2px solid #000",
+                      outline: "none",
+                    }}
+                  />
+                )}
               />
             </div>
-          </DialogContent>
+          ) : (
+            // NAME INPUT (After OTP verified for new user)
+            <div style={{ marginTop: "20px" }}>
+              <TextField
+                label="Full Name"
+                variant="outlined"
+                fullWidth
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
+        </DialogContent>
 
-          <DialogActions
-            style={{
-              display: "flex",
-              justifyContent: "end",
-              paddingRight: isSmallScreen ? "0px" : "50px",
-            }}
-          >
-            <Button
-              style={{
-                borderRadius: "10px",
-                backgroundColor: "#FFFFFF",
-                border: "none",
-                color: "#000000",
-              }}
-              onClick={() => {
-                handleSendOtp(otpType);
-              }}
-            >
-              resend
-            </Button>
-            <Button
-              style={{
-                borderRadius: "10px",
-                backgroundColor: "#ffffff",
-                color: "#ff0000a3",
-                border: "none",
-              }}
-              onClick={() => {
-                setOtp("");
-                setOtpModel(false);
-                setOtpType("Text_Message");
-              }}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              onClick={handleOTPVerify}
-              color="primary"
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "#005b00c2",
-                border: "none",
-                borderRadius: "10px",
-              }}
-            >
-              Verify
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Snackbar open={false} autoHideDuration={6000} onClose={() => {}}>
-          <Alert severity="success" variant="success">
-            OTP submitted successfully!
-          </Alert>
-        </Snackbar>
-      </div>
+        <DialogActions className="justify-content-end px-4 pb-3">
+          {!showNameInput ? (
+            <>
+              <Button 
+                onClick={handleResendOtp} 
+                disabled={isVerifying || isSending}
+              >
+                {isSending ? "Sending..." : "Resend"}
+              </Button>
+              <Button 
+                color="error" 
+                onClick={handleCancelOtp} 
+                disabled={isVerifying}
+              >
+                Cancel
+              </Button>
+              <Button 
+                color="success" 
+                onClick={handleOTPVerify} 
+                disabled={isVerifying || otp.length !== 6}
+              >
+                {isVerifying ? "Verifying..." : "Verify OTP"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                color="error" 
+                onClick={handleCancelOtp}
+              >
+                Cancel
+              </Button>
+              <Button 
+                color="success" 
+                onClick={handleSignup}
+                disabled={!userName || userName.trim().length < 2}
+              >
+                Complete Signup
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <Toaster />
     </>

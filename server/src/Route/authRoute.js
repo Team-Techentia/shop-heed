@@ -1,44 +1,135 @@
-const express = require("express"); 
+const express = require("express");
 const authRoute = express();
 const user = require("../controller/userController/index");
 const otp = require("../controller/otpController/index");
-const email = require("../controller/emailController/index")
-const auth = require("../auth/index")
-const googleAuth = require("../controller/googleController/index")
+const auth = require("../auth/index");
+const { getAllUser } = require("../controller/adminController/user");
 
-const { authenticateToken, userAuthorisation } = auth
+const { authenticateToken, userAuthorisation, adminAuthorisation } = auth;
 
-authRoute.get("/is-login-check" ,authenticateToken,user.checkIsLogin )
+// ============================================
+// USER ROUTES - MOBILE OTP BASED
+// ============================================
 
-authRoute.post('/check-email-mobile' , user.checkUser)
+// Step 1: Check if mobile exists
+authRoute.post('/check-mobile', user.checkMobile);
 
-authRoute.post('/check-mobile' , user.checkMobile)
-
-authRoute.post("/signUp", user.signUp)
-
-authRoute.post("/login", user.loginUser)
-
-authRoute.post("/login-register-forCheck-outPage", user.loginRegisterForCheckOutPage)
-
-
-
-authRoute.post("/forget-password" ,user.forgetPassword)
-
- 
-authRoute.put("/delete/user/:id" , authenticateToken, user.deleteUser)
-
-
+// Step 2a: Send OTP (for both new and existing users)
 authRoute.post("/send-otp", otp.sendOtp);
 
-authRoute.post("/verify-otp" ,otp.verifyOtp)
+// Step 2b: Verify OTP
+authRoute.post("/verify-otp", otp.verifyOtp);
 
-authRoute.post("/auth/google", googleAuth.googleAuth)
+// Step 3a: Signup (for new users after OTP verification)
+authRoute.post("/user/signup", user.signUp);
 
-authRoute.get("/get-user-by-id" ,authenticateToken  , userAuthorisation ,user.getUserById )
+// Step 3b: Login (for existing users after OTP verification)
+authRoute.post("/user/login", user.loginUser);
 
-authRoute.put("/profile-change-by-id" ,authenticateToken  , userAuthorisation ,user.profileChange)
+// ============================================
+// ADMIN ROUTES - EMAIL + PASSWORD BASED
+// ============================================
 
-authRoute.post("/change-password",authenticateToken  , userAuthorisation,  user.changePassword);
-authRoute.get("/change-number/:number",authenticateToken  , userAuthorisation,  user.ChangeNumber);
+// Admin Login (Email + Password)
+authRoute.post("/admin/login", user.adminLogin);
 
-module.exports = authRoute
+// Create Admin - TEMPORARILY WITHOUT MIDDLEWARE FOR FIRST ADMIN
+// ⚠️ IMPORTANT: After creating first admin, uncomment the middleware below:
+authRoute.post("/admin/create", user.createAdmin);
+
+// 🔒 SECURE VERSION (Use this after first admin is created):
+// authRoute.post("/admin/create", 
+//   authenticateToken, 
+//   adminAuthorisation, 
+//   user.createAdmin
+// );
+
+// ============================================
+// COMMON ROUTES (Both User & Admin)
+// ============================================
+
+// Check if logged in
+authRoute.get("/is-login-check", authenticateToken, user.checkIsLogin);
+
+// Get user profile
+authRoute.get("/profile", 
+  authenticateToken, 
+  userAuthorisation, 
+  user.getUserById
+);
+
+// Update profile
+authRoute.put("/profile", 
+  authenticateToken, 
+  userAuthorisation, 
+  user.profileChange
+);
+authRoute.get("/all-user", getAllUser);
+authRoute.get("/get-user-by-id/:id", user.getUserById);
+// Change password
+authRoute.post("/change-password", 
+  authenticateToken, 
+  userAuthorisation, 
+  user.changePassword
+);
+
+module.exports = authRoute;
+
+// ============================================
+// COMPLETE FLOW DOCUMENTATION
+// ============================================
+
+/*
+
+🎯 USER FLOW (Mobile OTP Based):
+
+EXISTING USER:
+1. POST /user/check-mobile → { phoneNumber: "9876543210" }
+   Response: { exists: true, isNewUser: false }
+
+2. POST /user/send-otp → { phoneNumber: "9876543210" }
+   Response: { success: true, message: "OTP sent" }
+
+3. POST /user/verify-otp → { phoneNumber: "9876543210", otp: "123456" }
+   Response: { success: true, verified: true }
+
+4. POST /user/login → { phoneNumber: "9876543210" }
+   Response: { success: true, token: "...", data: {...} }
+
+NEW USER:
+1. POST /user/check-mobile → { phoneNumber: "9876543210" }
+   Response: { exists: false, isNewUser: true }
+
+2. POST /user/send-otp → { phoneNumber: "9876543210" }
+   Response: { success: true, message: "OTP sent" }
+
+3. POST /user/verify-otp → { phoneNumber: "9876543210", otp: "123456" }
+   Response: { success: true, verified: true }
+
+4. Frontend pe NAME input dikhaao
+
+5. POST /user/signup → { name: "John Doe", phoneNumber: "9876543210" }
+   Response: { success: true, token: "...", data: {...} }
+
+---
+
+🔐 ADMIN FLOW (Email + Password):
+
+FIRST TIME - CREATE ADMIN:
+POST /admin/create (with admin token)
+{
+  "name": "Admin Name",
+  "email": "admin@example.com", 
+  "password": "securePassword123",
+  "phoneNumber": "9876543210"
+}
+
+ADMIN LOGIN:
+POST /admin/login
+{
+  "email": "admin@example.com",
+  "password": "securePassword123"
+}
+Response: { success: true, token: "...", data: { role: "admin" } }
+
+*/

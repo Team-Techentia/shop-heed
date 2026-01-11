@@ -671,20 +671,24 @@ const HomeBannerList = () => {
               {/* Category Selection for "category" click action */}
       
 // Category Selection for "category" click action - SEND VALUE NOT ID
+{/* Category Selection for "category" click action - SEND VALUE NOT ID */}
 {bannerForm.clickAction === "category" && (
   <FormGroup className="mb-3">
     <Label className="fw-bold">Select Target Category:</Label>
     <Input
       type="select"
       value={bannerForm.targetCategory}
-      onChange={(e) => setBannerForm((prev) => ({ ...prev, targetCategory: e.target.value }))}
+      onChange={(e) =>
+        setBannerForm((prev) => ({ ...prev, targetCategory: e.target.value }))
+      }
       required
       className="form-select-dark-text"
     >
       <option value="">Select category...</option>
-      {categories.map(cat => {
-        const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
-        const categoryValue = cat.value || cat.category; // SEND VALUE NOT ID
+      {categories.map((cat) => {
+        const displayName =
+          cat.value || cat.name || cat.categoryName || cat.title;
+        const categoryValue = cat.value || cat.category;
         return (
           <option key={cat._id} value={categoryValue}>
             {displayName}
@@ -695,7 +699,9 @@ const HomeBannerList = () => {
   </FormGroup>
 )}
 
+
 // Category and Subcategory Selection for "subcategory" click action - SEND VALUES NOT IDS
+{/* Category and Subcategory Selection for "subcategory" click action - SEND VALUES NOT IDS */}
 {bannerForm.clickAction === "subcategory" && (
   <>
     <FormGroup className="mb-3">
@@ -703,66 +709,59 @@ const HomeBannerList = () => {
       <Input
         type="select"
         value={bannerForm.targetCategory}
-        onChange={(e) => {
-          const selectedCategoryValue = e.target.value; // NOW STORING VALUE
-          setBannerForm((prev) => ({ 
-            ...prev, 
-            targetCategory: selectedCategoryValue, 
-            targetSubCategory: "" 
-          }));
-        }}
+        onChange={(e) =>
+          setBannerForm((prev) => ({
+            ...prev,
+            targetCategory: e.target.value,
+            targetSubCategory: "",
+          }))
+        }
         required
         className="form-select-dark-text"
       >
         <option value="">Select category...</option>
-        {categories && categories.length > 0 ? (
-          categories.map(cat => {
-            const displayName = cat.value || cat.name || cat.categoryName || cat.title || `Category ${cat._id}`;
-            const categoryValue = cat.value || cat.category; // SEND VALUE NOT ID
-            return (
-              <option key={cat._id} value={categoryValue}>
-                {displayName}
-              </option>
-            );
-          })
-        ) : (
-          <option disabled>No categories available</option>
-        )}
+        {categories.map((cat) => {
+          const displayName =
+            cat.value || cat.name || cat.categoryName || cat.title;
+          const categoryValue = cat.value || cat.category;
+          return (
+            <option key={cat._id} value={categoryValue}>
+              {displayName}
+            </option>
+          );
+        })}
       </Input>
     </FormGroup>
-    
+
     <FormGroup className="mb-3">
       <Label className="fw-bold">Select Target Subcategory:</Label>
       <Input
         type="select"
         value={bannerForm.targetSubCategory}
-        onChange={(e) => setBannerForm((prev) => ({ ...prev, targetSubCategory: e.target.value }))}
+        onChange={(e) =>
+          setBannerForm((prev) => ({
+            ...prev,
+            targetSubCategory: e.target.value,
+          }))
+        }
         required
         disabled={!bannerForm.targetCategory}
         className="form-select-dark-text"
       >
         <option value="">Select subcategory...</option>
-        {bannerForm.targetCategory ? (
-          categorySubcategories[bannerForm.targetCategory] && categorySubcategories[bannerForm.targetCategory].length > 0 ? (
-            categorySubcategories[bannerForm.targetCategory].map(sub => {
-              const subName = sub.subCategory || sub.value || sub.name || `Subcategory ${sub._id}`;
-              const subValue = sub.value || sub.subCategory; // SEND VALUE NOT ID
-              return (
-                <option key={sub._id} value={subValue}>
-                  {subName}
-                </option>
-              );
-            })
-          ) : (
-            <option disabled>No subcategories available for selected category</option>
-          )
-        ) : (
-          <option disabled>Please select a category first</option>
-        )}
+        {categorySubcategories[bannerForm.targetCategory]?.map((sub) => (
+          <option
+            key={sub._id}
+            value={sub.value || sub.subCategory}
+          >
+            {sub.subCategory || sub.value}
+          </option>
+        ))}
       </Input>
     </FormGroup>
   </>
 )}
+
 <FormGroup className="mb-4">
                 <Label className="fw-bold">
                   Banner Media <span className="text-danger">*</span>:

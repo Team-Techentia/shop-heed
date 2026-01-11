@@ -14,10 +14,10 @@ const { authenticateToken, adminAuthorisation } = auth;
 
 // Admin routes (protected)
 bannerRouter.post("/create-banner", authenticateToken, adminAuthorisation, createBanner);
-bannerRouter.get("/get-all-banners", authenticateToken, adminAuthorisation, getAllBanners);
-bannerRouter.get("/get-banner/:id", authenticateToken, adminAuthorisation, getBannerById);
-bannerRouter.put("/update-banner/:id", authenticateToken, adminAuthorisation, updateBanner);
-bannerRouter.delete("/delete-banner/:id", authenticateToken, adminAuthorisation, deleteBanner);
+bannerRouter.get("/get-all-banners", getAllBanners);
+bannerRouter.get("/get-banner/:id",  getBannerById);
+bannerRouter.put("/update-banner/:id",  updateBanner);
+bannerRouter.delete("/delete-banner/:id",  deleteBanner);
 
 // Public route for home page carousel
 bannerRouter.get("/public/active-banners", getActiveBanners);

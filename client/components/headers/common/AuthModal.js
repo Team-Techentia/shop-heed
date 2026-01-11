@@ -1,252 +1,152 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { TextField } from "@mui/material";
+import { toast } from "react-hot-toast";
 import OpenModal from "../../../pages/page/account/openModal";
 import UserContext from "../../../helpers/user/UserContext";
+import Api from "../../../components/Api";
+import { LoaderContext } from "../../../helpers/loaderContext";
 
 const modalStyles = `
   .auth-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    inset: 0;
+    background: rgba(0,0,0,0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 20000;
-    backdrop-filter: blur(4px);
   }
   .auth-modal-content {
-    background: white;
-    border-radius: 16px;
+    background: #fff;
+    border-radius: 14px;
     width: 90%;
-    max-width: 480px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    animation: modalSlideIn 0.3s ease-out;
-  }
-  @keyframes modalSlideIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    max-width: 420px;
   }
   .auth-modal-header {
-    padding: 24px 32px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .auth-modal-header h4 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #222;
+  .auth-modal-body {
+    padding: 20px;
   }
-  .auth-close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #666;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-  }
-  .auth-close-btn:hover { color: #222; background-color: #f5f5f5; }
-  .auth-modal-body { padding: 32px; }
   .auth-continue-btn {
     width: 100%;
-    padding: 16px;
-    background-color: #222;
-    color: white;
+    padding: 14px;
+    margin-top: 20px;
+    background: #000;
+    color: #fff;
     border: none;
     border-radius: 8px;
+    cursor: pointer;
     font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 24px;
-    transition: background-color 0.3s, transform 0.1s;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
-  .auth-continue-btn:hover { background-color: #000; transform: translateY(-1px); }
-  .auth-continue-btn:active { transform: translateY(0); }
-  .auth-switch-link {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 14px;
-    color: #666;
-  }
-  .auth-switch-link span {
-    color: #222;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .auth-switch-link span:hover { color: #000; }
-  .auth-error-message {
-    color: #d32f2f;
-    font-size: 14px;
-    margin-top: 8px;
-  }
-  .auth-input-spacing { margin-bottom: 20px; }
-  body.modal-open {
-    overflow: hidden !important;
-    height: 100vh;
+  .auth-continue-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
   }
 `;
 
 const AuthModal = () => {
   const {
     isLoginModalOpen,
-    isRegisterModalOpen,
+    setIsLoginModalOpen,
     isOTPModalOpen,
+    setIsOTPModalOpen,
     closeAll,
-    openLogin,
-    openRegister,
     user,
     setUser,
-    error,
-    handleMobileNumberLogin,
-    handleRegister,
-    setIsOTPModalOpen,
-    popUpFor,
-    setPopUpFor
   } = useContext(UserContext);
+
+  const { setLoading } = useContext(LoaderContext);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (value.length > 50) return;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Prevent scroll when modal open
+  // 🔥 Simple: Just validate phone and open OTP modal
+  const handleGetOtpClick = () => {
+    // Validate phone number
+    if (!user.phoneNumber || user.phoneNumber.length < 10) {
+      toast.error("Enter valid 10-digit phone number");
+      return;
+    }
+
+    console.log("📞 Opening OTP modal for:", user.phoneNumber);
+    
+    setIsLoginModalOpen(false);
+    setIsOTPModalOpen(true);
+  };
+
   useEffect(() => {
-    document.body.style.overflow = isLoginModalOpen || isRegisterModalOpen || isOTPModalOpen ? "hidden" : "auto";
-    return () => { document.body.style.overflow = "auto"; };
-  }, [isLoginModalOpen, isRegisterModalOpen, isOTPModalOpen]);
-
-  // Handle login click - set popUpFor to "login"
-  const handleLoginClick = () => {
-    setPopUpFor("login");
-    handleMobileNumberLogin();
-  };
-
-  // Handle register click - set popUpFor to "register"
-  const handleRegisterClick = () => {
-    setPopUpFor("register");
-    handleRegister();
-  };
+    document.body.style.overflow =
+      isLoginModalOpen || isOTPModalOpen ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [isLoginModalOpen, isOTPModalOpen]);
 
   return (
     <>
       <style>{modalStyles}</style>
 
-      {/* Login Modal */}
       {isLoginModalOpen && (
         <div className="auth-modal-overlay" onClick={closeAll}>
-          <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="auth-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="auth-modal-header">
-              <h4>Log In / Sign Up</h4>
-              <button className="auth-close-btn" onClick={closeAll}>
+              <h4>Login / Sign up</h4>
+              <button 
+                onClick={closeAll}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  fontSize: '20px'
+                }}
+              >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
+
             <div className="auth-modal-body">
+              {/* Just Phone Number Field */}
               <TextField
-                type="tel"
                 label="Phone Number"
+                name="phoneNumber"
                 variant="standard"
                 fullWidth
-                value={user.emailOrPhone || ""}
+                type="tel"
+                value={user.phoneNumber || ""}
                 onChange={handleChange}
-                name="emailOrPhone"
+                autoFocus
               />
-              {error && <div className="auth-error-message">{error}</div>}
-              <button className="auth-continue-btn" onClick={handleLoginClick}>
-                Continue
-              </button>
-              <div className="auth-switch-link">
-                New user? <span onClick={openRegister}>Register</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Register Modal */}
-      {isRegisterModalOpen && (
-        <div className="auth-modal-overlay" onClick={closeAll}>
-          <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="auth-modal-header">
-              <h4>Sign Up</h4>
-              <button className="auth-close-btn" onClick={closeAll}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
-            <div className="auth-modal-body">
-              <div className="auth-input-spacing">
-                <TextField
-                  name="name"
-                  type="text"
-                  label="Name"
-                  variant="standard"
-                  fullWidth
-                  value={user.name || ""}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="auth-input-spacing">
-                <TextField
-                  name="email"
-                  type="email"
-                  label="Email"
-                  variant="standard"
-                  fullWidth
-                  value={user.email || ""}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="auth-input-spacing">
-                <TextField
-                  name="phoneNumber"
-                  type="tel"
-                  label="Phone Number"
-                  variant="standard"
-                  fullWidth
-                  value={user.phoneNumber || ""}
-                  onChange={handleChange}
-                />
-              </div>
-              <button className="auth-continue-btn" onClick={handleRegisterClick}>
+              {/* Get OTP Button */}
+              <button
+                className="auth-continue-btn"
+                onClick={handleGetOtpClick}
+              >
                 Get OTP
               </button>
-              <div className="auth-switch-link">
-                Already have an account? <span onClick={openLogin}>Login</span>
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* OTP Modal */}
-      <OpenModal
-        userData={{
-          phoneNumber: user.phoneNumber || user.emailOrPhone,
-          name: user.name,
-          email: user.email,
-        }}
-        useBox="login"
-        popUpFor={popUpFor}
-      />
+      {/* OTP MODAL - Only phone number needed */}
+      {isOTPModalOpen && user?.phoneNumber && (
+        <OpenModal
+          userData={{
+            phoneNumber: user.phoneNumber,
+          }}
+        />
+      )}
     </>
   );
 };

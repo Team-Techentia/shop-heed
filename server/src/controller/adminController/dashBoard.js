@@ -4,11 +4,7 @@ const orderModel = require("../../Model/orderModel");
 const transactionModel = require("../../Model/paymentModel");
 
 const adminPannel = async function (req, res) {
-  const userID = req._id;
-  if (!userID) {
-    return res.status(404).json({ success: false, message: "User ID is missing" });
-  }
-
+  
   const getCurrentMonthDateRange = () => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);

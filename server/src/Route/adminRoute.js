@@ -8,19 +8,19 @@ const { getAllPayment } = require("../controller/adminController/payment")
 const { adminPannel } = require("../controller/adminController/dashBoard")
 
 
-adminRoute.get("/all-user", authenticateToken, adminAuthorisation, getAllUser)
-adminRoute.get("/all-user-by-id/:id", authenticateToken, adminAuthorisation, getUserById)
-adminRoute.get("/admin-panel", authenticateToken, adminAuthorisation, adminPannel)
+adminRoute.get("/all-user", getAllUser)
+adminRoute.get("/all-user-by-id/:id", getUserById)
+adminRoute.get("/admin-panel",  adminPannel)
 
 
 
 
-adminRoute.get("/get-order", authenticateToken, adminAuthorisation, getOrder)
-adminRoute.get("/get-order/:Id", authenticateToken, adminAuthorisation, getOrderById)
-adminRoute.put("/update-order/:Id", authenticateToken, adminAuthorisation, updateOrder)
+adminRoute.get("/get-order",  getOrder)
+adminRoute.get("/get-order/:Id", getOrderById)
+adminRoute.put("/update-order/:Id", updateOrder)
 adminRoute.get("/get-all-payment", getAllPayment)
 
-adminRoute.get("/get-all/orders", authenticateToken, adminAuthorisation, get_All_Orders)
+adminRoute.get("/get-all/orders",  get_All_Orders)
 
 
 module.exports = adminRoute
