@@ -35,37 +35,14 @@ const OpenModal = ({ userData }) => {
   const [userName, setUserName] = useState("");
 
   // 🔐 Prevent double OTP send
+  const hasSentOtp = useRef(false);
   const otpSentRef = useRef(false);
-  const mountedRef = useRef(false);
-
+  const isInitialMount = useRef(true);
+const AUTO_OTP_KEY = "auto_otp_sent";
   // =========================
   // AUTO SEND OTP ONCE
   // =========================
-  useEffect(() => {
-    if (
-      isOTPModalOpen && 
-      userData?.phoneNumber && 
-      !otpSentRef.current &&
-      !mountedRef.current &&
-      !isSending
-    ) {
-      console.log("🚀 Sending OTP for the first time");
-      mountedRef.current = true;
-      otpSentRef.current = true;
-      sendOtp();
-    }
-    
-    // Reset when modal closes
-    if (!isOTPModalOpen) {
-      otpSentRef.current = false;
-      mountedRef.current = false;
-      setOtp("");
-      setOtpModal(false);
-      setIsSending(false);
-      setShowNameInput(false);
-      setUserName("");
-    }
-  }, [isOTPModalOpen]);
+
 
   // =========================
   // SEND OTP
@@ -76,14 +53,15 @@ const OpenModal = ({ userData }) => {
       return;
     }
 
+    // 🛑 Double send prevention
     if (isSending || otpSentRef.current) {
-      console.log("🛑 Already sending/sent OTP");
+      console.log("🛑 Already sending/sent OTP, skipping...");
       return;
     }
 
     try {
+      otpSentRef.current = true; // ✅ Set immediately to prevent parallel calls
       setIsSending(true);
-      otpSentRef.current = true;
       setLoading(true);
 
       console.log("📤 Sending OTP to:", userData.phoneNumber);
@@ -100,13 +78,13 @@ const OpenModal = ({ userData }) => {
         setOtpModal(true);
       } else {
         toast.error(res.data.message || "Failed to send OTP");
-        otpSentRef.current = false;
+        otpSentRef.current = false; // Reset on failure
       }
     } catch (err) {
       console.error("❌ Send OTP Error:", err);
       catchErrors(err);
       toast.error(err?.response?.data?.message || "Failed to send OTP");
-      otpSentRef.current = false;
+      otpSentRef.current = false; // Reset on error
     } finally {
       setLoading(false);
       setIsSending(false);
@@ -117,6 +95,7 @@ const OpenModal = ({ userData }) => {
   // RESEND OTP
   // =========================
   const handleResendOtp = async () => {
+    console.log("🔄 Resending OTP...");
     otpSentRef.current = false;
     setOtp("");
     await sendOtp();
@@ -269,20 +248,41 @@ const OpenModal = ({ userData }) => {
   // =========================
   // CANCEL
   // =========================
-  const handleCancelOtp = () => {
-    setOtp("");
-    setUserName("");
-    otpSentRef.current = false;
-    mountedRef.current = false;
-    setOtpModal(false);
-    setIsOTPModalOpen(false);
-    setIsSending(false);
-    setShowNameInput(false);
-  };
+ const handleCancelOtp = () => {
+  sessionStorage.removeItem(AUTO_OTP_KEY); // 🔓 RESET AUTO OTP
+
+  setOtp("");
+  setUserName("");
+  otpSentRef.current = false;
+  hasSentOtp.current = false;
+  setOtpModal(false);
+  setIsOTPModalOpen(false);
+  setIsSending(false);
+  setShowNameInput(false);
+};
+
 
   if (!userData || !isOTPModalOpen) {
     return null;
   }
+useEffect(() => {
+  if (!isOTPModalOpen) return;
+  if (!userData?.phoneNumber) return;
+
+  // 🔒 GLOBAL LOCK (SURVIVES UNMOUNT)
+  const alreadySent = sessionStorage.getItem(AUTO_OTP_KEY);
+
+  if (alreadySent === "true") {
+    console.log("🚫 Auto OTP already sent, skipping");
+    return;
+  }
+
+  sessionStorage.setItem(AUTO_OTP_KEY, "true");
+
+  console.log("✅ Auto OTP sending ONCE");
+  sendOtp();
+
+}, [isOTPModalOpen]);
 
   return (
     <>
@@ -298,9 +298,7 @@ const OpenModal = ({ userData }) => {
             <Col lg="7" sm="12">
               <div className="modal-bg">
                 <div className="offer-content">
-                  <h3 className="mb-3">
-                  
-                  </h3>
+                  <h3 className="mb-3">Verify Your Phone Number</h3>
 
                   <Form>
                     <FormGroup>
@@ -313,22 +311,7 @@ const OpenModal = ({ userData }) => {
                       />
                     </FormGroup>
 
-                    <div className="mt-4 d-flex gap-3">
-                      <Button 
-                        className="btn btn-solid" 
-                        onClick={handleResendOtp}
-                        disabled={isSending}
-                      >
-                        {isSending ? "Sending..." : "Send OTP"}
-                      </Button>
-                      <Button
-                        className="btn btn-outline"
-                        onClick={handleCancelOtp}
-                        disabled={isSending}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+                  
                   </Form>
                 </div>
               </div>
@@ -349,62 +332,57 @@ const OpenModal = ({ userData }) => {
         </DialogTitle>
 
         <DialogContent>
-          // ========================= 
-// OTP INPUT SECTION (Replace your current OTP section)
-// ========================= 
-
-{!showNameInput ? (
-  // OTP INPUT - NUMBERS ONLY
-  <div>
-    <OTPInput
-      value={otp}
-      onChange={setOtp}
-      numInputs={6}
-      separator={<span style={{ width: "8px" }}></span>}
-      isInputNum={true}  // ✅ THIS RESTRICTS TO NUMBERS ONLY
-      shouldAutoFocus={true}
-      inputStyle={{
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        width: isSmallScreen ? "40px" : "54px",
-        height: isSmallScreen ? "40px" : "54px",
-        fontSize: "18px",
-        color: "#000",
-        fontWeight: "600",
-        caretColor: "blue",
-      }}
-      focusStyle={{
-        border: "2px solid #007bff",
-        outline: "none",
-      }}
-      renderInput={(props) => (
-        <input 
-          {...props} 
-          type="tel"  // ✅ MOBILE NUMERIC KEYBOARD
-          pattern="[0-9]*"  // ✅ ADDITIONAL NUMBER RESTRICTION
-          inputMode="numeric"  // ✅ FORCES NUMERIC KEYBOARD ON MOBILE
-        />
-      )}
-    />
-  </div>
-) : (
-  // NAME INPUT (After OTP verified for new user)
-  <div>
-    <TextField
-      fullWidth
-      label="Your Name"
-      variant="outlined"
-      value={userName}
-      onChange={(e) => {
-        // ✅ OPTIONAL: Restrict name to letters and spaces only
-        const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-        setUserName(value);
-      }}
-      autoFocus
-      placeholder="Enter your full name"
-    />
-  </div>
-)}
+          {!showNameInput ? (
+            // ✅ OTP INPUT - NUMBERS ONLY
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+              <OTPInput
+                value={otp}
+                onChange={setOtp}
+                numInputs={6}
+                separator={<span style={{ width: "8px" }}></span>}
+                isInputNum={true}
+                shouldAutoFocus={true}
+                inputStyle={{
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                  width: isSmallScreen ? "40px" : "54px",
+                  height: isSmallScreen ? "40px" : "54px",
+                  fontSize: "18px",
+                  color: "#000",
+                  fontWeight: "600",
+                  caretColor: "blue",
+                }}
+                focusStyle={{
+                  border: "2px solid #007bff",
+                  outline: "none",
+                }}
+                renderInput={(props) => (
+                  <input 
+                    {...props} 
+                    type="tel"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                  />
+                )}
+              />
+            </div>
+          ) : (
+            // ✅ NAME INPUT (After OTP verified for new user)
+            <div style={{ padding: '20px 0' }}>
+              <TextField
+                fullWidth
+                label="Your Name"
+                variant="outlined"
+                value={userName}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setUserName(value);
+                }}
+                autoFocus
+                placeholder="Enter your full name"
+              />
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions className="justify-content-end px-4 pb-3">
