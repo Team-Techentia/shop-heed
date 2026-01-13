@@ -21,10 +21,11 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import MarkdownRenderer from "../../../components/MarkDown";
 import UserContext from "../../../helpers/user/UserContext";
 
+import { getCookie } from "../../../components/cookies";
 
 
 const DetailsWithPrice = ({
-  
+
   item,
   stickyClass,
   sameProductData,
@@ -45,6 +46,26 @@ const DetailsWithPrice = ({
   const [modal, setModal] = useState(false);
   const toggle = () => setModal(!modal);
   const [open, setOpen] = useState("");
+  // ✅ CORRECT BUY NOW HANDLER
+  const handleBuyNow = () => {
+  const token = getCookie("ectoken");
+
+  // 🔥 STEP 1: PURANA CART CLEAR KARO
+  context.clearCart();
+
+  // 🔥 STEP 2: SIRF YE PRODUCT ADD KARO
+  context.addToCart(product, product._id, quantity);
+
+  if (!token) {
+    // user login nahi hai
+    localStorage.setItem("redirectAfterLogin", "checkout");
+    userContext.openLogin();
+  } else {
+    // user login hai
+    router.push("/page/account/checkout");
+  }
+};
+
   const togglee = (id) => {
     if (open === id) {
       setOpen();
@@ -52,6 +73,7 @@ const DetailsWithPrice = ({
       setOpen(id);
     }
   };
+
 
   // Calculate if product is actually in stock based on current product and same variants
   const isProductInStock = () => {
@@ -425,34 +447,12 @@ const DetailsWithPrice = ({
                     </button>
 
                     <button
-                      className="btn btn-buy-now"
-                      onClick={() => {
-                        if (userContext.isLogin) {
-                          context.addToCart(product, product._id, quantity);
-                          router.push("/page/account/checkout");
-                        } else {
-                          userContext.openLogin(); // open login modal if not logged in
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        background: '#10ADD6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.background = '#10ADD1';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.background = '#10ADD6';
-                      }}
+                      className="btn-buy-now"
+                      onClick={handleBuyNow}
                     >
-                      <i className="fa fa-bolt me-2"></i> Buy Now
+                      Buy Now
                     </button>
+
 
                   </div>
                 )}

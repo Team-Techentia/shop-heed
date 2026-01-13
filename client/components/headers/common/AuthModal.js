@@ -64,22 +64,26 @@ const AuthModal = () => {
 
   const { setLoading } = useContext(LoaderContext);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUser((prev) => ({ ...prev, [name]: value }));
+  // 🔥 MAIN FIX: Handle close properly
+  const handleCloseLoginModal = () => {
+    setIsLoginModalOpen(false);
+    setUser((prev) => ({ ...prev, phoneNumber: "" })); // Clear phone
   };
 
-  // 🔥 Simple: Just validate phone and open OTP modal
-  const handleGetOtpClick = () => {
-    // Validate phone number
-    if (!user.phoneNumber || user.phoneNumber.length < 10) {
+  const handleGetOtpClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("🔥 Get OTP Clicked - Phone:", user.phoneNumber);
+
+    if (!user.phoneNumber || user.phoneNumber.length !== 10) {
       toast.error("Enter valid 10-digit phone number");
       return;
     }
 
-    console.log("📞 Opening OTP modal for:", user.phoneNumber);
+    console.log("✅ Valid phone, opening OTP modal");
     
-    setIsLoginModalOpen(false);
+    // 🔥 CRITICAL: Just open OTP modal, don't close login modal
     setIsOTPModalOpen(true);
   };
 
@@ -89,12 +93,25 @@ const AuthModal = () => {
     return () => (document.body.style.overflow = "auto");
   }, [isLoginModalOpen, isOTPModalOpen]);
 
+  // 🔥 DEBUG: Log state changes
+  useEffect(() => {
+    console.log("📊 Modal States:", {
+      isLoginModalOpen,
+      isOTPModalOpen,
+      phone: user.phoneNumber
+    });
+  }, [isLoginModalOpen, isOTPModalOpen]);
+
   return (
     <>
       <style>{modalStyles}</style>
 
-      {isLoginModalOpen && (
-        <div className="auth-modal-overlay" onClick={closeAll}>
+      {/* 🔥 Login Modal - Hide when OTP modal opens */}
+      {isLoginModalOpen && !isOTPModalOpen && (
+        <div 
+          className="auth-modal-overlay" 
+          onClick={handleCloseLoginModal}
+        >
           <div
             className="auth-modal-content"
             onClick={(e) => e.stopPropagation()}
@@ -102,72 +119,77 @@ const AuthModal = () => {
             <div className="auth-modal-header">
               <h4>Shopheed Login</h4>
               <button 
-                onClick={closeAll}
+                onClick={handleCloseLoginModal}
                 style={{ 
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  fontSize: '23px'
+                  fontSize: '23px',
+                  color: '#000'
                 }}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
 
-            <div className="auth-modal-body">
-              {/* Just Phone Number Field */}
-              <TextField
-  label="Phone Number"
-  name="phoneNumber"
-  variant="standard"
-  fullWidth
-  type="tel"
-  value={user.phoneNumber || ""}
-  onChange={handleChange}
-  autoFocus
-  sx={{
-    "& label": {
-      color: "#000", // label black
-    },
-    "& label.Mui-focused": {
-      color: "#000", // focused label black
-    },
-    "& .MuiInputBase-input": {
-      color: "#000", // input text black
-    },
-    "& .MuiInput-underline:before": {
-      borderBottomColor: "#000", // normal underline
-    },
-    "& .MuiInput-underline:hover:before": {
-      borderBottomColor: "#000",
-    },
-    "& .MuiInput-underline:after": {
-      borderBottomColor: "#000", // focused underline
-    },
-  }}
-/>
+            <div className="auth-modal-body" style={{ backgroundColor: "#fff" }}>
+  <TextField
+    label="Phone Number"
+    name="phoneNumber"
+    variant="standard"
+    fullWidth
+    type="tel"
+    value={user.phoneNumber || ""}
+    onChange={(e) => {
+      const value = e.target.value.replace(/[^0-9]/g, "");
+      if (value.length <= 10) {
+        setUser((prev) => ({ ...prev, phoneNumber: value }));
+      }
+    }}
+    autoFocus
+    onKeyPress={(e) => {
+      if (e.key === "Enter") handleGetOtpClick(e);
+    }}
+    sx={{
+      "& label": {
+        color: "#000",
+      },
+      "& label.Mui-focused": {
+        color: "#000",
+      },
+      "& .MuiInputBase-input": {
+        color: "#000",
+      },
+      "& .MuiInput-underline:before": {
+        borderBottomColor: "#000",
+      },
+      "& .MuiInput-underline:hover:before": {
+        borderBottomColor: "#000",
+      },
+      "& .MuiInput-underline:after": {
+        borderBottomColor: "#000",
+      },
+    }}
+  />
 
+  <button
+    className="auth-continue-btn"
+    onClick={handleGetOtpClick}
+    type="button"
+    style={{ background: "#000", color: "#fff" }}
+  >
+    Get OTP
+  </button>
+</div>
 
-              {/* Get OTP Button */}
-              <button
-                className="auth-continue-btn"
-                onClick={handleGetOtpClick}
-              >
-                Get OTP
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* OTP MODAL - Only phone number needed */}
-      {isOTPModalOpen && user?.phoneNumber && (
-        <OpenModal
-          userData={{
-            phoneNumber: user.phoneNumber,
-          }}
-        />
-      )}
+      {/* 🔥 OTP Modal - Always render when isOTPModalOpen is true */}
+      <OpenModal
+        userData={{ phoneNumber: user.phoneNumber }}
+      />
     </>
   );
 };

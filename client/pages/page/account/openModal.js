@@ -1,5 +1,4 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { Col, Media, Row, Modal, ModalBody, Form, Button, FormGroup } from "reactstrap";
 import {
   Dialog,
   DialogTitle,
@@ -7,7 +6,9 @@ import {
   DialogActions,
   Typography,
   TextField,
+  CircularProgress,
 } from "@mui/material";
+import { Button } from "reactstrap";
 import OTPInput from "react-otp-input";
 import { toast, Toaster } from "react-hot-toast";
 import { useMediaQuery } from "@mui/material";
@@ -20,29 +21,21 @@ import { LoaderContext } from "../../../helpers/loaderContext";
 const OpenModal = ({ userData }) => {
   const isSmallScreen = useMediaQuery("(max-width: 600px)");
 
-  const { setIslogin, isOTPModalOpen, setIsOTPModalOpen } =
+  const { setIslogin, isOTPModalOpen, setIsOTPModalOpen, setIsLoginModalOpen } =
     useContext(UserContext);
 
   const { setLoading, catchErrors } = useContext(LoaderContext);
 
-  const [otpModal, setOtpModal] = useState(false);
+  const [otpSent, setOtpSent] = useState(false); // 🔥 Changed from otpModal
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  // 🆕 State for new user name input
   const [showNameInput, setShowNameInput] = useState(false);
   const [userName, setUserName] = useState("");
 
-  // 🔐 Prevent double OTP send
-  const hasSentOtp = useRef(false);
   const otpSentRef = useRef(false);
-  const isInitialMount = useRef(true);
-const AUTO_OTP_KEY = "auto_otp_sent";
-  // =========================
-  // AUTO SEND OTP ONCE
-  // =========================
-
+  const AUTO_OTP_KEY = "auto_otp_sent";
 
   // =========================
   // SEND OTP
@@ -53,16 +46,14 @@ const AUTO_OTP_KEY = "auto_otp_sent";
       return;
     }
 
-    // 🛑 Double send prevention
     if (isSending || otpSentRef.current) {
-      console.log("🛑 Already sending/sent OTP, skipping...");
+      console.log("🛑 Already sending/sent OTP");
       return;
     }
 
     try {
-      otpSentRef.current = true; // ✅ Set immediately to prevent parallel calls
+      otpSentRef.current = true;
       setIsSending(true);
-      setLoading(true);
 
       console.log("📤 Sending OTP to:", userData.phoneNumber);
 
@@ -75,18 +66,17 @@ const AUTO_OTP_KEY = "auto_otp_sent";
 
       if (res.data.success) {
         toast.success("OTP sent successfully");
-        setOtpModal(true);
+        setOtpSent(true); // ✅ Show OTP input
       } else {
         toast.error(res.data.message || "Failed to send OTP");
-        otpSentRef.current = false; // Reset on failure
+        otpSentRef.current = false;
       }
     } catch (err) {
       console.error("❌ Send OTP Error:", err);
       catchErrors(err);
       toast.error(err?.response?.data?.message || "Failed to send OTP");
-      otpSentRef.current = false; // Reset on error
+      otpSentRef.current = false;
     } finally {
-      setLoading(false);
       setIsSending(false);
     }
   };
@@ -102,14 +92,11 @@ const AUTO_OTP_KEY = "auto_otp_sent";
   };
 
   // =========================
-  // VERIFY OTP → CHECK USER → LOGIN/SIGNUP
+  // VERIFY OTP
   // =========================
   const handleOTPVerify = async () => {
-    if (isVerifying) {
-      console.log("🛑 Already verifying");
-      return;
-    }
-
+    if (isVerifying) return;
+    
     if (!userData?.phoneNumber) {
       toast.error("Phone number is required");
       return;
@@ -124,65 +111,61 @@ const AUTO_OTP_KEY = "auto_otp_sent";
       setIsVerifying(true);
       setLoading(true);
 
-      console.log("🔐 Step 1: Verifying OTP...");
+      console.log("🔐 Verifying OTP...");
 
-      // ✅ STEP 1: VERIFY OTP
       const verifyRes = await Api.verifyOtp({
         phoneNumber: userData.phoneNumber,
         otp: otp,
         otpType: "Text_Message",
       });
 
-      console.log("📥 Verify Response:", verifyRes.data);
-
       if (!verifyRes.data.success || !verifyRes.data.verified) {
         toast.error(verifyRes.data.message || "Invalid OTP");
         return;
       }
 
-      console.log("✅ OTP Verified Successfully");
+      console.log("✅ OTP Verified");
 
-      // ✅ STEP 2: CHECK IF USER EXISTS
-      console.log("🔍 Step 2: Checking if user exists...");
-      
+      // Check if user exists
       const checkRes = await Api.checkMobile({
         phoneNumber: userData.phoneNumber
       });
 
-      console.log("📥 Check Mobile Response:", checkRes.data);
-
       const userExists = checkRes.data?.exists || false;
 
       if (userExists) {
-        // ✅ USER EXISTS → LOGIN
-        console.log("✅ User exists, logging in...");
-
+        // LOGIN
         const loginRes = await Api.loginUser({
           phoneNumber: userData.phoneNumber,
         });
-
-        console.log("📥 Login Response:", loginRes.data);
 
         if (loginRes.data.success && loginRes.data.token) {
           setCookie(null, "ectoken", loginRes.data.token, 100);
           setIslogin(true);
           toast.success("Logged in successfully 🎉");
 
-          // Reset & Redirect
+          // Close modals
           setOtp("");
-          setOtpModal(false);
+          setOtpSent(false);
           setIsOTPModalOpen(false);
+          setIsLoginModalOpen(false);
+          sessionStorage.removeItem(AUTO_OTP_KEY);
+
+          const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
 
           setTimeout(() => {
-            window.location.href = "/";
-          }, 500);
+            if (redirectAfterLogin === "checkout") {
+              window.location.href = "/page/account/checkout";
+            } else {
+              window.location.href = "/";
+            }
+            localStorage.removeItem("redirectAfterLogin");
+          }, 300);
         } else {
           toast.error(loginRes.data.message || "Login failed");
         }
-
       } else {
-        // ✅ USER DOESN'T EXIST → SHOW NAME INPUT
-        console.log("🆕 New user detected, asking for name...");
+        // NEW USER - Show name input
         setShowNameInput(true);
         toast.success("Please enter your name to complete signup");
       }
@@ -198,7 +181,7 @@ const AUTO_OTP_KEY = "auto_otp_sent";
   };
 
   // =========================
-  // SIGNUP NEW USER
+  // SIGNUP
   // =========================
   const handleSignup = async () => {
     if (!userName || userName.trim().length < 2) {
@@ -209,30 +192,35 @@ const AUTO_OTP_KEY = "auto_otp_sent";
     try {
       setLoading(true);
 
-      console.log("📝 Signing up new user...");
-
       const signupRes = await Api.signUp({
         name: userName,
         phoneNumber: userData.phoneNumber,
       });
-
-      console.log("📥 Signup Response:", signupRes.data);
 
       if (signupRes.data.success && signupRes.data.token) {
         setCookie(null, "ectoken", signupRes.data.token, 100);
         setIslogin(true);
         toast.success("Account created successfully 🎉");
 
-        // Reset & Redirect
+        // Close everything
         setOtp("");
         setUserName("");
         setShowNameInput(false);
-        setOtpModal(false);
+        setOtpSent(false);
         setIsOTPModalOpen(false);
+        setIsLoginModalOpen(false);
+        sessionStorage.removeItem(AUTO_OTP_KEY);
+
+        const redirectAfterLogin = localStorage.getItem("redirectAfterLogin");
 
         setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
+          if (redirectAfterLogin === "checkout") {
+            window.location.href = "/page/account/checkout";
+          } else {
+            window.location.href = "/";
+          }
+          localStorage.removeItem("redirectAfterLogin");
+        }, 300);
       } else {
         toast.error(signupRes.data.message || "Signup failed");
       }
@@ -248,92 +236,74 @@ const AUTO_OTP_KEY = "auto_otp_sent";
   // =========================
   // CANCEL
   // =========================
- const handleCancelOtp = () => {
-  sessionStorage.removeItem(AUTO_OTP_KEY); // 🔓 RESET AUTO OTP
+  const handleCancelOtp = () => {
+    sessionStorage.removeItem(AUTO_OTP_KEY);
+    setOtp("");
+    setUserName("");
+    otpSentRef.current = false;
+    setOtpSent(false);
+    setIsOTPModalOpen(false);
+    setIsSending(false);
+    setShowNameInput(false);
+  };
 
-  setOtp("");
-  setUserName("");
-  otpSentRef.current = false;
-  hasSentOtp.current = false;
-  setOtpModal(false);
-  setIsOTPModalOpen(false);
-  setIsSending(false);
-  setShowNameInput(false);
-};
+  // =========================
+  // AUTO SEND OTP
+  // =========================
+  useEffect(() => {
+    if (!isOTPModalOpen) return;
+    if (!userData?.phoneNumber) return;
 
+    const alreadySent = sessionStorage.getItem(AUTO_OTP_KEY);
+    if (alreadySent === "true") {
+      setOtpSent(true); // Already sent, just show input
+      return;
+    }
 
-  if (!userData || !isOTPModalOpen) {
-    return null;
-  }
-useEffect(() => {
-  if (!isOTPModalOpen) return;
-  if (!userData?.phoneNumber) return;
-
-  // 🔒 GLOBAL LOCK (SURVIVES UNMOUNT)
-  const alreadySent = sessionStorage.getItem(AUTO_OTP_KEY);
-
-  if (alreadySent === "true") {
-    console.log("🚫 Auto OTP already sent, skipping");
-    return;
-  }
-
-  sessionStorage.setItem(AUTO_OTP_KEY, "true");
-
-  console.log("✅ Auto OTP sending ONCE");
-  sendOtp();
-
-}, [isOTPModalOpen]);
+    console.log("🚀 Auto-sending OTP...");
+    sessionStorage.setItem(AUTO_OTP_KEY, "true");
+    sendOtp();
+  }, [isOTPModalOpen]);
 
   return (
     <>
-      {/* ================= SEND OTP MODAL ================= */}
-      <Modal
-        isOpen={isOTPModalOpen && !otpModal}
-        toggle={handleCancelOtp}
-        className="theme-modal modal-lg"
-        centered
+      {/* 🔥 SINGLE DIALOG - ALWAYS OPEN WHEN isOTPModalOpen IS TRUE */}
+      <Dialog 
+        open={isOTPModalOpen} 
+        maxWidth="sm" 
+        fullWidth
+        onClose={handleCancelOtp}
       >
-        <ModalBody>
-          <Row className="justify-content-center text-center">
-            <Col lg="7" sm="12">
-              <div className="modal-bg">
-                <div className="offer-content">
-                  <h3 className="mb-3">Verify Your Phone Number</h3>
-
-                  <Form>
-                    <FormGroup>
-                      <TextField
-                        variant="standard"
-                        fullWidth
-                        label="Phone Number"
-                        value={userData.phoneNumber || ""}
-                        disabled
-                      />
-                    </FormGroup>
-
-                  
-                  </Form>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </ModalBody>
-      </Modal>
-
-      {/* ================= OTP VERIFY MODAL ================= */}
-      <Dialog open={otpModal} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Typography align="center" fontWeight={600}>
-            {showNameInput ? "Complete Your Signup" : "Enter 6-digit OTP"}
+            {isSending 
+              ? "Sending OTP..." 
+              : showNameInput 
+                ? "Complete Your Signup" 
+                : "Enter 6-digit OTP"}
           </Typography>
           <Typography align="center" variant="body2" color="textSecondary">
-            {showNameInput ? "Just one more step!" : `Sent to ${userData.phoneNumber}`}
+            {isSending 
+              ? "Please wait..." 
+              : showNameInput 
+                ? "Just one more step!" 
+                : `Sent to ${userData.phoneNumber}`}
           </Typography>
         </DialogTitle>
 
         <DialogContent>
-          {!showNameInput ? (
-            // ✅ OTP INPUT - NUMBERS ONLY
+          {isSending ? (
+            // 🔥 LOADING STATE
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+              <CircularProgress />
+            </div>
+          ) : !otpSent ? (
+            // 🔥 WAITING FOR OTP TO SEND
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+              <Typography>Preparing OTP...</Typography>
+            </div>
+          ) : !showNameInput ? (
+            // ✅ OTP INPUT
             <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
               <OTPInput
                 value={otp}
@@ -367,7 +337,7 @@ useEffect(() => {
               />
             </div>
           ) : (
-            // ✅ NAME INPUT (After OTP verified for new user)
+            // ✅ NAME INPUT
             <div style={{ padding: '20px 0' }}>
               <TextField
                 fullWidth
@@ -386,7 +356,7 @@ useEffect(() => {
         </DialogContent>
 
         <DialogActions className="justify-content-end px-4 pb-3">
-          {!showNameInput ? (
+          {!showNameInput && otpSent ? (
             <>
               <Button 
                 onClick={handleResendOtp} 
@@ -409,7 +379,7 @@ useEffect(() => {
                 {isVerifying ? "Verifying..." : "Verify OTP"}
               </Button>
             </>
-          ) : (
+          ) : showNameInput ? (
             <>
               <Button 
                 color="error" 
@@ -425,6 +395,13 @@ useEffect(() => {
                 Complete Signup
               </Button>
             </>
+          ) : (
+            <Button 
+              color="error" 
+              onClick={handleCancelOtp}
+            >
+              Cancel
+            </Button>
           )}
         </DialogActions>
       </Dialog>
