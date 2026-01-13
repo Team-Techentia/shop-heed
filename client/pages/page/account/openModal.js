@@ -349,44 +349,62 @@ const OpenModal = ({ userData }) => {
         </DialogTitle>
 
         <DialogContent>
-          {!showNameInput ? (
-            // OTP INPUT
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-              <OTPInput
-                value={otp}
-                onChange={setOtp}
-                numInputs={6}
-                shouldAutoFocus
-                renderInput={(props) => (
-                  <input
-                    {...props}
-                    style={{
-                      width: isSmallScreen ? "32px" : "44px",
-                      height: "44px",
-                      margin: "0 6px",
-                      fontSize: "18px",
-                      textAlign: "center",
-                      border: "none",
-                      borderBottom: "2px solid #000",
-                      outline: "none",
-                    }}
-                  />
-                )}
-              />
-            </div>
-          ) : (
-            // NAME INPUT (After OTP verified for new user)
-            <div style={{ marginTop: "20px" }}>
-              <TextField
-                label="Full Name"
-                variant="outlined"
-                fullWidth
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                autoFocus
-              />
-            </div>
-          )}
+          // ========================= 
+// OTP INPUT SECTION (Replace your current OTP section)
+// ========================= 
+
+{!showNameInput ? (
+  // OTP INPUT - NUMBERS ONLY
+  <div>
+    <OTPInput
+      value={otp}
+      onChange={setOtp}
+      numInputs={6}
+      separator={<span style={{ width: "8px" }}></span>}
+      isInputNum={true}  // ✅ THIS RESTRICTS TO NUMBERS ONLY
+      shouldAutoFocus={true}
+      inputStyle={{
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+        width: isSmallScreen ? "40px" : "54px",
+        height: isSmallScreen ? "40px" : "54px",
+        fontSize: "18px",
+        color: "#000",
+        fontWeight: "600",
+        caretColor: "blue",
+      }}
+      focusStyle={{
+        border: "2px solid #007bff",
+        outline: "none",
+      }}
+      renderInput={(props) => (
+        <input 
+          {...props} 
+          type="tel"  // ✅ MOBILE NUMERIC KEYBOARD
+          pattern="[0-9]*"  // ✅ ADDITIONAL NUMBER RESTRICTION
+          inputMode="numeric"  // ✅ FORCES NUMERIC KEYBOARD ON MOBILE
+        />
+      )}
+    />
+  </div>
+) : (
+  // NAME INPUT (After OTP verified for new user)
+  <div>
+    <TextField
+      fullWidth
+      label="Your Name"
+      variant="outlined"
+      value={userName}
+      onChange={(e) => {
+        // ✅ OPTIONAL: Restrict name to letters and spaces only
+        const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+        setUserName(value);
+      }}
+      autoFocus
+      placeholder="Enter your full name"
+    />
+  </div>
+)}
         </DialogContent>
 
         <DialogActions className="justify-content-end px-4 pb-3">
