@@ -73,14 +73,25 @@ const checkMobile = async function (req, res) {
 };
 
 // Step 2: Signup (after OTP verification for new users)
+// Step 2: Signup (after OTP verification for new users)
 const signUp = async function (req, res) {
   try {
     const { name, phoneNumber } = req.body;
 
+    console.log("📝 Signup Request:", { name, phoneNumber });
+
+    // ✅ VALIDATION
     if (!validator.isValid(name)) {
       return res.status(400).json({
         success: false,
         message: "Please provide name",
+      });
+    }
+
+    if (!validator.isValid(phoneNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide phone number",
       });
     }
 
@@ -91,29 +102,35 @@ const signUp = async function (req, res) {
       });
     }
 
-    // Check if already exists
+    // ✅ CHECK IF ALREADY EXISTS
     const existingUser = await userModel.findOne({ 
       phoneNumber: phoneNumber,
-      role: 'user'
+      role: 'user',
+      isDeleted: false  // 🔥 Added isDeleted check
     });
 
     if (existingUser) {
+      console.log("❌ User already exists:", phoneNumber);
       return res.status(400).json({
         success: false,
         message: "Phone number already registered",
       });
     }
 
-    // Create new user (USER role by default)
+    // ✅ CREATE NEW USER
     const newUser = new userModel({
-      name,
-      phoneNumber,
+      name: name.trim(),
+      phoneNumber: phoneNumber,
       role: 'user',
+      isDeleted: false,  // 🔥 Explicitly set isDeleted
       lastLogin: Date.now()
     });
 
+    console.log("💾 Saving user...");
     const user = await newUser.save();
+    console.log("✅ User saved:", user._id);
 
+    // ✅ GENERATE TOKEN
     const token = jwt.sign(
       {
         userId: user._id.toString(),
@@ -123,6 +140,8 @@ const signUp = async function (req, res) {
       process.env.JWT_SECRET_KEY,
       { expiresIn: '7d' }
     );
+
+    console.log("✅ Token generated");
 
     return res.status(200).json({
       success: true,
@@ -134,11 +153,31 @@ const signUp = async function (req, res) {
       },
       token,
     });
+
   } catch (error) {
+    console.error("❌ Signup Error:", error);
+    console.error("Error Stack:", error.stack);
+    
+    // 🔥 BETTER ERROR MESSAGES
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        error: error.message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number already exists",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error,
+      error: error.message,  // 🔥 Send actual error message for debugging
     });
   }
 };
