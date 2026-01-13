@@ -46,7 +46,7 @@ const AboutUs = () => {
                         </p>
 
                         <p>
-                            Thank you for choosing Heed. We look forward to being a part of your wardrobe and contributing to your style journey.
+                            Thank you for choosing ShopHeed. We look forward to being a part of your wardrobe and contributing to your style journey.
                         </p>
                     </Container>
                 </div>

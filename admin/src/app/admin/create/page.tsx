@@ -126,7 +126,7 @@ const CreateAdminPage = () => {
                 </CardBody>
               </Card>
 
-              {/* 🔐 Footer Note */}
+              
               <div className="text-center mt-4">
                 <p className="text-muted small">
                   Only authorized administrators can create new admin accounts
