@@ -19,8 +19,8 @@ const isRightFormatmobile = function (phone) {
 }
 
 
-const isRightFormatPhoneNumber = function (phone) {
-    return /^[0]?[6789]\d{9,11}$/.test(phone); 
+const isRightFormatPhoneNumber = (phone) => {
+  return /^[6-9]\d{9}$/.test(phone);
 };
 
 const isValidObjectId = function (objectId) {
