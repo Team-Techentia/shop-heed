@@ -52,26 +52,29 @@ authRoute.post("/admin/create", user.createAdmin);
 authRoute.get("/is-login-check", authenticateToken, user.checkIsLogin);
 
 // Get user profile
-authRoute.get("/profile", 
-  authenticateToken, 
-  userAuthorisation, 
-  user.getUserById
+authRoute.get("/profile",
+   authenticateToken,
+   userAuthorisation,
+   user.getUserById
 );
 
 // Update profile
-authRoute.put("/profile", 
-  authenticateToken, 
-  userAuthorisation, 
-  user.profileChange
+authRoute.put("/profile",
+   authenticateToken,
+   userAuthorisation,
+   user.profileChange
 );
 authRoute.get("/all-user", getAllUser);
 authRoute.get("/get-user-by-id/:id", user.getUserById);
 // Change password
-authRoute.post("/change-password", 
-  authenticateToken, 
-  userAuthorisation, 
-  user.changePassword
+authRoute.post("/change-password",
+   authenticateToken,
+   userAuthorisation,
+   user.changePassword
 );
+
+// Delete User (Unprotected as per request)
+authRoute.put("/delete/user/:id", user.deleteUser);
 
 module.exports = authRoute;
 

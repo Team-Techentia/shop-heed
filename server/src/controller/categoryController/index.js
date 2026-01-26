@@ -11,7 +11,7 @@ const createCategory = async function (req, res) {
         }
         return res.status(201).json({ success: true, message: "successfully create category", data: categoryData })
     } catch (error) {
-       
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -30,7 +30,7 @@ const subCreateCategory = async function (req, res) {
         }
         return res.status(201).json({ success: true, message: "successfully create subCategory", data: subCategoryData })
     } catch (error) {
-       
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -43,7 +43,7 @@ const getCategory = async function (req, res) {
         const getAllCategory = await categoryModel.find().sort({ createdAt: -1 })
         return res.status(201).json({ success: true, message: "successfully", data: getAllCategory })
     } catch (error) {
-       
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -52,17 +52,17 @@ const getNavbarCategories = async function (req, res) {
     try {
         // Get all categories
         const categories = await categoryModel.find().sort({ createdAt: -1 });
-        
+
         // Get all subcategories
         const subcategories = await subCategoryModel.find().sort({ createdAt: -1 });
-        
+
         // Group subcategories by category name
         const navbarCategories = categories.map(category => {
             // Find subcategories that belong to this category
             const categorySubcategories = subcategories.filter(
                 subcategory => subcategory.category === category.value
             );
-            
+
             return {
                 id: category._id,
                 name: category.value,
@@ -78,18 +78,18 @@ const getNavbarCategories = async function (req, res) {
                 }))
             };
         });
-        
-        return res.status(200).json({ 
-            success: true, 
-            message: "Navbar categories fetched successfully", 
-            data: navbarCategories 
+
+        return res.status(200).json({
+            success: true,
+            message: "Navbar categories fetched successfully",
+            data: navbarCategories
         });
-        
+
     } catch (error) {
         console.error("Error fetching navbar categories:", error);
-        return res.status(500).json({ 
-            success: false, 
-            message: "Internal server error" 
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
         });
     }
 };
@@ -99,7 +99,7 @@ const getSubCategory = async function (req, res) {
         const getAllCategory = await subCategoryModel.find().sort({ createdAt: -1 })
         return res.status(201).json({ success: true, message: "successfully", data: getAllCategory })
     } catch (error) {
-      
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -114,7 +114,7 @@ const getSubCategoryByCategoryName = async function (req, res) {
 
         return res.status(201).json({ success: true, message: "successfully", data: getAllCategory })
     } catch (error) {
-    
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -129,7 +129,7 @@ const deteletCategory = async function (req, res) {
 
         return res.status(201).json({ success: true, message: "successfully" })
     } catch (error) {
-      
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -141,7 +141,7 @@ const deteletSubCategory = async function (req, res) {
         await subCategoryModel.findByIdAndDelete(_id)
         return res.status(201).json({ success: true, message: "successfully" })
     } catch (error) {
-    
+
         return res.status(500).json({ success: false, message: "internal server error" })
 
     }
@@ -171,12 +171,7 @@ const categoriesWithSubcategories = async function (req, res) {
 
 const getCategoryById = async function (req, res) {
     try {
-        const userId = req._id;
         const category = req.params.id
-
-        if (!userId) {
-            return res.status(404).json({ success: false, message: "User id not found" })
-        }
 
         const userDetails = await categoryModel.findById(category);
 
@@ -187,7 +182,7 @@ const getCategoryById = async function (req, res) {
         return res.status(200).json({ success: true, data: userDetails, message: "User detail fetch successfully" })
 
     } catch (error) {
-      
+
         return res.status(500).json({ success: false, message: "Internal server error" })
     }
 
@@ -197,12 +192,7 @@ const getCategoryById = async function (req, res) {
 
 const getSubCategoryById = async function (req, res) {
     try {
-
-        const userId = req._id;
         const subcategory = req.params.id;
-        if (!userId) {
-            return res.status(404).json({ success: false, message: "User id not found" })
-        }
         const subCategoryDetails = await subCategoryModel.findById(subcategory)
 
         if (!subCategoryDetails) {
@@ -211,18 +201,14 @@ const getSubCategoryById = async function (req, res) {
         return res.status(200).json({ success: true, data: subCategoryDetails, message: "Subcategory detail fetch successfully" })
 
     } catch (error) {
-     
+
         return res.status(500).json({ success: false, message: "Internal server error" })
     }
 }
 
 const editCategory = async function (req, res) {
     try {
-        const userId = req._id;
         const data = req.body;
-        if (!userId) {
-            return res.status(404).json({ success: false, message: "User ID is missing" });
-        }
 
         const id = req.params.id;
         if (!id) {
@@ -231,17 +217,17 @@ const editCategory = async function (req, res) {
         const findById = await categoryModel.findById(id)
 
         const updateCategory = await categoryModel.findByIdAndUpdate(id, { $set: data }, { new: true });
-      
+
         if (!updateCategory) {
             return res.status(404).json({ success: false, message: "Failed to update category" });
         }
 
         const updatedSubCategories = await subCategoryModel.updateMany(
-            { category: findById.value },  
-            { $set: { category: updateCategory.value } }       
+            { category: findById.value },
+            { $set: { category: updateCategory.value } }
         );
-       
-        
+
+
 
         return res.status(200).json({
             success: true,
@@ -250,7 +236,7 @@ const editCategory = async function (req, res) {
         });
 
     } catch (error) {
-    
+
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
@@ -259,13 +245,8 @@ const editCategory = async function (req, res) {
 
 const editSubcategory = async function (req, res) {
     try {
-        const userId = req._id;  
         const { id } = req.params;
         const data = req.body;
-
-        if (!userId) {
-            return res.status(400).json({ success: false, message: "User id not found" });
-        }
         if (!id) {
             return res.status(400).json({ success: false, message: "ID is missing" });
         }
@@ -273,11 +254,11 @@ const editSubcategory = async function (req, res) {
             return res.status(400).json({ success: false, message: "Invalid data format" });
         }
 
-       
+
         const editSubcategory = await subCategoryModel.findByIdAndUpdate(
             id,
-            { $set: data },  
-            { new: true } 
+            { $set: data },
+            { new: true }
         );
 
         if (!editSubcategory) {
@@ -286,7 +267,7 @@ const editSubcategory = async function (req, res) {
 
         return res.status(200).json({ success: true, data: editSubcategory, message: "Subcategory updated successfully" });
     } catch (error) {
-      
+
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
@@ -294,4 +275,4 @@ const editSubcategory = async function (req, res) {
 
 
 
-module.exports = { createCategory,getNavbarCategories, subCreateCategory, getCategoryById, getSubCategoryById, getCategory, getSubCategory, getSubCategoryByCategoryName, deteletCategory, deteletSubCategory, categoriesWithSubcategories, editCategory , editSubcategory }
+module.exports = { createCategory, getNavbarCategories, subCreateCategory, getCategoryById, getSubCategoryById, getCategory, getSubCategory, getSubCategoryByCategoryName, deteletCategory, deteletSubCategory, categoriesWithSubcategories, editCategory, editSubcategory }

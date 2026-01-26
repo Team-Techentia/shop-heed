@@ -1,9 +1,8 @@
 const validator = require("../../validator/validator");
 const nodemailer = require("nodemailer");
+const { generateInvoicePDF } = require("../../utils/invoiceGenerator");
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+    service: 'gmail', // Use built-in Gmail service (handles ports automatically)
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -1045,6 +1044,7 @@ const adminNewOrderTemplate = (order) => {
 };
 
 const orderShippedTemplate = (order, awbNumber) => {
+    const trackingUrl = awbNumber && awbNumber !== 'N/A' ? `https://shiprocket.co/tracking/${awbNumber}` : '#';
     return `
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
@@ -1053,7 +1053,15 @@ const orderShippedTemplate = (order, awbNumber) => {
           <p>Dear ${order.customerDetails.first_name},</p>
           <p>Great news! Your order <strong>${order.orderId}</strong> has been shipped.</p>
           <p><strong>AWB Number:</strong> ${awbNumber || 'N/A'}</p>
-          <p>You can track your order using this AWB number. Please note it may take a few hours for tracking details to be available.</p>
+          
+          ${awbNumber && awbNumber !== 'N/A' ? `
+          <p>You can track your order status directly on Shiprocket by clicking the link below:</p>
+          <p style="text-align: center; margin: 20px 0;">
+            <a href="${trackingUrl}" target="_blank" style="background-color: #00466a; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Track Your Order</a>
+          </p>
+          ` : ''}
+
+          <p>Please note it may take a few hours for tracking details to be available.</p>
           <p>Thank you for shopping with us!</p>
           <p>Team ShopHeed</p>
         </div>
@@ -1095,6 +1103,86 @@ const returnUpdateTemplate = (order, status) => {
   `;
 };
 
+const updateOrderEmail = async (req, res) => {
+    try {
+        const { orderDataById, status, orderStatus } = req.body;
+        console.log(`Sending Email for Status: ${orderStatus}, Invoice: ${status === "Shipped" ? "Yes" : "No"}`);
+
+        if (!orderDataById || !orderDataById.customerDetails) {
+            console.error("Missing order data for email");
+            return res.status(400).json({ success: false, message: "Invalid order data" });
+        }
+
+        const { email, first_name } = orderDataById.customerDetails;
+        const orderId = orderDataById.orderId || orderDataById._id;
+
+        let subject = "";
+        let htmlContent = "";
+        let attachments = [];
+
+        const normalizedStatus = orderStatus ? orderStatus.toLowerCase() : "";
+
+        if (normalizedStatus === "shipped") {
+            subject = `Your Order ${orderId} has been Shipped!`;
+            const awb = orderDataById.forwardAwb || "N/A";
+
+            htmlContent = orderShippedTemplate(orderDataById, awb);
+
+            try {
+                const pdfBuffer = await generateInvoicePDF(orderDataById);
+                attachments = [{
+                    filename: `Invoice_${orderId}.pdf`,
+                    content: pdfBuffer
+                }];
+                console.log("Invoice generated and attached.");
+            } catch (err) {
+                console.error("Error generating invoice PDF for email:", err);
+            }
+
+        } else if (normalizedStatus === "cancelled") {
+            subject = `Order Cancelled: ${orderId}`;
+            htmlContent = orderCancelledTemplate(orderDataById);
+        } else if (normalizedStatus === "refunded") {
+            // Basic refund template logic
+            subject = `Refund Processed: ${orderId}`;
+            htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>Refund Processed</h2>
+                    <p>Hi ${first_name},</p>
+                    <p>We have processed the refund for your order <strong>${orderId}</strong>.</p>
+                    <p>It may take 5-7 business days to reflect in your account.</p>
+                </div>
+            `;
+        } else {
+            // Default update - using return update or generic
+            subject = `Order Update: ${orderId}`;
+            htmlContent = returnUpdateTemplate(orderDataById, orderStatus);
+        }
+
+        const mailOptions = {
+            from: process.env.SMTP_FROM || `"ShopHeed" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: subject,
+            html: htmlContent,
+            attachments: attachments
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Error sending email:", error);
+                return res.status(500).json({ success: false, message: "Error sending email", error: error.message });
+            } else {
+                console.log(`Email sent: ${info.messageId}`);
+                return res.status(200).json({ success: true, message: "Email sent successfully" });
+            }
+        });
+
+    } catch (error) {
+        console.error("Controller Error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
 module.exports = {
     htmlContentForMailTemplate,
     contactUs,
@@ -1105,5 +1193,6 @@ module.exports = {
     adminNewOrderTemplate,
     orderShippedTemplate,
     orderCancelledTemplate,
-    returnUpdateTemplate
+    returnUpdateTemplate,
+    updateOrderEmail // Added
 };

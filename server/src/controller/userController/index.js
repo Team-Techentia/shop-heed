@@ -11,15 +11,15 @@ require("dotenv").config();
 // Check if user is logged in (middleware se aayega)
 const checkIsLogin = async function (req, res) {
   try {
-    return res.status(200).json({ 
-      success: true, 
-      message: "User found" 
+    return res.status(200).json({
+      success: true,
+      message: "User found"
     });
   } catch (error) {
-    return res.status(500).json({ 
-      success: false, 
-      message: "Internal server error", 
-      error 
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error
     });
   }
 };
@@ -43,7 +43,7 @@ const checkMobile = async function (req, res) {
       });
     }
 
-    const user = await userModel.findOne({ 
+    const user = await userModel.findOne({
       phoneNumber: phoneNumber,
       role: 'user' // Only check for users, not admins
     });
@@ -103,7 +103,7 @@ const signUp = async function (req, res) {
     }
 
     // ✅ CHECK IF ALREADY EXISTS
-    const existingUser = await userModel.findOne({ 
+    const existingUser = await userModel.findOne({
       phoneNumber: phoneNumber,
       role: 'user',
       isDeleted: false  // 🔥 Added isDeleted check
@@ -157,7 +157,7 @@ const signUp = async function (req, res) {
   } catch (error) {
     console.error("❌ Signup Error:", error);
     console.error("Error Stack:", error.stack);
-    
+
     // 🔥 BETTER ERROR MESSAGES
     if (error.name === 'ValidationError') {
       return res.status(400).json({
@@ -194,7 +194,7 @@ const loginUser = async function (req, res) {
       });
     }
 
-    const user = await userModel.findOne({ 
+    const user = await userModel.findOne({
       phoneNumber: phoneNumber,
       role: 'user',
       isDeleted: false
@@ -267,7 +267,7 @@ const adminLogin = async function (req, res) {
     }
 
     // Find admin user only
-    const admin = await userModel.findOne({ 
+    const admin = await userModel.findOne({
       email: email,
       role: 'admin',
       isDeleted: false
@@ -350,49 +350,49 @@ const createAdmin = async function (req, res) {
       return res.status(400).json({ success: false, message: "Valid phone number is required" });
 
     // CHECK EXISTING ADMIN COUNT
-// CHECK EXISTING ADMIN COUNT
-const adminCount = await userModel.countDocuments({
-  role: "admin",
-  isDeleted: false,
-});
-
-// 🔐 IF ADMIN EXISTS → TOKEN REQUIRED
-if (adminCount > 0) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      success: false,
-      message: "Token required",
+    // CHECK EXISTING ADMIN COUNT
+    const adminCount = await userModel.countDocuments({
+      role: "admin",
+      isDeleted: false,
     });
-  }
 
-  const token = authHeader.split(" ")[1];
+    // 🔐 IF ADMIN EXISTS → TOKEN REQUIRED
+    if (adminCount > 0) {
+      const authHeader = req.headers.authorization;
 
-  if (!token || token === "null" || token === "undefined") {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
-  }
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+          success: false,
+          message: "Token required",
+        });
+      }
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  } catch (err) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
-  }
+      const token = authHeader.split(" ")[1];
 
-  if (decoded.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Admin access required",
-    });
-  }
-}
+      if (!token || token === "null" || token === "undefined") {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid token",
+        });
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid token",
+        });
+      }
+
+      if (decoded.role !== "admin") {
+        return res.status(403).json({
+          success: false,
+          message: "Admin access required",
+        });
+      }
+    }
 
 
     // CHECK EMAIL DUPLICATE
@@ -516,7 +516,7 @@ const getUserById = async function (req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "Internal server error",error });
+      .json({ success: false, message: "Internal server error", error });
   }
 };
 
@@ -579,19 +579,49 @@ const profileChange = async function (req, res) {
   }
 };
 
+const deleteUser = async function (req, res) {
+  try {
+    const id = req.params.id;
+    const user = await userModel.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Soft delete
+    await userModel.findByIdAndUpdate(id, { isDeleted: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
+    });
+  }
+};
+
 module.exports = {
   // User authentication (Mobile OTP based)
   checkMobile,
   signUp,
   loginUser,
-  
+
   // Admin authentication (Email + Password)
   adminLogin,
   createAdmin,
-  
+
   // Common
   checkIsLogin,
   changePassword,
   getUserById,
   profileChange,
+  deleteUser, // Added
 };
