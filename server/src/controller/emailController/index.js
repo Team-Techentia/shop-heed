@@ -8,45 +8,45 @@ apiKey.apiKey = process.env.EMAIL_API_KEY;
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 function EmailSendComponent(to, subject, htmlContent) {
-  const sendSmtpEmail = {
-    to: [{ email: to, name: "From Heed" }],
-    sender: { email: process.env.CLIENT_MAIL, name: "ShopHeed" },
-    subject: subject,
-    htmlContent: htmlContent,
-  };
-  apiInstance.sendTransacEmail(sendSmtpEmail).then((data) => {
-    return "Email sent:";
-  });
+    const sendSmtpEmail = {
+        to: [{ email: to, name: "From Heed" }],
+        sender: { email: process.env.CLIENT_MAIL, name: "ShopHeed" },
+        subject: subject,
+        htmlContent: htmlContent,
+    };
+    apiInstance.sendTransacEmail(sendSmtpEmail).then((data) => {
+        return "Email sent:";
+    });
 }
 
 const contactUs = async function (req, res) {
-  try {
-    const { to, name, email, message, phone } = req.body;
+    try {
+        const { to, name, email, message, phone } = req.body;
 
-    if (!validator.isValid(name)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "name must be required" });
-    }
+        if (!validator.isValid(name)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "name must be required" });
+        }
 
-    if (!validator.isValid(email)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "email must be required" });
-    }
+        if (!validator.isValid(email)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "email must be required" });
+        }
 
-    if (!validator.isValid(message)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "message must be required" });
-    }
+        if (!validator.isValid(message)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "message must be required" });
+        }
 
-    if (!validator.isValid(phone)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "phone must be required" });
-    }
-    const htmlData = `<!DOCTYPE html>
+        if (!validator.isValid(phone)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "phone must be required" });
+        }
+        const htmlData = `<!DOCTYPE html>
     <html>
     <head>
         <style>
@@ -102,79 +102,79 @@ const contactUs = async function (req, res) {
        </div>
     </body>
     </html>`;
-    EmailSendComponent(
-      process.env.CLIENT_MAIL,
-      "contact for ShopHeed",
-      htmlData
-    );
+        EmailSendComponent(
+            process.env.CLIENT_MAIL,
+            "contact for ShopHeed",
+            htmlData
+        );
 
-    return res
-      .status(250)
-      .json({ success: true, message: "received successfully" });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to submit. Internal server error.",
-    });
-  }
+        return res
+            .status(250)
+            .json({ success: true, message: "received successfully" });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to submit. Internal server error.",
+        });
+    }
 };
 
 const BulkEnquiry = async function (req, res) {
-  try {
-    const {
-      fullName,
-      companyName,
-      natureOfBusiness,
-      phoneNumber,
-      preferredContact,
-      productsInterested,
-      quantityRequired,
-      shippingAddress,
-      deliveryDate,
-      additionalInfo,
-      priceRange,
-      heardAboutUs,
-      otherSource,
-      email,
-    } = req.body;
+    try {
+        const {
+            fullName,
+            companyName,
+            natureOfBusiness,
+            phoneNumber,
+            preferredContact,
+            productsInterested,
+            quantityRequired,
+            shippingAddress,
+            deliveryDate,
+            additionalInfo,
+            priceRange,
+            heardAboutUs,
+            otherSource,
+            email,
+        } = req.body;
 
-    if (!validator.isValid(fullName)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Full name is required" });
-    }
+        if (!validator.isValid(fullName)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Full name is required" });
+        }
 
-    if (!validator.isValid(email)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Email is required" });
-    }
+        if (!validator.isValid(email)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Email is required" });
+        }
 
-    if (!validator.isValid(phoneNumber)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Phone number is required" });
-    }
+        if (!validator.isValid(phoneNumber)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Phone number is required" });
+        }
 
-    if (!validator.isValid(productsInterested)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Products interested is required" });
-    }
+        if (!validator.isValid(productsInterested)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Products interested is required" });
+        }
 
-    if (!validator.isValid(quantityRequired)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Quantity required is required" });
-    }
+        if (!validator.isValid(quantityRequired)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Quantity required is required" });
+        }
 
-    if (!validator.isValid(shippingAddress)) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Shipping address is required" });
-    }
+        if (!validator.isValid(shippingAddress)) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Shipping address is required" });
+        }
 
-    const htmlData = `
+        const htmlData = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -218,53 +218,45 @@ const BulkEnquiry = async function (req, res) {
               <p><span class="label">Products Interested:</span> ${productsInterested}</p>
               <p><span class="label">Quantity Required:</span> ${quantityRequired}</p>
               <p><span class="label">Shipping Address:</span> ${shippingAddress}</p>
-                <p><span class="label">Company Name:</span> ${
-                  companyName || "N/A"
-                }</p>
-              <p><span class="label">Additional Information:</span> ${
-                additionalInfo || "N/A"
-              }</p>
-              <p><span class="label">Nature Of Business:</span> ${
-                natureOfBusiness || "N/A"
-              }</p>
-              <p><span class="label">Preferred Contact:</span> ${
-                preferredContact || "N/A"
-              }</p>
-              <p><span class="label">Delivery Date:</span> ${
-                deliveryDate || "N/A"
-              }</p>
-              <p><span class="label">Price Range:</span> ${
-                priceRange || "N/A"
-              }</p>
-              <p><span class="label">Heard AboutUs:</span> ${
-                heardAboutUs || "N/A"
-              }</p>
-              <p><span class="label">Other Source:</span> ${
-                otherSource || "N/A"
-              }</p>
+                <p><span class="label">Company Name:</span> ${companyName || "N/A"
+            }</p>
+              <p><span class="label">Additional Information:</span> ${additionalInfo || "N/A"
+            }</p>
+              <p><span class="label">Nature Of Business:</span> ${natureOfBusiness || "N/A"
+            }</p>
+              <p><span class="label">Preferred Contact:</span> ${preferredContact || "N/A"
+            }</p>
+              <p><span class="label">Delivery Date:</span> ${deliveryDate || "N/A"
+            }</p>
+              <p><span class="label">Price Range:</span> ${priceRange || "N/A"
+            }</p>
+              <p><span class="label">Heard AboutUs:</span> ${heardAboutUs || "N/A"
+            }</p>
+              <p><span class="label">Other Source:</span> ${otherSource || "N/A"
+            }</p>
           </div>
       </body>
       </html>`;
 
-    EmailSendComponent(
-      process.env.CLIENT_MAIL,
-      "Bulk Enquiry for ShopHeed",
-      htmlData
-    );
+        EmailSendComponent(
+            process.env.CLIENT_MAIL,
+            "Bulk Enquiry for ShopHeed",
+            htmlData
+        );
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Received successfully" });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to submit. Internal server error.",
-    });
-  }
+        return res
+            .status(200)
+            .json({ success: true, message: "Received successfully" });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to submit. Internal server error.",
+        });
+    }
 };
 
 const htmlContentForMailTemplate = (name, title, dis) => {
-  return `<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+    return `<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
   xmlns:o="urn:schemas-microsoft-com:office:office">
   
   <head>
@@ -854,8 +846,8 @@ const htmlContentForMailTemplate = (name, title, dis) => {
  * 
  * @param {*} body 
  */
-const returnOrExchangeMail = async(body) => {
-  const htmlContent= `<!DOCTYPE html>
+const returnOrExchangeMail = async (body) => {
+    const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -947,21 +939,21 @@ const returnOrExchangeMail = async(body) => {
 </html>`;
 
     const sendSmtpEmail = {
-      to: [{ email: process.env.CLIENT_MAIL, name: "From Heed" }],
-      sender: { email: body.email, name: "Return/Exchange Request" },
-      subject: "Return/Exchange Request",
-      htmlContent: htmlContent,
+        to: [{ email: process.env.CLIENT_MAIL, name: "From Heed" }],
+        sender: { email: body.email, name: "Return/Exchange Request" },
+        subject: "Return/Exchange Request",
+        htmlContent: htmlContent,
     };
     apiInstance.sendTransacEmail(sendSmtpEmail).then((data) => {
-      return "Email sent:";
+        return "Email sent:";
     });
 };
 
 
 module.exports = {
-  htmlContentForMailTemplate,
-  contactUs,
-  EmailSendComponent,
-  BulkEnquiry,
-  returnOrExchangeMail
+    htmlContentForMailTemplate,
+    contactUs,
+    EmailSendComponent,
+    BulkEnquiry,
+    returnOrExchangeMail
 };
