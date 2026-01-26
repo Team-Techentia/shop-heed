@@ -22,10 +22,10 @@ const OrderSuccess = () => {
                                 <i className="fa fa-check-circle text-success" style={{ fontSize: "4rem", marginBottom: "20px" }} aria-hidden="true"></i>
                                 <h2 style={{ fontWeight: "700", color: "#333", marginBottom: "15px" }}>Payment Successful! 🎉</h2>
                                 <p style={{ fontSize: "14px", color: "#555", marginBottom: "10px" }}>
-                                   Thank you for your order. We’ve received your payment and your order has been placed successfully.
+                                  Thank you for your order. We’ve received your payment and your order has been placed successfully.
                                 </p>
                                 <p style={{ fontSize: "14px", color: "#555", marginBottom: "30px" }}>
-                                    You’ll receive an order confirmation shortly with all the details.
+                                   You’ll receive an order confirmation shortly with all the details.
                                 </p>
 
                                 {orderId && (

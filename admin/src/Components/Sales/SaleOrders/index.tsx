@@ -13,15 +13,12 @@ import jsPDF from 'jspdf';
 import { useRouter } from "next/navigation";
 
 interface OrderData {
-  ["Item Id"]: string;
-  ["Order Id"]: string;
-  Products: JSX.Element | string;
+  ["Order Date"]: string;
+  ["Name"]: JSX.Element | string;
+  ["SKU"]: string;
+  ["Amount"]: JSX.Element | number;
   ["Payment Status"]: JSX.Element | string;
-  ["Payment Method"]: JSX.Element;
   ["Order Status"]: JSX.Element | string;
-  Date: string;
-  ["Total"]: JSX.Element | number;
-  ["Customer"]?: string;
   Actions: string;
 }
 
@@ -80,7 +77,6 @@ const SalesOrders = () => {
     return `${day}/${month}/${year}`;
   };
 
-  // Generate next invoice number with format: 2025SH0001
   const getNextInvoiceNumber = (): string => {
     try {
       const currentYear = new Date().getFullYear();
@@ -99,7 +95,6 @@ const SalesOrders = () => {
       return `${currentYear}SH0001`;
     }
   };
-
 
   const generateInvoice = async (orderId: string) => {
     try {
@@ -150,8 +145,6 @@ const SalesOrders = () => {
 
       doc.text(`Place of Supply: ${customer.state}`, 110, 77);
       doc.text(`Nature of Supply: Goods`, 110, 83);
-
-
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
@@ -390,10 +383,13 @@ const SalesOrders = () => {
           `${item.title || 'N/A'} (${item.size || 'N/A'}) x${item.quantity}`
         ).join(", ");
 
+        const skuList = order.items.map((item: any) => item.sku || 'N/A').join(", ");
+
         const newObject: OrderData = {
-          ["Item Id"]: order._id,
-          ["Order Id"]: order.orderId,
-          Products: <div className="break-words">{productList}</div>,
+          ["Order Date"]: formatDate(order.createdAt),
+          ["Name"]: <div className="break-words">{productList}</div>,
+          ["SKU"]: skuList,
+          ["Amount"]: <div>₹ {order.totalAmount}</div>,
           ["Payment Status"]: order.status === "pending" ? (
             <Badge className="capitalized" color="warning">Pending</Badge>
           ) : order.status === "paid" ? (
@@ -403,15 +399,7 @@ const SalesOrders = () => {
           ) : (
             <Badge color="secondary" className="capitalized">{order.status}</Badge>
           ),
-          ["Payment Method"]: order.paymentMethod?.toLowerCase() === "cod" ? (
-            <Badge color="secondary">Cash On Delivery</Badge>
-          ) : (
-            <Badge className="capitalized" color="success">{order.paymentMethod || "N/A"}</Badge>
-          ),
           ["Order Status"]: <div className="capitalized">{order.orderStatus}</div>,
-          Date: formatDate(order.createdAt),
-          ["Total"]: <div>₹ {order.totalAmount}</div>,
-          ["Customer"]: `${order.customerDetails?.first_name || ""} ${order.customerDetails?.last_name || ""}`,
           Actions: order._id,
         };
 
@@ -458,10 +446,18 @@ const SalesOrders = () => {
       setValue("email", customerDetails.email);
       setValue("address", customerDetails.address);
       setValue("pincode", customerDetails.pincode);
-      setValue("orderStatus", res.data.data.orderStatus);
+
+      let standardizedStatus = res.data.data.orderStatus;
+      if (standardizedStatus === "Processed" || standardizedStatus === "processing") {
+        standardizedStatus = "Confirmed";
+      } else if (standardizedStatus === "shipping") {
+        standardizedStatus = "Shipped";
+      }
+
+      setValue("orderStatus", standardizedStatus);
       setValue("forwardAwb", res.data.data.forwardAwb || "");
       setValue("reverseAwb", res.data.data.reverseAwb || "");
-      setOrderStatus(res.data.data.orderStatus);
+      setOrderStatus(standardizedStatus);
 
       const country = Country.getAllCountries().find(country => country.name === customerDetails.country);
       const state = State.getStatesOfCountry(country?.isoCode ?? '').find(state => state.name === customerDetails.state);
@@ -599,6 +595,13 @@ const SalesOrders = () => {
                                   </Col>
                                 )}
 
+                                {orderDataById.paymentDetails && orderDataById.paymentDetails.orderId && (
+                                  <Col lg="4" md="4" sm="6">
+                                    <h5>Razorpay Order Id </h5>
+                                    <div className="field-label">{orderDataById.paymentDetails.orderId}</div>
+                                  </Col>
+                                )}
+
                                 {orderDataById.paymentDetails && orderDataById.paymentDetails.paymentStatus && (
                                   <Col lg="4" md="4" sm="6">
                                     <h5>Payment Status </h5>
@@ -690,11 +693,11 @@ const SalesOrders = () => {
                               <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                 <div className="field-label">Order Status</div>
                                 <select className="input-input" {...register("orderStatus", { required: true })} value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>
-                                  <option value="Processed">Processed</option>
-                                  <option value="shipping">Shipping</option>
+                                  <option value="Confirmed">Confirmed</option>
+                                  <option value="Shipped">Shipped</option>
                                   <option value="Delivered">Delivered</option>
                                   <option value="Returned">Returned</option>
-                                  <option value="Return Initiative">Return Initiative</option>
+                                  <option value="Return Processed">Return Processed</option>
                                   <option value="Cancelled">Cancelled</option>
 
                                   <option value="refunded">Refunded</option>
@@ -791,8 +794,8 @@ const SalesOrders = () => {
                       <option value="null">All</option>
                       <option value="new-order">New Order</option>
                       <option value="pending-payment">Pending Payment</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipping">Shipping</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Shipped">Shipped</option>
                       <option value="on-hold">On Hold</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>

@@ -79,7 +79,7 @@ const createOrder = async (req, res) => {
       paymentMethod,
       customerDetails,
       status: "pending",
-      orderStatus: "processing",
+      orderStatus: "Confirmed",
     });
 
     if (paymentMethod === "online") {

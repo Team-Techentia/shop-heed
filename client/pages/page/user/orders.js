@@ -152,11 +152,11 @@ const MyOrders = () => {
                                       fontWeight: "600",
                                       textTransform: "capitalize"
                                     }}>
-                                      {d.orderStatus === "processing"? "Order Processing" : d.orderStatus || "Processing"}
+                                      {d.orderStatus === "processing" ? "Confirmed" : d.orderStatus || "Confirmed"}
                                     </span>
                                   </div>
 
-                                 
+
                                 </div>
 
                                 {/* Arrow Icon (Desktop mostly) */}

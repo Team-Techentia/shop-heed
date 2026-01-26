@@ -61,7 +61,7 @@ const OrderDetails = () => {
                             fontWeight: "500",
                             textTransform: "capitalize"
                           }}>
-                            Order Status: {order.orderStatus}
+                             {order.orderStatus === "processing" ? "Confirmed" : d.orderStatus || "Confirmed"}
                           </span>
                         </div>
                       </div>
@@ -96,7 +96,7 @@ const OrderDetails = () => {
               <Card className="dashboard-table mt-0" style={{ border: "1px solid #eee", marginBottom: "20px" }}>
                 <div style={{ padding: "15px" }}>
                   <h5 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "15px", borderBottom: "1px solid #eee", paddingBottom: "10px" }}>
-                    Ship To:
+                    Ship To
                   </h5>
                   <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                     <p style={{ fontWeight: "600", color: "#333", margin: 0 }}>
