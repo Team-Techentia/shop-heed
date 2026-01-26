@@ -1,14 +1,37 @@
 const validator = require("../../validator/validator");
 const nodemailer = require("nodemailer");
 const { generateInvoicePDF } = require("../../utils/invoiceGenerator");
+
+console.log("---------------- EMAIL CONFIG DEBUG ----------------");
+console.log("SMTP_HOST:", process.env.SMTP_HOST);
+console.log("SMTP_PORT:", process.env.SMTP_PORT);
+console.log("SMTP_SECURE (raw):", process.env.SMTP_SECURE);
+console.log("SMTP_SECURE (parsed):", process.env.SMTP_SECURE === "true");
+console.log("SMTP_USER:", process.env.SMTP_USER);
+console.log("----------------------------------------------------");
+
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === "true", // Convert string to boolean
+    port: parseInt(process.env.SMTP_PORT), // Convert to number
+    secure: process.env.SMTP_SECURE === "true", // true for 465, false for 587
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
+    tls: {
+        rejectUnauthorized: false // Accept self-signed certificates
+    },
+    debug: true, // Enable debug output
+    logger: true // Log to console
+});
+
+// Verify connection on startup
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error("❌ SMTP Connection Failed:", error);
+    } else {
+        console.log("✅ SMTP Server is ready to send emails");
+    }
 });
 
 function EmailSendComponent(to, subject, htmlContent) {
@@ -21,9 +44,15 @@ function EmailSendComponent(to, subject, htmlContent) {
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.error("Error sending email:", error);
+            console.error("❌ Error sending email:", error);
+            console.error("Error details:", {
+                code: error.code,
+                command: error.command,
+                response: error.response,
+                responseCode: error.responseCode
+            });
         } else {
-            console.log(`Email sent successfully to ${to}. MessageId:`, info.messageId);
+            console.log(`✅ Email sent successfully to ${to}. MessageId:`, info.messageId);
         }
     });
 }
@@ -1136,7 +1165,7 @@ const updateOrderEmail = async (req, res) => {
                     filename: `Invoice_${orderId}.pdf`,
                     content: pdfBuffer
                 }];
-                console.log("Invoice generated and attached.");
+                console.log("Invoice generated and attached (Buffer).");
             } catch (err) {
                 console.error("Error generating invoice PDF for email:", err);
             }

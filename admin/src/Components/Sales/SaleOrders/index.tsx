@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 interface OrderData {
   ["Order Date"]: string;
-  ["Name"]: JSX.Element | string;
+  ["Order Id"]: JSX.Element | string;
   ["SKU"]: string;
   ["Amount"]: JSX.Element | number;
   ["Payment Status"]: JSX.Element | string;
@@ -386,7 +386,7 @@ const SalesOrders = () => {
 
         const newObject: OrderData = {
           ["Order Date"]: formatDate(order.createdAt),
-          ["Name"]: <div className="break-words">{productList}</div>,
+          ["Order Id"]: <div style={{ fontWeight: 'bold' }}>{order.orderId}</div>,
           ["SKU"]: skuList,
           ["Amount"]: <div>₹ {order.totalAmount}</div>,
           ["Payment Status"]: order.status === "pending" ? (
@@ -456,6 +456,8 @@ const SalesOrders = () => {
       setValue("orderStatus", standardizedStatus);
       setValue("forwardAwb", res.data.data.forwardAwb || "");
       setValue("reverseAwb", res.data.data.reverseAwb || "");
+      setValue("forwardLogisticService", res.data.data.forwardLogisticService || "");
+      setValue("reverseLogisticService", res.data.data.reverseLogisticService || "");
       setOrderStatus(standardizedStatus);
 
       const country = Country.getAllCountries().find(country => country.name === customerDetails.country);
@@ -703,6 +705,8 @@ const SalesOrders = () => {
 
                                 </select>
                                 <span className="error-message">{errors.orderStatus && "Order status is required"}</span>
+
+
                                 <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                   <div className="field-label">Forward AWB Number</div>
                                   <input
@@ -714,12 +718,32 @@ const SalesOrders = () => {
                                 </div>
 
                                 <div className="form-group col-md-12 col-sm-6 col-xs-12">
+                                  <div className="field-label">Forward Logistic Service Provider</div>
+                                  <input
+                                    type="text"
+                                    className="input-input"
+                                    {...register("forwardLogisticService")}
+                                    placeholder="e.g. Bluedart"
+                                  />
+                                </div>
+
+                                <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                   <div className="field-label">Reverse AWB Number</div>
                                   <input
                                     type="text"
                                     className="input-input"
                                     {...register("reverseAwb")}
                                     placeholder="Enter Reverse AWB Number"
+                                  />
+                                </div>
+
+                                <div className="form-group col-md-12 col-sm-6 col-xs-12">
+                                  <div className="field-label">Reverse Logistic Service Provider</div>
+                                  <input
+                                    type="text"
+                                    className="input-input"
+                                    {...register("reverseLogisticService")}
+                                    placeholder="e.g. Delhivery"
                                   />
                                 </div>
                               </div>

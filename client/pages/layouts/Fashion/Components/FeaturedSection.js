@@ -29,7 +29,6 @@ const MasterSection = ({ img, title, link }) => {
               width: "100%",
               height: "100%",
               maxHeight: "450px",
-              borderRadius: "10px",
             }}
             src={img || defaultImage}
             alt={title}
@@ -43,19 +42,24 @@ const MasterSection = ({ img, title, link }) => {
             className="overlay-text"
             style={{
               position: "absolute",
-              border: "2px solid #fff",
-              bottom: "15px",
+              bottom: "5px",
               left: "50%",
               transform: "translateX(-50%)",
               color: "#fff",
-              fontWeight: "600",
-              fontSize: "18px",
-              textShadow: "0px 2px 6px rgba(0,0,0,0.6)",
+              fontWeight: "400",
+              fontSize: "10px",
               textAlign: "center",
-              width: "60%",
-              height: "50px",
-              lineHeight: "50px",
-              borderRadius: "5px",
+              width: "100%",
+              letterSpacing: "0.5px",
+              textTransform: "uppercase",
+
+              /* 🔥 BLACK OUTLINE */
+              textShadow: `
+      -1px -1px 0 #000,
+       1px -1px 0 #000,
+      -1px  1px 0 #000,
+       1px  1px 0 #000
+    `,
             }}
           >
             {title}
@@ -109,7 +113,7 @@ const FeaturedSections = () => {
     return (
       <section className="section-b-space detail-cannabis bg-grey category">
         <Container>
-          <Row style={{ gap: "25px 0px" }}>
+          <Row style={{ gap: "10px 0px" }}>
             <div style={{ textAlign: "center", padding: "50px" }}>
               <p>Loading categories...</p>
             </div>
@@ -136,9 +140,9 @@ const FeaturedSections = () => {
   return (
     <section className="section-b-space detail-cannabis bg-grey category">
       <Container>
-        <Row style={{ gap: "25px 0px" }}>
+        <Row style={{ gap: "10px 0px" }}>
           {category.map((data, i) => (
-            <Col lg={3} md={4} sm={6} xs={12} key={data._id || i}>
+            <Col lg={4} md={4} sm={4} xs={4} key={data._id || i} style={{ padding: "2px" }}>
               <MasterSection
                 img={data.image}
                 title={formatCategoryName(data.category, data.subCategory)}

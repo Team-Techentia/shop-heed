@@ -225,7 +225,7 @@ const Profile = () => {
                         setIsOpenTOTP(true);
                       }}
                     >
-                      get otp
+                      SEND OTP
                     </div>
                   </div>
                 </ModalBody>

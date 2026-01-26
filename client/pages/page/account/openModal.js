@@ -96,7 +96,7 @@ const OpenModal = ({ userData }) => {
   // =========================
   const handleOTPVerify = async () => {
     if (isVerifying) return;
-    
+
     if (!userData?.phoneNumber) {
       toast.error("Phone number is required");
       return;
@@ -268,27 +268,30 @@ const OpenModal = ({ userData }) => {
   return (
     <>
       {/* 🔥 SINGLE DIALOG - ALWAYS OPEN WHEN isOTPModalOpen IS TRUE */}
-      <Dialog 
-        open={isOTPModalOpen} 
-        maxWidth="sm" 
+      <Dialog
+        open={isOTPModalOpen}
+        maxWidth="sm"
         fullWidth
         onClose={handleCancelOtp}
+        PaperProps={{
+          style: {
+            borderRadius: '16px'
+          }
+        }}
       >
         <DialogTitle>
           <Typography align="center" fontWeight={600}>
-            {isSending 
-              ? "Sending OTP..." 
-              : showNameInput 
-                ? "Complete Your Signup" 
-                : "Enter 6-digit OTP"}
+            {isSending
+              ? "Sending OTP..."
+              : showNameInput
+                ? "Complete Your Signup"
+                : `Enter 6-digit OTP Sent to ${userData.phoneNumber}`}
           </Typography>
-          <Typography align="center" variant="body2" color="textSecondary">
-            {isSending 
-              ? "Please wait..." 
-              : showNameInput 
-                ? "Just one more step!" 
-                : `Sent to ${userData.phoneNumber}`}
-          </Typography>
+          {(isSending || showNameInput) && (
+            <Typography align="center" variant="body2" color="textSecondary">
+              {isSending ? "Please wait..." : "Just one more step!"}
+            </Typography>
+          )}
         </DialogTitle>
 
         <DialogContent>
@@ -309,7 +312,7 @@ const OpenModal = ({ userData }) => {
                 value={otp}
                 onChange={setOtp}
                 numInputs={6}
-                separator={<span style={{ width: "8px" }}></span>}
+                // separator={<span style={{ width: "24px" }}></span>} // Removed in favor of gap
                 isInputNum={true}
                 shouldAutoFocus={true}
                 inputStyle={{
@@ -321,14 +324,15 @@ const OpenModal = ({ userData }) => {
                   color: "#000",
                   fontWeight: "600",
                   caretColor: "blue",
+                  margin: "0 6px" // Added spread gap directly
                 }}
                 focusStyle={{
                   border: "2px solid #007bff",
                   outline: "none",
                 }}
                 renderInput={(props) => (
-                  <input 
-                    {...props} 
+                  <input
+                    {...props}
                     type="tel"
                     pattern="[0-9]*"
                     inputMode="numeric"
@@ -358,37 +362,31 @@ const OpenModal = ({ userData }) => {
         <DialogActions className="justify-content-end px-4 pb-3">
           {!showNameInput && otpSent ? (
             <>
-              <Button 
-                onClick={handleResendOtp} 
+              <Button
+                onClick={handleResendOtp}
                 disabled={isVerifying || isSending}
               >
                 {isSending ? "Sending..." : "Resend"}
               </Button>
-              <Button 
-                color="error" 
-                onClick={handleCancelOtp} 
-                disabled={isVerifying}
-              >
-                Cancel
-              </Button>
-              <Button 
-                color="success" 
-                onClick={handleOTPVerify} 
+
+              <Button
+                color="success"
+                onClick={handleOTPVerify}
                 disabled={isVerifying || otp.length !== 6}
               >
-                {isVerifying ? "Verifying..." : "Verify OTP"}
+                {isVerifying ? "Verifying..." : "Verify"}
               </Button>
             </>
           ) : showNameInput ? (
             <>
-              <Button 
-                color="error" 
+              <Button
+                color="error"
                 onClick={handleCancelOtp}
               >
                 Cancel
               </Button>
-              <Button 
-                color="success" 
+              <Button
+                color="success"
                 onClick={handleSignup}
                 disabled={!userName || userName.trim().length < 2}
               >
@@ -396,8 +394,8 @@ const OpenModal = ({ userData }) => {
               </Button>
             </>
           ) : (
-            <Button 
-              color="error" 
+            <Button
+              color="error"
               onClick={handleCancelOtp}
             >
               Cancel

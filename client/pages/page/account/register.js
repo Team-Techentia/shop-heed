@@ -129,7 +129,7 @@ const Register = () => {
                       onClick={handleRegister}
                       className="btn btn-solid w-auto"
                     >
-                      GET OTP
+                      SEND OTP
                     </button>
                   </div>
 

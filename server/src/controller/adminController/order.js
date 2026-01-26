@@ -85,6 +85,8 @@ const updateOrder = async function (req, res) {
       // ✅ AWB numbers stored at root order level
       forwardAwb: req.body.forwardAwb || "",
       reverseAwb: req.body.reverseAwb || "",
+      forwardLogisticService: req.body.forwardLogisticService || "",
+      reverseLogisticService: req.body.reverseLogisticService || "",
     };
 
     const updatedOrder = await orderModel.findByIdAndUpdate(

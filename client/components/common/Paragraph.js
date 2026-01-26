@@ -8,7 +8,8 @@ const Paragraph = ({
   hrClass,
   titleData,
   titleDisData,
-  headingStyle
+  headingStyle,
+  fontsize,
 }) => {
   const titleRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -37,12 +38,16 @@ const Paragraph = ({
     <>
       <div className={title}>
         <h2
-        ref={titleRef}
-        style={headingStyle}
-        className={`title-inner1 ${isVisible ? "visible" : ""} ${inner}`}
-      >
-        {titleData}
-      </h2>
+          ref={titleRef}
+          style={{
+            fontSize: fontsize || "28px",   // 👈 yahan control
+            ...headingStyle                // 👈 agar extra styles pass ho
+          }}
+          className={`title-inner1 ${isVisible ? "visible" : ""} ${inner}`}
+        >
+          {titleData}
+        </h2>
+
         {line ? (
           <div className="line"></div>
         ) : hrClass ? (

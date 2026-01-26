@@ -26,6 +26,8 @@ const orderSchema = new mongoose.Schema(
     paymentDetails: { type: Object },
     forwardAwb: { type: String, default: '' },
     reverseAwb: { type: String, default: '' },
+    forwardLogisticService: { type: String, default: '' },
+    reverseLogisticService: { type: String, default: '' },
   },
   { timestamps: true }
 );
