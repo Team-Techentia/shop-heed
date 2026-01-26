@@ -5,7 +5,7 @@ const postsApi = axios.create({
 });
 
 const Api = {
-  uploadSingleImage: (data: any) => postsApi.post("/api/upload-single-image", data),
+  uploadSingleImage: (data: any) => postsApi.post("/upload-single-image", data),
 
   // ============================================
   // 🔐 USER AUTHENTICATION (Mobile OTP Based)
