@@ -607,7 +607,7 @@ const DetailsWithPrice = ({
                             marginBottom: "4px",
                           }}
                         >
-                          Expected delivery <span style={{ color: "#4CAF50" }}>IN 2 To 3 Days</span>
+                          Expected delivery <span style={{ color: "#4CAF50" }}>IN 3 To 4 Days</span>
                         </div>
                         <div
                           style={{

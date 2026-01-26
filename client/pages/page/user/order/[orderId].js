@@ -49,8 +49,14 @@ const OrderDetails = () => {
                         <h5 className="text-capitalize" style={{ fontSize: "16px", fontWeight: "600", color: "#333", marginBottom: "5px" }}>
                           {item.title}
                         </h5>
-                        <p className="text-capitalize" style={{ color: "#333",fontWeight: "600", fontSize: "14px", margin: 0 }}>
+                        <p className="text-capitalize" style={{ color: "#333", fontWeight: "600", fontSize: "14px", margin: 0 }}>
                           Size: {item.size}
+                        </p>
+                        <p className="text-capitalize" style={{ color: "#333", fontWeight: "600", fontSize: "14px", margin: 0 }}>
+                          Quantity: {item.quantity}
+                        </p>
+                        <p className="text-capitalize" style={{ color: "#333", fontWeight: "600", fontSize: "14px", margin: 0 }}>
+                          Total Price: ₹{item.totalPrice}
                         </p>
                         <div style={{ marginTop: "5px" }}>
                           <span style={{
@@ -61,7 +67,7 @@ const OrderDetails = () => {
                             fontWeight: "500",
                             textTransform: "capitalize"
                           }}>
-                             {order.orderStatus === "processing" ? "Confirmed" : d.orderStatus || "Confirmed"}
+                            Order Status:{order.orderStatus === "processing" ? "Confirmed" : order.orderStatus || "Confirmed"}
                           </span>
                         </div>
                       </div>

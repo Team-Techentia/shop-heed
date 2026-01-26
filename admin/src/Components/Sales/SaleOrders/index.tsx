@@ -98,10 +98,7 @@ const SalesOrders = () => {
 
   const generateInvoice = async (orderId: string) => {
     try {
-      if (orderDataById?.orderStatus?.toLowerCase() !== 'confirmed' && orderDataById?.orderStatus?.toLowerCase() !== 'processed') {
-        toast.error("Invoice can only be generated for orders with 'Confirmed' status!");
-        return;
-      }
+      // Validation removed as per user request
 
       setInvoiceGenerating(orderId);
 
@@ -329,7 +326,7 @@ const SalesOrders = () => {
       yPos += 10;
       doc.setFontSize(7);
       doc.text('Reg Address: BRANDS.IN, A-39, WEST PATEL NAGAR, New delhi, DELHI-110008', 20, yPos);
-      
+
       yPos += 11;
       doc.setFontSize(7);
       doc.text('This is a computer generated bill, does not require any physical signature.', 20, yPos);

@@ -10,7 +10,11 @@ const cron = require("node-cron");
 const {
   EmailSendComponent,
   htmlContentForMailTemplate,
-  orderConfirmationTemplate
+  orderConfirmationTemplate,
+  adminNewOrderTemplate,
+  orderShippedTemplate,
+  orderCancelledTemplate,
+  returnUpdateTemplate
 } = require("../emailController");
 const { createInvoice } = require("./invoice");
 const { Promocode } = require("../../Model/promocode");
@@ -133,13 +137,21 @@ const createOrder = async (req, res) => {
 
       // Send confirmation email
       try {
+        // Send to Customer
         EmailSendComponent(
           customerDetails.email,
           "Order Confirmation - " + customOrderId,
           orderConfirmationTemplate(newOrder)
         );
+
+        // Send to Admin
+        EmailSendComponent(
+          "heed.brandsin@gmail.com",
+          "New Order Alert - " + customOrderId,
+          adminNewOrderTemplate(newOrder)
+        );
       } catch (emailError) {
-        console.error("Failed to send order confirmation email:", emailError);
+        console.error("Failed to send order emails:", emailError);
       }
 
       return res.status(201).json({
@@ -205,10 +217,17 @@ const verifyPayment = async (req, res) => {
 
       // Send confirmation email
       try {
+        // Send to Customer
         EmailSendComponent(
           order.customerDetails.email,
           "Order Confirmation - " + order.orderId,
           orderConfirmationTemplate(order)
+        );
+        // Send to Admin
+        EmailSendComponent(
+          "heed.brandsin@gmail.com",
+          "New Order Alert - " + order.orderId,
+          adminNewOrderTemplate(order)
         );
       } catch (emailError) {
         console.error("Failed to send payment confirmation email:", emailError);
@@ -278,18 +297,48 @@ const updateOrderStatus = async (req, res) => {
       });
 
     order.orderStatus = req.body.status;
+    if (req.body.forwardAwb) order.forwardAwb = req.body.forwardAwb;
+    if (req.body.reverseAwb) order.reverseAwb = req.body.reverseAwb;
+
     await order.save();
 
-    // Send status update email
-    EmailSendComponent(
-      order.customerDetails.email,
-      "Order Status Update",
-      htmlContentForMailTemplate(
-        order.customerDetails.first_name,
-        "Order Status Updated",
-        `Your order ${order.orderId} status has been updated to: ${req.body.status}`
-      )
-    );
+    // Send status update email based on status
+    try {
+      const statusLower = req.body.status.toLowerCase();
+
+      if (statusLower === 'shipped') {
+        EmailSendComponent(
+          order.customerDetails.email,
+          "Order Shipped - " + order.orderId,
+          orderShippedTemplate(order, req.body.forwardAwb)
+        );
+      } else if (statusLower === 'cancelled') {
+        EmailSendComponent(
+          order.customerDetails.email,
+          "Order Cancelled - " + order.orderId,
+          orderCancelledTemplate(order)
+        );
+      } else if (statusLower.includes('return') || statusLower.includes('exchange')) {
+        EmailSendComponent(
+          order.customerDetails.email,
+          "Return Update - " + order.orderId,
+          returnUpdateTemplate(order, req.body.status)
+        );
+      } else {
+        // Fallback for other statuses
+        EmailSendComponent(
+          order.customerDetails.email,
+          "Order Status Update - " + order.orderId,
+          htmlContentForMailTemplate(
+            order.customerDetails.first_name,
+            "Order Status Updated",
+            `Your order ${order.orderId} status has been updated to: ${req.body.status}`
+          )
+        );
+      }
+    } catch (emailError) {
+      console.error("Failed to send status update email:", emailError);
+    }
 
     return res.status(200).json({
       success: true,

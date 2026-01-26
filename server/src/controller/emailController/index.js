@@ -1,21 +1,29 @@
 const validator = require("../../validator/validator");
-const SibApiV3Sdk = require("sib-api-v3-sdk");
-const defaultClient = SibApiV3Sdk.ApiClient.instance;
-require("dotenv").config();
-
-const apiKey = defaultClient.authentications["api-key"];
-apiKey.apiKey = process.env.EMAIL_API_KEY;
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 587,
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+});
 
 function EmailSendComponent(to, subject, htmlContent) {
-    const sendSmtpEmail = {
-        to: [{ email: to, name: "From Heed" }],
-        sender: { email: process.env.CLIENT_MAIL, name: "ShopHeed" },
+    const mailOptions = {
+        from: process.env.SMTP_FROM || `"ShopHeed" <${process.env.SMTP_USER}>`,
+        to: to,
         subject: subject,
-        htmlContent: htmlContent,
+        html: htmlContent,
     };
-    apiInstance.sendTransacEmail(sendSmtpEmail).then((data) => {
-        return "Email sent:";
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error("Error sending email:", error);
+        } else {
+            console.log(`Email sent successfully to ${to}. MessageId:`, info.messageId);
+        }
     });
 }
 
@@ -1019,11 +1027,83 @@ const orderConfirmationTemplate = (order) => {
   `;
 };
 
+const adminNewOrderTemplate = (order) => {
+    return `
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #00466a;">New Order Received!</h2>
+          <p>Hello Admin,</p>
+          <p>You have received a new order <strong>${order.orderId}</strong>.</p>
+          <p><strong>Customer:</strong> ${order.customerDetails.first_name} ${order.customerDetails.last_name}</p>
+          <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
+          <p>Please check the admin panel for more details.</p>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+const orderShippedTemplate = (order, awbNumber) => {
+    return `
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #00466a;">Your Order has been Shipped!</h2>
+          <p>Dear ${order.customerDetails.first_name},</p>
+          <p>Great news! Your order <strong>${order.orderId}</strong> has been shipped.</p>
+          <p><strong>AWB Number:</strong> ${awbNumber || 'N/A'}</p>
+          <p>You can track your order using this AWB number. Please note it may take a few hours for tracking details to be available.</p>
+          <p>Thank you for shopping with us!</p>
+          <p>Team ShopHeed</p>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+const orderCancelledTemplate = (order) => {
+    return `
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #d9534f;">Order Cancelled</h2>
+          <p>Dear ${order.customerDetails.first_name},</p>
+          <p>Your order <strong>${order.orderId}</strong> has been cancelled as per your request or due to unforeseen circumstances.</p>
+          <p>If you have already paid, your refund will be processed within <strong>2 to 3 working days</strong>.</p>
+          <p>We hope to serve you again in the future.</p>
+          <p>Team ShopHeed</p>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+const returnUpdateTemplate = (order, status) => {
+    return `
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #00466a;">Return/Exchange Status Update</h2>
+          <p>Dear ${order.customerDetails.first_name},</p>
+          <p>The status of your return/exchange for order <strong>${order.orderId}</strong> has been updated to: <strong>${status}</strong>.</p>
+          <p>We are processing your request and will keep you updated.</p>
+          <p>Team ShopHeed</p>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 module.exports = {
     htmlContentForMailTemplate,
     contactUs,
     EmailSendComponent,
     BulkEnquiry,
     returnOrExchangeMail,
-    orderConfirmationTemplate
+    orderConfirmationTemplate,
+    adminNewOrderTemplate,
+    orderShippedTemplate,
+    orderCancelledTemplate,
+    returnUpdateTemplate
 };
