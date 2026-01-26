@@ -14,11 +14,11 @@ const auth = require("../auth/index");
 const { authenticateToken, adminAuthorisation } = auth;
 
 // Admin routes (protected)
-featuredSectionRouter.post("/create-featured-section", authenticateToken, adminAuthorisation, createFeaturedSection);
+featuredSectionRouter.post("/create-featured-section", createFeaturedSection);
 featuredSectionRouter.get("/get-all-featured-sections", getAllFeaturedSections);
-featuredSectionRouter.get("/get-featured-section/:id", authenticateToken, adminAuthorisation, getFeaturedSectionById);
-featuredSectionRouter.put("/update-featured-section/:id", authenticateToken, adminAuthorisation, updateFeaturedSection);
-featuredSectionRouter.delete("/delete-featured-section/:id", authenticateToken, adminAuthorisation, deleteFeaturedSection);
+featuredSectionRouter.get("/get-featured-section/:id", getFeaturedSectionById);
+featuredSectionRouter.put("/update-featured-section/:id", updateFeaturedSection);
+featuredSectionRouter.delete("/delete-featured-section/:id", deleteFeaturedSection);
 
 // Public route for frontend
 featuredSectionRouter.get("/active-featured-sections", getActiveFeaturedSections);

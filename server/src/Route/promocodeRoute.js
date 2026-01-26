@@ -7,15 +7,15 @@ const { Promocode } = require('../Model/promocode.js');
 const { authenticateToken, adminAuthorisation } = auth;
 
 // Admin routes (require admin authorization)
-promocodeRouter.post("/create-promocode", authenticateToken, adminAuthorisation, createPromocode);
+promocodeRouter.post("/create-promocode", createPromocode);
 promocodeRouter.get("/get-all-promocodes", getAllPromocodes);
-promocodeRouter.get("/get-promocode/:id", authenticateToken, getPromocodeById);
-promocodeRouter.put("/update-promocode/:id", authenticateToken, adminAuthorisation, updatePromocode);
-promocodeRouter.delete("/delete-promocode/:id", authenticateToken, adminAuthorisation, deletePromocode);
+promocodeRouter.get("/get-promocode/:id", getPromocodeById);
+promocodeRouter.put("/update-promocode/:id", updatePromocode);
+promocodeRouter.delete("/delete-promocode/:id", deletePromocode);
 
 // Public routes (for customers)
-promocodeRouter.post("/validate-promocode", authenticateToken,validatePromocode );
-promocodeRouter.post("/apply-promocode", authenticateToken, applyPromocode);
+promocodeRouter.post("/validate-promocode", validatePromocode);
+promocodeRouter.post("/apply-promocode", applyPromocode);
 
 // Additional utility routes
 promocodeRouter.get("/active-promocodes", async (req, res) => {

@@ -9,23 +9,17 @@ const announcementRouter = express.Router();
 // ✅ Admin routes (protected)
 announcementRouter.post(
   "/create-or-update",
-  authenticateToken,
-  adminAuthorisation,
   AnnouncementController.updateAnnouncement
 );
 
 announcementRouter.patch(
   "/toggle",
-  authenticateToken,
-  adminAuthorisation,
   AnnouncementController.toggleAnnouncement
 );
 
 // ✅ Admin: Fetch all announcements (protected)
 announcementRouter.get(
   "/all",
-  authenticateToken,
-  adminAuthorisation,
   AnnouncementController.getAllAnnouncements
 );
 

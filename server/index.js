@@ -21,6 +21,7 @@ const announcementRoute = require("./src/Route/announcement");
 const featuredSectionRouter = require("./src/Route/feature");
 const addressRouter = require("./src/Route/addressRoute");
 const reviewRouter = require("./src/Route/reviewRouter");
+const commonRoutes = require("./src/Route/routes");
 
 // MIDDLEWARE
 
@@ -66,6 +67,7 @@ app.use("/api/announcement", announcementRoute);
 app.use("/api/featured-section", featuredSectionRouter);
 app.use("/api/user", addressRouter);
 app.use("/api/review", reviewRouter);
+app.use("/api", commonRoutes);
 
 // CRON
 scheduleCron();
