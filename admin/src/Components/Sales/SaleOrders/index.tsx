@@ -98,8 +98,8 @@ const SalesOrders = () => {
 
   const generateInvoice = async (orderId: string) => {
     try {
-      if (orderDataById?.orderStatus?.toLowerCase() !== 'processed') {
-        toast.error("Invoice can only be generated for orders with 'Processed' status!");
+      if (orderDataById?.orderStatus?.toLowerCase() !== 'confirmed' && orderDataById?.orderStatus?.toLowerCase() !== 'processed') {
+        toast.error("Invoice can only be generated for orders with 'Confirmed' status!");
         return;
       }
 
@@ -137,8 +137,7 @@ const SalesOrders = () => {
       doc.setFontSize(9);
       doc.text('GSTIN Number: 07BGUPB9136M1ZR', 110, 35);
       doc.text(`Invoice Number: ${invoiceNumber}`, 110, 41);
-      doc.text(`PacketID: ${packetId}`, 110, 47);
-      doc.text(`Order Number: ${orderNumber}`, 110, 53);
+      doc.text(`Order Id: ${orderNumber}`, 110, 53);
       doc.text(`Invoice Date: ${invoiceDate}`, 110, 59);
       doc.text(`Order Date: ${orderDate}`, 110, 65);
       doc.text(`Nature of Transaction: ${isDelhi ? 'Intra-State' : 'Inter-State'}`, 110, 71);
@@ -330,13 +329,16 @@ const SalesOrders = () => {
       yPos += 10;
       doc.setFontSize(7);
       doc.text('Reg Address: BRANDS.IN, A-39, WEST PATEL NAGAR, New delhi, DELHI-110008', 20, yPos);
-
+      
+      yPos += 11;
+      doc.setFontSize(7);
+      doc.text('This is a computer generated bill, does not require any physical signature.', 20, yPos);
       const currentDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       doc.text(`Purchase made on ${currentDate}`, 150, yPos);
 
       yPos += 12;
       doc.setFontSize(6.5);
-      doc.text('If you have any questions, feel free to call customer care at +91 99997 36675 or use Contact Us section in our Website,', 20, yPos);
+      doc.text('If you have any questions, feel free to call customer care at +91-7703933743 or use Contact Us section in our Website,', 20, yPos);
       yPos += 3;
       doc.text('or log on to www.shopheed.com/contactus', 20, yPos);
 

@@ -39,7 +39,7 @@ async function createInvoice(invoice) {
     .stroke()
     .fontSize(10)
     .text(`Invoice Number: ${invoice.invoiceNumber}`, 330, 70)
-    .text(`Order Number: ${invoice.orderNumber}`, 330, 85)
+    .text(` Order Id: ${invoice.orderNumber}`, 330, 85)
     .text(`Invoice Date: ${invoice.invoiceDate}`, 330, 100)
     .text(`Total Amount: ₹${invoice.totalAmount}`, 330, 115);
   doc
