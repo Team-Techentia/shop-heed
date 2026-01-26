@@ -80,7 +80,7 @@ const ReturnAndExchangePage = () => {
                       }}
                     >
                       <Clock color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
-                      <span>Sun-Sat | 10:30 AM - 06:00 PM (IST)</span>
+                      <span>Mon-Fri | 10:30 AM - 06:00 PM (IST)</span>
                     </div>
                   </div>
                 </Col>

@@ -34,19 +34,19 @@ const ContactUs = () => {
                   </h3>
 
                   <div style={{ lineHeight: "2.2", color: "#000000" }}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" ,fontSize:"20px"}}>
-                      <Phone color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
-                      <span>Customer Care -  ‪+91-7703933743</span>
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" ,fontSize:"16px"}}>
+                      <Phone color="#ff4d00" size={15} style={{ marginRight: "10px" }} />
+                      <span>  ‪+91-7703933743</span>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px",fontSize:"20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px",fontSize:"16px" }}>
                       <Mail color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
                       <span>Heed.brandsin@gmail.com</span>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center",fontSize:"20px" }}>
+                    <div style={{ display: "flex", alignItems: "center",fontSize:"15px" }}>
                       <Clock color="#ff4d00" size={20} style={{ marginRight: "10px" }} />
-                      <span>Sun-Sat | 10:30 AM - 06:00 PM (IST)</span>
+                      <span>Mon-Fri | 10:30 AM - 07:00 PM</span>
                     </div>
                   </div>
                 </Col>

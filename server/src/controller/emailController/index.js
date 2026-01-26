@@ -950,10 +950,80 @@ const returnOrExchangeMail = async (body) => {
 };
 
 
+const orderConfirmationTemplate = (order) => {
+    const itemsHtml = order.items.map(item => `
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.title} (Size: ${item.size || 'N/A'})</td>
+      <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.quantity}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #ddd;">₹${item.finalPrice}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #ddd;">₹${item.totalPrice}</td>
+    </tr>
+  `).join('');
+
+    return `
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+          h2 { color: #00466a; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #f4f4f4; text-align: left; padding: 10px; }
+          .total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 1.2em; }
+          .address { background-color: #f9f9f9; padding: 15px; margin-top: 20px; border-radius: 5px; }
+          .footer { margin-top: 30px; font-size: 0.8em; color: #777; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>Order Confirmation</h2>
+          <p>Dear ${order.customerDetails.first_name},</p>
+          <p>Thank you for your order! We have received your order <strong>${order.orderId}</strong> and it is now being processed.</p>
+          
+          <h3>Order Details</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          
+          <div class="total">
+            Total Amount: ₹${order.totalAmount}
+          </div>
+
+          <div class="address">
+            <h3>Shipping Address</h3>
+            <p>
+              ${order.customerDetails.first_name} ${order.customerDetails.last_name || ''}<br>
+              ${order.customerDetails.address}<br>
+              ${order.customerDetails.city}, ${order.customerDetails.state} - ${order.customerDetails.pincode}<br>
+              Phone: ${order.customerDetails.phone || order.customerDetails.mobile}
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>If you have any questions, please reply to this email.</p>
+            <p>Team ShopHeed</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 module.exports = {
     htmlContentForMailTemplate,
     contactUs,
     EmailSendComponent,
     BulkEnquiry,
-    returnOrExchangeMail
+    returnOrExchangeMail,
+    orderConfirmationTemplate
 };

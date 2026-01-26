@@ -132,11 +132,15 @@ const createOrder = async (req, res) => {
       );
 
       // Send confirmation email
-      EmailSendComponent(
-        customerDetails.email,
-        "Order Confirmation - " + customOrderId,
-        orderConfirmationTemplate(newOrder)
-      );
+      try {
+        EmailSendComponent(
+          customerDetails.email,
+          "Order Confirmation - " + customOrderId,
+          orderConfirmationTemplate(newOrder)
+        );
+      } catch (emailError) {
+        console.error("Failed to send order confirmation email:", emailError);
+      }
 
       return res.status(201).json({
         success: true,
@@ -200,11 +204,15 @@ const verifyPayment = async (req, res) => {
       }
 
       // Send confirmation email
-      EmailSendComponent(
-        order.customerDetails.email,
-        "Order Confirmation - " + order.orderId,
-        orderConfirmationTemplate(order)
-      );
+      try {
+        EmailSendComponent(
+          order.customerDetails.email,
+          "Order Confirmation - " + order.orderId,
+          orderConfirmationTemplate(order)
+        );
+      } catch (emailError) {
+        console.error("Failed to send payment confirmation email:", emailError);
+      }
 
       return res.json({ success: true });
     } else {
