@@ -118,7 +118,7 @@ const AuthModal = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="auth-modal-header">
-              <h4> Login & Signup</h4>
+              <h4> Login / Signup</h4>
               <button
                 onClick={handleCloseLoginModal}
                 style={{

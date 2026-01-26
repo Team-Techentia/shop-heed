@@ -47,7 +47,7 @@ const MasterSection = ({ img, title, link }) => {
               transform: "translateX(-50%)",
               color: "#fff",
               fontWeight: "400",
-              fontSize: "10px",
+              fontSize: "14px",
               textAlign: "center",
               width: "100%",
               letterSpacing: "0.5px",

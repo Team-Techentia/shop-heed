@@ -157,7 +157,7 @@ const OpenModal = ({ userData }) => {
             if (redirectAfterLogin === "checkout") {
               window.location.href = "/page/account/checkout";
             } else {
-              window.location.href = "/";
+              window.location.reload(); // Stay on same page
             }
             localStorage.removeItem("redirectAfterLogin");
           }, 300);
@@ -217,7 +217,7 @@ const OpenModal = ({ userData }) => {
           if (redirectAfterLogin === "checkout") {
             window.location.href = "/page/account/checkout";
           } else {
-            window.location.href = "/";
+            window.location.reload(); // Stay on same page
           }
           localStorage.removeItem("redirectAfterLogin");
         }, 300);
